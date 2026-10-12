@@ -1,0 +1,11 @@
+.git
+build*
+.data
+**/bin
+**/obj
+TestResults
+assets
+docs
+.env
+scenarios/**/source.osm
+scenarios/**/conversion.log

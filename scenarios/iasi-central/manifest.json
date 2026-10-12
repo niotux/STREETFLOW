@@ -1,0 +1,16 @@
+{
+  "id": "iasi-central",
+  "revision": "1",
+  "name": "Central Ia\u0219i with synthetic demand",
+  "network_revision": "iasi-central-osm-1",
+  "detector_config_revision": "iasi-central-cameras-1",
+  "evidence_level": "synthetic",
+  "network_file": "network.net.xml",
+  "routes_file": "routes.rou.xml",
+  "attribution": "\u00A9 OpenStreetMap contributors; https://www.openstreetmap.org/copyright. Demand and signal timings are synthetic.",
+  "duration_seconds": 300,
+  "step_seconds": 0.5,
+  "observation_window_seconds": 5,
+  "queue_speed_mps": 0.1,
+  "queue_duration_seconds": 1
+}

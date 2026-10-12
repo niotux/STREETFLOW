@@ -1,0 +1,17 @@
+{
+  "format_version": 1,
+  "id": "podu-ros",
+  "name": "Podu Roș intersection",
+  "description": "Bounded OSM-derived Podu Roș roundabout and approach roads with explicit per-edge traffic preferences.",
+  "network": {
+    "file": "network.net.xml",
+    "attribution": "© OpenStreetMap contributors; https://www.openstreetmap.org/copyright. Converted with SUMO 1.28.0; generated signal timing is estimated."
+  },
+  "demand_file": "demand.json",
+  "detectors_file": "detectors.json",
+  "additional_files": [],
+  "defaults": {
+    "start_time_seconds": 68940,
+    "step_seconds": 0.5
+  }
+}

@@ -1,0 +1,5 @@
+group_label,day_type,value,unit,source_id,quality,note
+group_1,weekday,4300,unspecified,pmud-2023-figure-3-24,digitized_approximate,"First pair of bars; caption mentions AM/PM but no visible pair labels or interval duration; not an hourly rate"
+group_1,weekend,3700,unspecified,pmud-2023-figure-3-24,digitized_approximate,"First pair of bars; interval unspecified"
+group_2,weekday,4125,unspecified,pmud-2023-figure-3-24,digitized_approximate,"Second pair of bars; approximate; interval unspecified"
+group_2,weekend,4240,unspecified,pmud-2023-figure-3-24,digitized_approximate,"Second pair of bars; approximate; interval unspecified"

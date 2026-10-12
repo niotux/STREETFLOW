@@ -1,0 +1,16 @@
+{
+  "id": "tiny-intersection",
+  "revision": "1",
+  "name": "Synthetic four-way signalized intersection",
+  "network_revision": "tiny-1",
+  "detector_config_revision": "tiny-cameras-1",
+  "evidence_level": "synthetic",
+  "network_file": "network.net.xml",
+  "routes_file": "routes.rou.xml",
+  "attribution": "Synthetic fixture",
+  "duration_seconds": 180,
+  "step_seconds": 0.5,
+  "observation_window_seconds": 5,
+  "queue_speed_mps": 0.1,
+  "queue_duration_seconds": 1
+}

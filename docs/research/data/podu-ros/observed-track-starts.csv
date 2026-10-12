@@ -1,0 +1,13 @@
+start_elapsed_seconds,end_elapsed_seconds,complete_car_track_starts,relative_weight,quality
+0,900,489,1.010132640386761,observed_selected_tracks_processing_clock
+900,1800,560,1.1567981157803398,observed_selected_tracks_processing_clock
+1800,2700,493,1.0183954840709062,observed_selected_tracks_processing_clock
+2700,3600,561,1.158863826701376,observed_selected_tracks_processing_clock
+3600,4500,595,1.2290979980166108,observed_selected_tracks_processing_clock
+4500,5400,519,1.0721039680178506,observed_selected_tracks_processing_clock
+5400,6300,491,1.0142640622288335,observed_selected_tracks_processing_clock
+6300,7200,444,0.9171756489401265,observed_selected_tracks_processing_clock
+7200,8100,457,0.9440298909135987,observed_selected_tracks_processing_clock
+8100,9000,382,0.7891015718358746,observed_selected_tracks_processing_clock
+9000,9900,338,0.6982102913102765,observed_selected_tracks_processing_clock
+9900,9998.454,49,0.9252833975024073,observed_selected_tracks_processing_clock

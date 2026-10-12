@@ -1,0 +1,46 @@
+{
+  "format_version": 1,
+  "raw_sha256": "cb896f1bdbc2e7e0b1aceaf4cb8900bcd360c9dd97c62d0ad879c6c1f44e1c4c",
+  "raw_size_bytes": 22333566,
+  "selected_id_sha256": "d4719eeb3afc4daf304d5b4333210a7503a770712a90804c2b1a15f3bad48301",
+  "selected_id_size_bytes": 28595,
+  "raw_rows": 2452378,
+  "selected_complete_car_tracks": 5378,
+  "raw_first_kafka_timestamp_ms": 1724754553857,
+  "raw_last_kafka_timestamp_ms": 1724764552311,
+  "raw_constant_start_timestamp_ms": [
+    1724754545675
+  ],
+  "processing_clock_span_seconds": 9998.454,
+  "unique_frame_timestamps": 249457,
+  "most_common_frame_timestamp_gaps_ms": [
+    [
+      40,
+      114611
+    ],
+    [
+      41,
+      45233
+    ],
+    [
+      39,
+      43941
+    ],
+    [
+      42,
+      5265
+    ],
+    [
+      38,
+      4325
+    ]
+  ],
+  "reported_recording_date": "2024-07-16",
+  "reported_start_time": "19:09",
+  "reported_end_time": "21:55",
+  "reported_duration_minutes": 166,
+  "paper_sample_throughput_reference_per_hour": 1943.8554216867471,
+  "processing_clock_sample_throughput_per_hour": 1936.379364249713,
+  "recording_time_mapping_verified": false,
+  "notes": "Count each selected ID once at first kafka_timestamp. Raw records are image detections, not measured SUMO edge flows. Processing clock differs from capture date. Mapping 19:09 + elapsed to recording time is an approximation; outside-window values are estimates. The sample excludes incomplete car tracks and other classes and covers one camera view."
+}

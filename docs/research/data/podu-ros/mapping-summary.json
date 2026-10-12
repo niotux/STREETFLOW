@@ -1,0 +1,30 @@
+{
+  "format_version": 1,
+  "method": "camera projection of every 25th selected-track detection; nearest compatible passenger lane segment; unique track-edge first match",
+  "maximum_distance_m": 12,
+  "maximum_heading_difference_degrees": 45,
+  "minimum_heading_displacement_m": 2,
+  "minimum_supported_tracks": 50,
+  "normalization_reference_mapped_tracks": 2143,
+  "processing_window_seconds": 9998.454,
+  "sampled_points_with_usable_heading": 33326,
+  "assigned_samples": 33179,
+  "unique_mapped_tracks": 5377,
+  "unique_track_edge_matches": 15435,
+  "edges_with_matches": 16,
+  "edges_used_for_camera_spatial_estimate": 14,
+  "edges_using_lane_priority_estimate": 92,
+  "distance_quantiles_m": {
+    "0.5": 2.6510713870077818,
+    "0.9": 7.895824277839876,
+    "0.99": 10.844151110600839
+  },
+  "dependencies": {
+    "numpy": "2.5.4",
+    "pandas": "2.3.3",
+    "pyarrow": "26.0.0",
+    "cameratransform": "1.2.1",
+    "pyproj": "3.8.0"
+  },
+  "notes": "Map matching is an inference from noisy camera detections and calibration, not measured SUMO edge density or ground-truth directional counts. Limited camera view; unmatched/low-support roads are not assumed empty."
+}

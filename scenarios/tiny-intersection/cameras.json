@@ -1,0 +1,36 @@
+[
+  {
+    "id": "center-camera",
+    "intersection_id": "center",
+    "lanes": [
+      {
+        "approach_id": "west",
+        "lane_id": "west_in_0",
+        "start_position": 100,
+        "end_position": 180,
+        "count_position": 150
+      },
+      {
+        "approach_id": "east",
+        "lane_id": "east_in_0",
+        "start_position": 100,
+        "end_position": 180,
+        "count_position": 150
+      },
+      {
+        "approach_id": "north",
+        "lane_id": "north_in_0",
+        "start_position": 100,
+        "end_position": 180,
+        "count_position": 150
+      },
+      {
+        "approach_id": "south",
+        "lane_id": "south_in_0",
+        "start_position": 100,
+        "end_position": 180,
+        "count_position": 150
+      }
+    ]
+  }
+]

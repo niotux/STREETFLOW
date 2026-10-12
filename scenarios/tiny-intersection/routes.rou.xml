@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<routes>
+  <vType id="passenger" vClass="passenger" accel="2.6" decel="4.5" sigma="0.5" length="5" minGap="2.5" />
+  <vehicle id="car-000" type="passenger" depart="0" departLane="best">
+    <route edges="west_in east_out" />
+  </vehicle>
+  <vehicle id="car-001" type="passenger" depart="2" departLane="best">
+    <route edges="east_in west_out" />
+  </vehicle>
+  <vehicle id="car-002" type="passenger" depart="4" departLane="best">
+    <route edges="north_in south_out" />
+  </vehicle>
+  <vehicle id="car-003" type="passenger" depart="6" departLane="best">
+    <route edges="south_in north_out" />
+  </vehicle>
+  <vehicle id="car-004" type="passenger" depart="8" departLane="best">
+    <route edges="west_in east_out" />
+  </vehicle>
+  <vehicle id="car-005" type="passenger" depart="10" departLane="best">
+    <route edges="east_in west_out" />
+  </vehicle>
+  <vehicle id="car-006" type="passenger" depart="12" departLane="best">
+    <route edges="north_in south_out" />
+  </vehicle>
+  <vehicle id="car-007" type="passenger" depart="14" departLane="best">
+    <route edges="south_in north_out" />
+  </vehicle>
+  <vehicle id="car-008" type="passenger" depart="16" departLane="best">
+    <route edges="west_in east_out" />
+  </vehicle>
+  <vehicle id="car-009" type="passenger" depart="18" departLane="best">
+    <route edges="east_in west_out" />
+  </vehicle>
+  <vehicle id="car-010" type="passenger" depart="20" departLane="best">
+    <route edges="north_in south_out" />
+  </vehicle>
+  <vehicle id="car-011" type="passenger" depart="22" departLane="best">
+    <route edges="south_in north_out" />
+  </vehicle>
+  <vehicle id="car-012" type="passenger" depart="24" departLane="best">
+    <route edges="west_in east_out" />
+  </vehicle>
+  <vehicle id="car-013" type="passenger" depart="26" departLane="best">
+    <route edges="east_in west_out" />
+  </vehicle>
+  <vehicle id="car-014" type="passenger" depart="28" departLane="best">
+    <route edges="north_in south_out" />
+  </vehicle>
+  <vehicle id="car-015" type="passenger" depart="30" departLane="best">
+    <route edges="south_in north_out" />
+  </vehicle>
+  <vehicle id="car-016" type="passenger" depart="32" departLane="best">
+    <route edges="west_in east_out" />
+  </vehicle>
+  <vehicle id="car-017" type="passenger" depart="34" departLane="best">
+    <route edges="east_in west_out" />
+  </vehicle>
+  <vehicle id="car-018" type="passenger" depart="36" departLane="best">
+    <route edges="north_in south_out" />
+  </vehicle>
+  <vehicle id="car-019" type="passenger" depart="38" departLane="best">
+    <route edges="south_in north_out" />
+  </vehicle>
+  <vehicle id="car-020" type="passenger" depart="40" departLane="best">
+    <route edges="west_in east_out" />
+  </vehicle>
+  <vehicle id="car-021" type="passenger" depart="42" departLane="best">
+    <route edges="east_in west_out" />
+  </vehicle>
+  <vehicle id="car-022" type="passenger" depart="44" departLane="best">
+    <route edges="north_in south_out" />
+  </vehicle>
+  <vehicle id="car-023" type="passenger" depart="46" departLane="best">
+    <route edges="south_in north_out" />
+  </vehicle>
+  <vehicle id="car-024" type="passenger" depart="48" departLane="best">
+    <route edges="west_in east_out" />
+  </vehicle>
+  <vehicle id="car-025" type="passenger" depart="50" departLane="best">
+    <route edges="east_in west_out" />
+  </vehicle>
+  <vehicle id="car-026" type="passenger" depart="52" departLane="best">
+    <route edges="north_in south_out" />
+  </vehicle>
+  <vehicle id="car-027" type="passenger" depart="54" departLane="best">
+    <route edges="south_in north_out" />
+  </vehicle>
+  <vehicle id="car-028" type="passenger" depart="56" departLane="best">
+    <route edges="west_in east_out" />
+  </vehicle>
+  <vehicle id="car-029" type="passenger" depart="58" departLane="best">
+    <route edges="east_in west_out" />
+  </vehicle>
+  <vehicle id="car-030" type="passenger" depart="60" departLane="best">
+    <route edges="north_in south_out" />
+  </vehicle>
+  <vehicle id="car-031" type="passenger" depart="62" departLane="best">
+    <route edges="south_in north_out" />
+  </vehicle>
+</routes>

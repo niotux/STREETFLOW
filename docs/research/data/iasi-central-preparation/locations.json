@@ -1,0 +1,40 @@
+{
+  "format_version": 1,
+  "locations": [
+    {
+      "id": "three-survey-sites-aggregate",
+      "name": "Aggregate of three Iași 24-hour survey sites",
+      "kind": "group",
+      "member_ids": [
+        "podu-ros-survey",
+        "alexandru-cel-bun-survey",
+        "independentei-sararie-survey"
+      ],
+      "aggregation": "sum"
+    },
+    {
+      "id": "podu-ros-survey",
+      "name": "Bd. Socola – Splaiul Bahlui Mal Drept – Strada Sfântul Lazăr – Șoseaua Națională – Strada Nicolina",
+      "kind": "unmapped",
+      "notes": "Survey location named in the PMUD report. Coverage and mapping to the experiment network have not been verified; not usable as a mapped edge flow constraint."
+    },
+    {
+      "id": "alexandru-cel-bun-survey",
+      "name": "E58 – Pasajul Alexandru cel Bun – Bd. Regele Ferdinand I al României",
+      "kind": "unmapped",
+      "notes": "Survey location named in the PMUD report. Coverage and mapping to the experiment network have not been verified; not usable as a mapped edge flow constraint."
+    },
+    {
+      "id": "independentei-sararie-survey",
+      "name": "Bd. Independenței – Strada Sărărie",
+      "kind": "unmapped",
+      "notes": "Survey location named in the PMUD report. Coverage and mapping to the experiment network have not been verified; not usable as a mapped edge flow constraint."
+    },
+    {
+      "id": "pacurari-canta-survey",
+      "name": "Șos. Păcurari – Str. Canta",
+      "kind": "unmapped",
+      "notes": "Survey location named in the PMUD report. Coverage and mapping to the experiment network have not been verified; not usable as a mapped edge flow constraint."
+    }
+  ]
+}

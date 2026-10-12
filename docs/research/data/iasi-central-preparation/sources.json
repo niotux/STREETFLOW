@@ -1,0 +1,54 @@
+{
+  "format_version": 1,
+  "sources": [
+    {
+      "id": "pmud-2023-figure-3-23",
+      "title": "Planul de Mobilitate Urbană Durabilă pentru Municipiul Iași — 24-hour aggregate traffic curve for three surveyed intersections",
+      "url": "https://vision4iasi.ro/wp-content/uploads/2023/11/PMUD-Iasi-FINAL.pdf",
+      "publication_date": "2023",
+      "survey_period": "2021-05",
+      "locator": "Printed page 90, Figure 3.23",
+      "extraction_method": "digitized_chart",
+      "notes": "Aggregate across three sites, not directional edge counts and not unique journeys. Visual digitization from chart, approximately nearest 100 vehicles. No explicit weekday/weekend designation for this figure. Aggregation details not stated. No measurement uncertainty supplied. Raw annex tables not obtained. Original downloaded PDF: 21217528 bytes; SHA-256 094fd0197bc0f02846f3a5d66653300bc05cd4f6bcded3b3f1cc5ea19e67b6b6. Survey methodology on printed page 89."
+    },
+    {
+      "id": "pmud-2023-figure-3-24",
+      "title": "Planul de Mobilitate Urbană Durabilă pentru Municipiul Iași — Păcurari–Canta weekday/weekend AM/PM traffic comparison",
+      "url": "https://vision4iasi.ro/wp-content/uploads/2023/11/PMUD-Iasi-FINAL.pdf",
+      "publication_date": "2023",
+      "survey_period": "2021-05",
+      "locator": "Printed page 91, Figure 3.24",
+      "extraction_method": "digitized_chart",
+      "notes": "Intersection-level aggregate bars. AM/PM group labels absent from visible chart. Units and duration not specified on axes. Must not be converted to vehicles/hour without additional evidence. Original downloaded PDF: 21217528 bytes; SHA-256 094fd0197bc0f02846f3a5d66653300bc05cd4f6bcded3b3f1cc5ea19e67b6b6. Survey methodology on printed page 89."
+    },
+    {
+      "id": "pmud-2023-figure-3-25",
+      "title": "Planul de Mobilitate Urbană Durabilă pentru Municipiul Iași — Păcurari–Canta weekday vehicle categories",
+      "url": "https://vision4iasi.ro/wp-content/uploads/2023/11/PMUD-Iasi-FINAL.pdf",
+      "publication_date": "2023",
+      "survey_period": "2021-05",
+      "locator": "Printed page 91, Figure 3.25",
+      "extraction_method": "digitized_chart",
+      "notes": "Transcribed integer percentage labels. Original downloaded PDF: 21217528 bytes; SHA-256 094fd0197bc0f02846f3a5d66653300bc05cd4f6bcded3b3f1cc5ea19e67b6b6. Survey methodology on printed page 89."
+    },
+    {
+      "id": "pmud-2023-figure-3-26",
+      "title": "Planul de Mobilitate Urbană Durabilă pentru Municipiul Iași — Păcurari–Canta weekend vehicle categories",
+      "url": "https://vision4iasi.ro/wp-content/uploads/2023/11/PMUD-Iasi-FINAL.pdf",
+      "publication_date": "2023",
+      "survey_period": "2021-05",
+      "locator": "Printed page 91, Figure 3.26",
+      "extraction_method": "digitized_chart",
+      "notes": "Transcribed integer percentage labels. Rounded displayed percentages sum to 99. Original downloaded PDF: 21217528 bytes; SHA-256 094fd0197bc0f02846f3a5d66653300bc05cd4f6bcded3b3f1cc5ea19e67b6b6. Survey methodology on printed page 89."
+    },
+    {
+      "id": "central-network-demand-assumptions",
+      "title": "Initial central network demand assumptions",
+      "file": "README.md",
+      "extraction_method": "assumption",
+      "notes": "Estimated mean600 departures/hour; passenger cars; Poisson arrivals; normalized PMUD aggregate hourly shape. Spatial distributions, eligible endpoints, and legal paths are automatically inferred from graph rules per run. No prescribed OD pairs or path library. Graph-capacity prior, synthetic signal programs, and transfer of aggregate temporal shape to this graph are assumptions; surveyed sites remain unmapped.",
+      "publication_date": "2026-10-11",
+      "locator": "README.md, Proposed demand"
+    }
+  ]
+}

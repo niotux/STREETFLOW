@@ -1,0 +1,107 @@
+edge,name,mapped_complete_tracks,lane_priority_supply,spatial_basis,outside_window_weight
+-1068015153#1,Strada Palat,1,24,lane_priority_estimate,0.5
+-1100838206,,0,4,lane_priority_estimate,0.08333333333333333
+-1222926118,,0,4,lane_priority_estimate,0.08333333333333333
+-1225444914#1,Aleea Rozelor,0,4,lane_priority_estimate,0.08333333333333333
+-218911690#1,,0,4,lane_priority_estimate,0.08333333333333333
+-22957475#0,Strada Traian,0,4,lane_priority_estimate,0.08333333333333333
+-23378822#1,,0,4,lane_priority_estimate,0.08333333333333333
+-23412834,,0,4,lane_priority_estimate,0.08333333333333333
+-25368524#1,Strada Sfântul Lazăr,0,24,lane_priority_estimate,0.5
+-305429593#1,,0,4,lane_priority_estimate,0.08333333333333333
+-325176765#1,Bulevardul Socola,0,24,lane_priority_estimate,0.5
+-58636262#1,Aleea Rozelor,0,4,lane_priority_estimate,0.08333333333333333
+-58636262#3,Aleea Rozelor,0,4,lane_priority_estimate,0.08333333333333333
+-58639945#1,,0,4,lane_priority_estimate,0.08333333333333333
+-915091841#1,,0,4,lane_priority_estimate,0.08333333333333333
+1068019512#0,Strada Nicolina,0,24,lane_priority_estimate,0.5
+1068022904#0,Aleea Rozelor,0,8,lane_priority_estimate,0.16666666666666666
+1068112704#0,Strada Palat,0,12,lane_priority_estimate,0.25
+1068167300#4,Bulevardul Țuțora,0,12,lane_priority_estimate,0.25
+1072468318,Podu Roș,2127,36,camera_map_matching_estimate,0.9925338310779281
+1076971040,Piața Podu Roș,0,36,lane_priority_estimate,0.75
+1076971041,Podu Roș,0,36,lane_priority_estimate,0.75
+1078056343,Bulevardul Socola,0,24,lane_priority_estimate,0.5
+1100838206,,0,4,lane_priority_estimate,0.08333333333333333
+1134276130#0,Strada Nicolina,0,24,lane_priority_estimate,0.5
+1222926118,,0,4,lane_priority_estimate,0.08333333333333333
+1223164064#0,Aleea Decebal,0,4,lane_priority_estimate,0.08333333333333333
+1225444914#0,Aleea Rozelor,0,4,lane_priority_estimate,0.08333333333333333
+1300222779#0,Strada Palat,0,24,lane_priority_estimate,0.5
+1300883979,,365,7,camera_map_matching_estimate,0.17032197853476436
+1390424230,Bulevardul Dimitrie Cantemir,0,36,lane_priority_estimate,0.75
+165518602#0,Bulevardul Regele Mihai I al României,0,24,lane_priority_estimate,0.5
+165518602#1,Bulevardul Regele Mihai I al României,0,24,lane_priority_estimate,0.5
+173170790,,0,24,lane_priority_estimate,0.5
+205658400#0,,0,4,lane_priority_estimate,0.08333333333333333
+218911690#0,,0,4,lane_priority_estimate,0.08333333333333333
+22771428#0,Bulevardul Regele Mihai I al României,0,24,lane_priority_estimate,0.5
+22771428#2,Bulevardul Regele Mihai I al României,0,24,lane_priority_estimate,0.5
+22776494,Bulevardul Socola,0,24,lane_priority_estimate,0.5
+22816050#0,,0,4,lane_priority_estimate,0.08333333333333333
+22895248,Strada Sfântul Lazăr,0,24,lane_priority_estimate,0.5
+22897481,Strada Palat,177,24,camera_map_matching_estimate,0.08259449370041998
+22916759#3,,0,4,lane_priority_estimate,0.08333333333333333
+22957475#0,Strada Traian,0,4,lane_priority_estimate,0.08333333333333333
+230365388#1,,0,4,lane_priority_estimate,0.08333333333333333
+23378815#0,Aleea Decebal,0,4,lane_priority_estimate,0.08333333333333333
+23378815#2,Aleea Decebal,0,4,lane_priority_estimate,0.08333333333333333
+23378819#0,,0,4,lane_priority_estimate,0.08333333333333333
+23378822#1,,0,4,lane_priority_estimate,0.08333333333333333
+23388862#0,,0,4,lane_priority_estimate,0.08333333333333333
+23412834,,0,4,lane_priority_estimate,0.08333333333333333
+25367556,Șoseaua Națională,0,11,lane_priority_estimate,0.22916666666666666
+25368524#0,Strada Sfântul Lazăr,0,24,lane_priority_estimate,0.5
+255682735,Bulevardul Țuțora,0,12,lane_priority_estimate,0.25
+256447681,,0,7,lane_priority_estimate,0.14583333333333334
+256585921,Șoseaua Nicolina,0,24,lane_priority_estimate,0.5
+265855329,Șoseaua Nicolina,0,24,lane_priority_estimate,0.5
+277230359#0,Strada Palat,1969,48,camera_map_matching_estimate,0.9188054129724685
+277230359#1,Strada Palat,2143,48,camera_map_matching_estimate,1.0
+290635797#3,Bulevardul Socola,0,24,lane_priority_estimate,0.5
+29201170#5,Bulevardul Profesor Dimitrie Mangeron,0,24,lane_priority_estimate,0.5
+29201176#0,Bulevardul Regele Ferdinand I al României,795,36,camera_map_matching_estimate,0.37097526831544564
+29201176#1,Bulevardul Regele Ferdinand I al României,607,36,camera_map_matching_estimate,0.28324778348110125
+29201176#5,Bulevardul Regele Ferdinand I al României,0,36,lane_priority_estimate,0.75
+29201250,Strada Palat,1735,36,camera_map_matching_estimate,0.8096126924871675
+29377424,Podu Roș,1495,36,camera_map_matching_estimate,0.6976201586560896
+303755190#2,Bulevardul Dimitrie Cantemir,0,36,lane_priority_estimate,0.75
+303755190#3,Bulevardul Dimitrie Cantemir,0,36,lane_priority_estimate,0.75
+303757861#0,Strada Nicolina,0,24,lane_priority_estimate,0.5
+305256944#0,Bulevardul Profesor Dimitrie Mangeron,881,36,camera_map_matching_estimate,0.4111059262715819
+305260417#0,Strada Sfântul Lazăr,354,24,camera_map_matching_estimate,0.16518898740083995
+305271346,Piața Podu Roș,0,36,lane_priority_estimate,0.75
+305271347,Strada Nicolina,0,24,lane_priority_estimate,0.5
+305271348,Piața Podu Roș,0,36,lane_priority_estimate,0.75
+305271349,Bulevardul Socola,0,24,lane_priority_estimate,0.5
+305272857#0,Bulevardul Țuțora,0,24,lane_priority_estimate,0.5
+305274207,Bulevardul Socola,0,7,lane_priority_estimate,0.14583333333333334
+305429590,Aleea Decebal,0,4,lane_priority_estimate,0.08333333333333333
+305429593#0,,0,4,lane_priority_estimate,0.08333333333333333
+305534238,Podu Roș,0,24,lane_priority_estimate,0.5
+30959184#0,Șoseaua Națională,0,33,lane_priority_estimate,0.6875
+324784649#0,Piața Podu Roș,0,36,lane_priority_estimate,0.75
+324784649#1,Piața Podu Roș,0,36,lane_priority_estimate,0.75
+324784651,Piața Podu Roș,0,36,lane_priority_estimate,0.75
+324784653,Piața Podu Roș,0,36,lane_priority_estimate,0.75
+324962581#0,Piața Podu Roș,0,36,lane_priority_estimate,0.75
+324972230,Piața Podu Roș,0,36,lane_priority_estimate,0.75
+325212457#0,Piața Podu Roș,0,36,lane_priority_estimate,0.75
+40128197#0,Aleea Nicolina,0,4,lane_priority_estimate,0.08333333333333333
+46719364#0,Splai Bahlui Mal Drept,0,24,lane_priority_estimate,0.5
+52503877,Bulevardul Profesor Dimitrie Mangeron,876,36,camera_map_matching_estimate,0.4087727484834344
+58636262#1,Aleea Rozelor,0,4,lane_priority_estimate,0.08333333333333333
+58636262#2,Aleea Rozelor,0,4,lane_priority_estimate,0.08333333333333333
+58638001#0,Aleea Decebal,0,4,lane_priority_estimate,0.08333333333333333
+58639945#0,,0,4,lane_priority_estimate,0.08333333333333333
+663624561,Strada Palat,15,12,lane_priority_estimate,0.25
+663624563,Podu Roș,512,12,camera_map_matching_estimate,0.23891740550629958
+682623766#0,Bulevardul Regele Ferdinand I al României,1383,36,camera_map_matching_estimate,0.6453569762015866
+722715186#0,Șoseaua Națională,0,22,lane_priority_estimate,0.4583333333333333
+722715186#4,Șoseaua Națională,0,22,lane_priority_estimate,0.4583333333333333
+803073473#1,Bulevardul Țuțora,0,12,lane_priority_estimate,0.25
+803073473#2,Bulevardul Țuțora,0,12,lane_priority_estimate,0.25
+803073473#6,Bulevardul Țuțora,0,12,lane_priority_estimate,0.25
+852500192#0,Aleea Decebal,0,4,lane_priority_estimate,0.08333333333333333
+852500192#1,Aleea Decebal,0,4,lane_priority_estimate,0.08333333333333333
+915091841#0,,0,4,lane_priority_estimate,0.08333333333333333

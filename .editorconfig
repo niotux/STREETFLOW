@@ -1,0 +1,17 @@
+root = true
+
+[*.cs]
+indent_style = space
+indent_size = 2
+csharp_new_line_before_open_brace = all
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+csharp_style_prefer_braces = true:warning
+csharp_style_prefer_switch_expression = false:suggestion
+csharp_style_prefer_pattern_matching = false:suggestion
+csharp_style_prefer_tuple_swap = false:suggestion
+csharp_style_prefer_extended_property_pattern = false:suggestion
+csharp_style_prefer_primary_constructors = false:suggestion
+csharp_style_namespace_declarations = file_scoped:suggestion
+csharp_preserve_single_line_statements = false
+csharp_preserve_single_line_blocks = true

@@ -1,0 +1,39 @@
+name: Simulator backend
+on:
+  push:
+  pull_request:
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18.3
+        env:
+          POSTGRES_PASSWORD: streetflow-test
+          POSTGRES_DB: streetflow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d streetflow_test"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build --target test -t streetflow-simulator-tests .
+      - run: >-
+          docker run --rm --network host
+          -e 'STREETFLOW_TEST_POSTGRES=Host=127.0.0.1;Database=streetflow_test;Username=postgres;Password=streetflow-test'
+          streetflow-simulator-tests
+      - run: docker build --target runtime -t streetflow-simulator .
+  portable-code:
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet restore Streetflow.slnx --locked-mode
+      - run: dotnet build Streetflow.slnx --no-restore
+      - run: dotnet test Streetflow.slnx --no-build --filter "FullyQualifiedName~ObservationTests|FullyQualifiedName~PassageTests|FullyQualifiedName~ProjectLoadingTests"

@@ -1,0 +1,52 @@
+{
+  "format_version": 1,
+  "verified_on": "2026-10-11",
+  "sources": [
+    {
+      "id": "podu-ros-sensors-2026",
+      "title": "Landmark-Based Features for Vehicle Trajectory Anomaly Detection from Traffic Video in Urban Intersections—A Case Study",
+      "url": "https://www.mdpi.com/1424-8220/26/10/3027",
+      "pdf_url": "https://mdpi-res.com/d_attachment/sensors/sensors-26-03027/article_deploy/sensors-26-03027.pdf",
+      "doi": "10.3390/s26103027",
+      "publication_date": "2026-05-11",
+      "survey_date": "2024-07-16",
+      "locator": "PDF page10 section2.4 Table1; pages11–12 extraction pipeline; Table2 anomaly counts",
+      "pdf_sha256": "f9c5f3fff2cd445f1170f8ba04346a7fe5568e8d56ee0e055e57254b58a87d71"
+    },
+    {
+      "id": "podu-ros-authors-release",
+      "url": "https://trafalert-project.gitlab.io/TrafAlert/papers/trajoutlierdet.html",
+      "folder_url": "https://drive.google.com/drive/folders/1Yz34Eonhiy-evEwFb3AvbO2IZ21F9OIS?usp=sharing",
+      "raw_parquet_url": "https://drive.google.com/uc?export=download&id=1P9pS-D6LXh-DUSJCOAAY4iYjKQBGcwPC",
+      "selected_ids_url": "https://drive.google.com/uc?export=download&id=1aro5lh4gyrd6P0VSYAn0aUBLCG7h44OD",
+      "documentation_url": "https://drive.google.com/uc?export=download&id=13UlqJg4P7infxcpt2AjhFZb_peYMYjwH",
+      "license": "Publicly downloadable; separate data redistribution license not established; raw binaries not redistributed",
+      "locator": "Podu Ros with manually annotated anomalies; PoduRos.md"
+    },
+    {
+      "id": "podu-ros-author-code",
+      "url": "https://gitlab.com/trafalert-project/TrafAlert/-/tree/paperoutlierdet",
+      "archive_sha256": "a4f4a0a1bad6bf2b3982189dcca7c62480844e71bcbb706be38cc15b154b4390",
+      "locator": "trafalert/utils/mapping.py; trafalert/cameras/PoduRos5_20240805.json; trafalert/core/preprocessing.py"
+    },
+    {
+      "id": "pmud-2023-local-site",
+      "url": "https://vision4iasi.ro/wp-content/uploads/2023/11/PMUD-Iasi-FINAL.pdf",
+      "locator": "Printed/PDFpage89 named24-hour countsite; page90 Figure3.23 combined3-site curve",
+      "notes": "May2021 survey, not local separate hourly totals; see ../iasi-pmud-2023"
+    },
+    {
+      "id": "orange-local-camera-2023",
+      "url": "https://5glab.orange.ro/en/5g-for-connected-intersections-specific-to-cities-of-the-future-the-5g-smart-intersection-solution/",
+      "publication_date": "2023-03-29",
+      "notes": "Camera deployment confirmation, no demand time series"
+    },
+    {
+      "id": "excluded-shanghai-paper",
+      "url": "https://arxiv.org/pdf/2011.09286",
+      "locator": "PDFpage5 section2.1",
+      "status": "excluded",
+      "reason": "Shanghai Gonghe/Guangzhong roads, not Iasi"
+    }
+  ]
+}

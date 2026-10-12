@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/components/" />
+  <Folder Name="/components/contracts/">
+    <Project Path="components/contracts/Streetflow.Traffic.Contracts/Streetflow.Traffic.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/components/simulator/">
+    <Project Path="components/simulator/Streetflow.Simulator.Tests/Streetflow.Simulator.Tests.csproj" />
+    <Project Path="components/simulator/Streetflow.Simulator/Streetflow.Simulator.csproj" />
+  </Folder>
+</Solution>

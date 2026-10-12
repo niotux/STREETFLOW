@@ -1,0 +1,292 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<routes>
+  <vType id="passenger" vClass="passenger" accel="2.6" decel="4.5" sigma="0.5" length="5" minGap="2.5" />
+  <vehicle id="iasi-car-000" type="passenger" depart="0" departLane="best">
+    <route edges="22994368#0 239071036 -22977124#1 240158322#1" />
+  </vehicle>
+  <vehicle id="iasi-car-001" type="passenger" depart="1.5" departLane="best">
+    <route edges="-22977471#0 -22907193#1 -22969575#1" />
+  </vehicle>
+  <vehicle id="iasi-car-002" type="passenger" depart="3" departLane="best">
+    <route edges="22905095#3 -29372504 -713924479" />
+  </vehicle>
+  <vehicle id="iasi-car-003" type="passenger" depart="4.5" departLane="best">
+    <route edges="-240157442#7 -211519312#3 211519312#0 211519312#1 211519312#2 -240157442#4 -240157442#3 -240157442#1 240155640#0 844956387#0 22973914#0 22973914#1 22973918#0" />
+  </vehicle>
+  <vehicle id="iasi-car-004" type="passenger" depart="6" departLane="best">
+    <route edges="23074500#0 843476425 -50365540 -22952986#0 -303596736#2 -676112596#1" />
+  </vehicle>
+  <vehicle id="iasi-car-005" type="passenger" depart="7.5" departLane="best">
+    <route edges="45758033 83633025 22969213#4 22969213#6 -22969917#4 22969636#0" />
+  </vehicle>
+  <vehicle id="iasi-car-006" type="passenger" depart="9" departLane="best">
+    <route edges="22969691 39458804#1 39458804#2 22969797#0 22969797#1 22969797#2 -22907207#0 1299298578#0 1299298578#1 -22907208#0 1300222727#0 1300222727#1 22907207#0" />
+  </vehicle>
+  <vehicle id="iasi-car-007" type="passenger" depart="10.5" departLane="best">
+    <route edges="-25958660#2 25958433 -22952986#1 50365540 -843476425 -303596736#2 22952951#0 22952951#1 22952951#3 -304202333#2 -304202333#0 8468523 1216609201#0" />
+  </vehicle>
+  <vehicle id="iasi-car-008" type="passenger" depart="12" departLane="best">
+    <route edges="-1220214610 -22953180#1 -1220226830#1 -1220226830#0 22905095#0 22905095#2 -23198386#1 22905088#3 22905088#4 -50539884 -29372504 -713924479" />
+  </vehicle>
+  <vehicle id="iasi-car-009" type="passenger" depart="13.5" departLane="best">
+    <route edges="-109721523#2 22974207#2 -22969213#2 -22969213#1 -22969213#0 22974045#0 22974045#2 207512026#1 207512026#6 147113048#0 147113048#1 -207512025#2 -843443024#5" />
+  </vehicle>
+  <vehicle id="iasi-car-010" type="passenger" depart="15" departLane="best">
+    <route edges="1222307769#0 1299298577#0 1299298577#1 44316820#0 44316820#2 305382660 -22907208#4 -22907208#0 1300222727#0 1300222727#1 1299298578#0 1299298578#1 22907208#1" />
+  </vehicle>
+  <vehicle id="iasi-car-011" type="passenger" depart="16.5" departLane="best">
+    <route edges="1068052216#1 696907729#0 696907729#1 22918252#0 22918252#4 -22977346#0 22994222#0 22994191 22993490" />
+  </vehicle>
+  <vehicle id="iasi-car-012" type="passenger" depart="18" departLane="best">
+    <route edges="-23379920#2 844956387#0 24477798 239071035 239071034#0 22977141 22977108 -22969213#0 22974045#0 22974062 22974060#6 109721523#0 109721523#1" />
+  </vehicle>
+  <vehicle id="iasi-car-013" type="passenger" depart="19.5" departLane="best">
+    <route edges="655026189 -230536829#1 -177331128#1 -163244604#3 -163244604#2 -163244604#1 -23041385 23041034#2 838330701#0 24693464 24693485 -846849314#0 24693483" />
+  </vehicle>
+  <vehicle id="iasi-car-014" type="passenger" depart="21" departLane="best">
+    <route edges="-846849314#4 -846849314#3 23040869#0 230536829#0 -655026189" />
+  </vehicle>
+  <vehicle id="iasi-car-015" type="passenger" depart="22.5" departLane="best">
+    <route edges="-240158322#1 22977124#0 239071030#0 239071035 239071034#0 22974045#0 22974062 22974060#6 109721523#0 -22974207#1 22974203#1 -22974115#0 685990161" />
+  </vehicle>
+  <vehicle id="iasi-car-016" type="passenger" depart="24" departLane="best">
+    <route edges="846849314#0 846849314#1 23040869#0 230536829#0 -655026189" />
+  </vehicle>
+  <vehicle id="iasi-car-017" type="passenger" depart="25.5" departLane="best">
+    <route edges="-52503882#4 -52503882#1 -44419896#1 -52566396#2 -303837850" />
+  </vehicle>
+  <vehicle id="iasi-car-018" type="passenger" depart="27" departLane="best">
+    <route edges="22969975#2 22969975#3 22970064#0 1137275266 -22969975#2 -22969991#2 -22969991#0 22907207#2 22969975#0 22969975#1" />
+  </vehicle>
+  <vehicle id="iasi-car-019" type="passenger" depart="28.5" departLane="best">
+    <route edges="-22969797#0 22969661#0 -1232424893 1216609201#2 39458804#4 39458804#7 158005036#0 158005036#1 158005036#2 -1068015161" />
+  </vehicle>
+  <vehicle id="iasi-car-020" type="passenger" depart="30" departLane="best">
+    <route edges="50436552#3 -845361109 -23618034#2 -23618034#0 -291359929 22900802#0 22900802#1 22901047#0 303670270#0 303670270#2 -325251132#1 -325251132#0 51781964#0" />
+  </vehicle>
+  <vehicle id="iasi-car-021" type="passenger" depart="31.5" departLane="best">
+    <route edges="28152960#4 28152971 291359929 23618034#0 23618034#1 845361109 -50436552#3 -50436552#2 22952884#0 30818548 24693504#0 44700250#0 44700250#1" />
+  </vehicle>
+  <vehicle id="iasi-car-022" type="passenger" depart="33" departLane="best">
+    <route edges="255647373 696907295 1069255533 1303881823#0 1303881823#1 22905022 339209004 157048710 339209002#0 339209002#1 339209007#0 456168334#0 22994222#0" />
+  </vehicle>
+  <vehicle id="iasi-car-023" type="passenger" depart="34.5" departLane="best">
+    <route edges="28152971 22900802#0 22900802#1 22901047#0 303670270#0 303670270#2 255647373 696907295 -1069255531 -1069255534 -23041788#1 -23041788#0 -23040420#2" />
+  </vehicle>
+  <vehicle id="iasi-car-024" type="passenger" depart="36" departLane="best">
+    <route edges="-843443024#5 -843443024#4 -207371816#8 -207371816#6 1307668376#0 1307668377#0 -207368132#1 -23141167#3 -686216550 685990159#1 685990159#2 686216550 23141167#0" />
+  </vehicle>
+  <vehicle id="iasi-car-025" type="passenger" depart="37.5" departLane="best">
+    <route edges="-843443024#4 -207371816#8 22977566#0" />
+  </vehicle>
+  <vehicle id="iasi-car-026" type="passenger" depart="39" departLane="best">
+    <route edges="22969945#1 22969991#1 -22969975#1 -22969975#0 -22907207#2 -22907207#1 -22969797#3 -22969797#1 22969691 39458804#1 39458804#2 22969661#0 -1232424893" />
+  </vehicle>
+  <vehicle id="iasi-car-027" type="passenger" depart="40.5" departLane="best">
+    <route edges="42410878#0 278007054#2 349762610 -696907296 -1303881823#0 -1069255533 -696907295 686683376 -1069255534 -23041788#1 686683374#0 686683374#1 1303881823#0" />
+  </vehicle>
+  <vehicle id="iasi-car-028" type="passenger" depart="42" departLane="best">
+    <route edges="22907198#4 1299298579 1300222727#1 1299298578#0 1299298578#1 22907208#1 22957241 1076971039 1299298575#2 1222307768#0 1222307768#1 303586809 1222307769#0" />
+  </vehicle>
+  <vehicle id="iasi-car-029" type="passenger" depart="43.5" departLane="best">
+    <route edges="843443024#5 22994368#0 239071036 239071030#0 239071035 22974047#0" />
+  </vehicle>
+  <vehicle id="iasi-car-030" type="passenger" depart="45" departLane="best">
+    <route edges="-23025685#3 303834079#0 303834079#1 23026035#0 23026035#1 22991353#0 22991353#1" />
+  </vehicle>
+  <vehicle id="iasi-car-031" type="passenger" depart="46.5" departLane="best">
+    <route edges="22974203#1 22974115#1 22974115#2 -109721523#2 -22974207#1" />
+  </vehicle>
+  <vehicle id="iasi-car-032" type="passenger" depart="48" departLane="best">
+    <route edges="158005036#1 158005036#2 -1068015161" />
+  </vehicle>
+  <vehicle id="iasi-car-033" type="passenger" depart="49.5" departLane="best">
+    <route edges="25958660#0 25958660#2 -843476425 22952986#0 22952986#1 22952986#2 22954354#0 1220214610" />
+  </vehicle>
+  <vehicle id="iasi-car-034" type="passenger" depart="51" departLane="best">
+    <route edges="-239071034#1 -239071035 -239071030#1 -239071036 240158323 22977124#0 239071030#0 239071035 22974047#0" />
+  </vehicle>
+  <vehicle id="iasi-car-035" type="passenger" depart="52.5" departLane="best">
+    <route edges="846849314#2 846849314#4 165300555 210378486#0 210378486#2 210378486#3 210378486#4 22900860#0 175084266#0 22952884#0 44700250#0 22952929#0 -207379787#1" />
+  </vehicle>
+  <vehicle id="iasi-car-036" type="passenger" depart="54" departLane="best">
+    <route edges="210378486#3 210378486#4 207379788 207379787#0 207379787#2 207379787#4 1220226830#0 1220226830#1 22953180#0 1220214610" />
+  </vehicle>
+  <vehicle id="iasi-car-037" type="passenger" depart="55.5" departLane="best">
+    <route edges="39459286#0 39459286#2 39458804#0 39458804#1 39458804#2 22969661#0 -1232424893 1216609201#2 39458804#4 39458804#7 22977471#0 22977471#1 22977471#2" />
+  </vehicle>
+  <vehicle id="iasi-car-038" type="passenger" depart="57" departLane="best">
+    <route edges="1224867367 22916778#0 1074639882 207560964#1 1390424200 22957282#0 44316820#2 305382660 -22907208#4 -22907208#0 1300222727#0 1300222727#1 22907207#0" />
+  </vehicle>
+  <vehicle id="iasi-car-039" type="passenger" depart="58.5" departLane="best">
+    <route edges="-50365540 22952986#1 22952986#2 -44700250#3 22952929#0 -207379787#1 -207379788 22900860#0 30795105#0 207379787#0 22905088#0 23198386#0 22905095#3" />
+  </vehicle>
+  <vehicle id="iasi-car-040" type="passenger" depart="60" departLane="best">
+    <route edges="109721523#0 109721523#1 45758033 83633025 22974082 57977090 22969213#2 22969213#3 -83633025 -45758033 -22974115#4 -22974115#1 -22974115#0" />
+  </vehicle>
+  <vehicle id="iasi-car-041" type="passenger" depart="61.5" departLane="best">
+    <route edges="23102383 23102353#1 23102353#3 -1554789035 -177331128#1 23040827#0 24693483 -24693464 23041408 24693492#0 22901046#0 22901046#3 255647373" />
+  </vehicle>
+  <vehicle id="iasi-car-042" type="passenger" depart="63" departLane="best">
+    <route edges="-207379795#0 22900860#0 175084266#0 50436552#0 50436552#3 -845361109 -23618034#2 -23618034#0 -291359929 22900802#0 22900802#1 22901047#0 303670270#0" />
+  </vehicle>
+  <vehicle id="iasi-car-043" type="passenger" depart="64.5" departLane="best">
+    <route edges="22977378 1300882882#3 22907198#4 1299298579 1300222727#1 1299298578#0 1299298578#1 -22907208#0 1300222727#0" />
+  </vehicle>
+  <vehicle id="iasi-car-044" type="passenger" depart="66" departLane="best">
+    <route edges="22957518#0 158005036#1 158005036#2 -1068015161" />
+  </vehicle>
+  <vehicle id="iasi-car-045" type="passenger" depart="67.5" departLane="best">
+    <route edges="8468516#1 8468516#2 843486867 28152960#0 28152960#3 22973918#5 22973918#6 22900802#1 22901047#0 303670270#0 303670270#2 -325251132#1 -325251132#0" />
+  </vehicle>
+  <vehicle id="iasi-car-046" type="passenger" depart="69" departLane="best">
+    <route edges="303837850 52566396#0 -303836045#1 24750042#0 137555198" />
+  </vehicle>
+  <vehicle id="iasi-car-047" type="passenger" depart="70.5" departLane="best">
+    <route edges="305283985#0 305283985#2 185330825" />
+  </vehicle>
+  <vehicle id="iasi-car-048" type="passenger" depart="72" departLane="best">
+    <route edges="-25958660#2 25958433 -22952986#1 50365540 -843476425 -303596736#2 22952951#0 22952951#1 22952951#3 -304202333#2 -304202333#0 8468523 1216609201#0" />
+  </vehicle>
+  <vehicle id="iasi-car-049" type="passenger" depart="73.5" departLane="best">
+    <route edges="-22952986#4 -22952986#1 50365540 -25958660#2 -25958660#1" />
+  </vehicle>
+  <vehicle id="iasi-car-050" type="passenger" depart="75" departLane="best">
+    <route edges="23040869#0 230536829#0 230536829#2" />
+  </vehicle>
+  <vehicle id="iasi-car-051" type="passenger" depart="76.5" departLane="best">
+    <route edges="254324225 -22977346#1 -22977346#0 22994222#0 22994191 22993490" />
+  </vehicle>
+  <vehicle id="iasi-car-052" type="passenger" depart="78" departLane="best">
+    <route edges="-44419896#1 -303836045#1 24750042#0 137555198" />
+  </vehicle>
+  <vehicle id="iasi-car-053" type="passenger" depart="79.5" departLane="best">
+    <route edges="-22969991#2 -22969991#0 -22907207#1 -22969797#3 -22969797#1 -22969797#0 39458804#3 22968993#0 22969662 22969797#2 -22907207#0 1299298578#0 1299298578#1" />
+  </vehicle>
+  <vehicle id="iasi-car-054" type="passenger" depart="81" departLane="best">
+    <route edges="686683376 -1069255534 -23041788#1 686683374#0 686683374#1 1303881823#0 1303881823#1 22905022 339209004 157048710 339209002#0 339209002#1 339209007#0" />
+  </vehicle>
+  <vehicle id="iasi-car-055" type="passenger" depart="82.5" departLane="best">
+    <route edges="-39459286#2 -39459286#1 -22969213#6 -22969213#5 -22969213#3 -22969213#2 -22969213#1 -22969213#0 22977141 109721523#0 22974207#2 22969213#3 22969213#4" />
+  </vehicle>
+  <vehicle id="iasi-car-056" type="passenger" depart="84" departLane="best">
+    <route edges="-207368132#1 843443024#0 1307668377#0 207368132#2 22977300#0 24477798 239071035 239071034#0 22969213#0 26216021 22973914#1 22973991 -42176141" />
+  </vehicle>
+  <vehicle id="iasi-car-057" type="passenger" depart="85.5" departLane="best">
+    <route edges="-22969213#6 -22969213#5 -22969213#3 -22969213#2 -22969213#1 -22969213#0 -239071034#1 -239071035 -239071030#1 -239071036 240158323 22977124#0 239071030#0" />
+  </vehicle>
+  <vehicle id="iasi-car-058" type="passenger" depart="87" departLane="best">
+    <route edges="22905088#4 -50539884 -29372504 -713924479" />
+  </vehicle>
+  <vehicle id="iasi-car-059" type="passenger" depart="88.5" departLane="best">
+    <route edges="1100776188 1303881778#0 240157442#4 -211519312#3 211519312#0 211519312#1 211519312#2 -240157442#4 -240157442#3 1303881777#0 -207368132#4 22977300#0 22973914#0" />
+  </vehicle>
+  <vehicle id="iasi-car-060" type="passenger" depart="90" departLane="best">
+    <route edges="22973914#1 22973991 -42176141 -22974074#5 22973918#1 22973918#5 8468516#1 8468516#2 -207379798#1 -207379800#1 22901047#0 303670270#0 303670270#2" />
+  </vehicle>
+  <vehicle id="iasi-car-061" type="passenger" depart="91.5" departLane="best">
+    <route edges="-23379535#3 39458804#7 22977471#0 -22969188" />
+  </vehicle>
+  <vehicle id="iasi-car-062" type="passenger" depart="93" departLane="best">
+    <route edges="-22977346#0 -456168334#2 339209007#1 696907729#1 22918252#0 22918252#4 22977346#1 22977346#2 685990159#2 686216550 23141167#0 -207371816#8 -207371816#6" />
+  </vehicle>
+  <vehicle id="iasi-car-063" type="passenger" depart="94.5" departLane="best">
+    <route edges="-239071032 23313945#0 23313945#4 294036363#0" />
+  </vehicle>
+  <vehicle id="iasi-car-064" type="passenger" depart="96" departLane="best">
+    <route edges="-207368132#1 -207371816#8 -207371816#6 -207371816#5 -207371816#2 -207371816#1" />
+  </vehicle>
+  <vehicle id="iasi-car-065" type="passenger" depart="97.5" departLane="best">
+    <route edges="722443264#2 723262299#0 52503865#1" />
+  </vehicle>
+  <vehicle id="iasi-car-066" type="passenger" depart="99" departLane="best">
+    <route edges="23026035#0 23026037#0 303834079#1" />
+  </vehicle>
+  <vehicle id="iasi-car-067" type="passenger" depart="100.5" departLane="best">
+    <route edges="-207379799 -1220226830#1 -1220226830#0 -22952986#8 -22952986#6 22954354#0 -22953180#1 207379799" />
+  </vehicle>
+  <vehicle id="iasi-car-068" type="passenger" depart="102" departLane="best">
+    <route edges="240157442#4 -211519312#3 -211519312#1 -211519312#0 211519312#2 240157442#5 25938930#0 255654130#0 42410878#0 278007054#2 349762610 -696907296 -1303881823#0" />
+  </vehicle>
+  <vehicle id="iasi-car-069" type="passenger" depart="103.5" departLane="best">
+    <route edges="696907729#1 22918252#0 22918252#4 -22977346#0 -456168334#2 339209007#1" />
+  </vehicle>
+  <vehicle id="iasi-car-070" type="passenger" depart="105" departLane="best">
+    <route edges="22977346#2 685990159#2 686216550 23141167#0 843443024#0 843443024#5 207512025#0 147113049#0 147113049#2 255784634#0 255784634#1 255784634#4" />
+  </vehicle>
+  <vehicle id="iasi-car-071" type="passenger" depart="106.5" departLane="best">
+    <route edges="22916778#0 1074639882 207560964#1 1390424200 22957354 305382660 -22907208#4 -22907208#0 1300222727#0 1300222727#1 22907207#0 -22969797#3 -22969797#1" />
+  </vehicle>
+  <vehicle id="iasi-car-072" type="passenger" depart="108" departLane="best">
+    <route edges="-22905095#6 -22905095#2 -22905095#1 -207379787#4 -207379787#3 22905088#0 23198386#0 22905095#3 207979573 228641554 165300555 210378486#0 210378486#2" />
+  </vehicle>
+  <vehicle id="iasi-car-073" type="passenger" depart="109.5" departLane="best">
+    <route edges="163244604#0 -23041385 23041034#2 838330701#0 24693464 24693485 846849314#1 846849314#2 846849314#4 165300555 210378486#0 23198368 22905088#4" />
+  </vehicle>
+  <vehicle id="iasi-car-074" type="passenger" depart="111" departLane="best">
+    <route edges="211519312#0 211519312#1 211519312#2 -240157442#4 -240157442#3 -240157442#1 -207368132#5 -207368132#4 22977300#0 22973914#0 22973914#1 22973918#0 22974074#0" />
+  </vehicle>
+  <vehicle id="iasi-car-075" type="passenger" depart="112.5" departLane="best">
+    <route edges="23379863#0 42176140 42176141 22977327 57977090 22969213#2 22969213#3 -83633025 -23068651 1206316142#0 -22969975#3 22974166 -22969213#5" />
+  </vehicle>
+  <vehicle id="iasi-car-076" type="passenger" depart="114" departLane="best">
+    <route edges="-22907207#1 -22907207#0 1299298578#0 1299298578#1 22907208#1 22957241 1076971039 1299298575#2 1222307768#0 52503879#0 52503879#1 843930164 1390424227" />
+  </vehicle>
+  <vehicle id="iasi-car-077" type="passenger" depart="115.5" departLane="best">
+    <route edges="22969188 -22977471#0 -22907193#1 -22969575#1" />
+  </vehicle>
+  <vehicle id="iasi-car-078" type="passenger" depart="117" departLane="best">
+    <route edges="24693485 846849314#1 846849314#2 846849314#4 165300555 210378486#0 23198368 22905088#4 -50539884 -22905095#6 -23198386#1 22905088#3 -23198368" />
+  </vehicle>
+  <vehicle id="iasi-car-079" type="passenger" depart="118.5" departLane="best">
+    <route edges="23026037#0 303834079#1 23026035#0 23026035#1 -23025685#4 1539470797#0" />
+  </vehicle>
+  <vehicle id="iasi-car-080" type="passenger" depart="120" departLane="best">
+    <route edges="22994212#0 24435103#0 24435103#2" />
+  </vehicle>
+  <vehicle id="iasi-car-081" type="passenger" depart="121.5" departLane="best">
+    <route edges="-22969213#1 26216021 22973914#1 22973918#0 22974074#0 -42176140 23379863#1 22969917#0 -22969213#6 -22969213#5 -22969213#3 -22974207#2 -22974207#1" />
+  </vehicle>
+  <vehicle id="iasi-car-082" type="passenger" depart="123" departLane="best">
+    <route edges="22905088#0 22905088#3 22905088#4 -50539884 -22905095#6 -23198386#1" />
+  </vehicle>
+  <vehicle id="iasi-car-083" type="passenger" depart="124.5" departLane="best">
+    <route edges="22907207#1 22907207#2 22969975#0 22969945#1 22969991#1 -22969975#1 -22969975#0 -22907207#2 22969991#0" />
+  </vehicle>
+  <vehicle id="iasi-car-084" type="passenger" depart="126" departLane="best">
+    <route edges="-50436552#3 -50436552#2 -175084266#1 -22900860#2 -210378486#5 -210378486#3 -210378486#2 -210378486#1 -165300555 -846849314#4 -846849314#3 -846849314#1 -846849314#0" />
+  </vehicle>
+  <vehicle id="iasi-car-085" type="passenger" depart="127.5" departLane="best">
+    <route edges="1206316142#0 -22969975#3 -1137275266 22970064#1 -23380307#1 -23380307#0 1222307768#0 1222307768#1 303586809 52503880#0 1074938618 207512026#0 207512026#1" />
+  </vehicle>
+  <vehicle id="iasi-car-086" type="passenger" depart="129" departLane="best">
+    <route edges="-23227698#2 -23227698#1 -23227698#0 -163244604#2 -163244604#1 -23041385 23041034#2 838330701#0 23041408 674537497#0 23261205#0 846849314#2 846849314#4" />
+  </vehicle>
+  <vehicle id="iasi-car-087" type="passenger" depart="130.5" departLane="best">
+    <route edges="22907207#2 22969975#0 22969945#1 22969991#1 22969975#2 22974166 22969213#6 39459286#0 22969945#0 22969975#1 -22969991#2 -22969991#0 -22907207#1" />
+  </vehicle>
+  <vehicle id="iasi-car-088" type="passenger" depart="132" departLane="best">
+    <route edges="-22952986#8 -22952986#6 -44700250#3 -44700250#0 -22952884#9 50436552#0 50436552#3 -845361109 -23618034#2 -23618034#0 -291359929 -28152971 8468516#0" />
+  </vehicle>
+  <vehicle id="iasi-car-089" type="passenger" depart="133.5" departLane="best">
+    <route edges="23313945#4 23313946#0 207371816#2 22994212#0 24435103#0 24435103#2" />
+  </vehicle>
+  <vehicle id="iasi-car-090" type="passenger" depart="135" departLane="best">
+    <route edges="207512026#7 843443022#0 255784634#0 255784634#1 255784634#4" />
+  </vehicle>
+  <vehicle id="iasi-car-091" type="passenger" depart="136.5" departLane="best">
+    <route edges="339215067 1068052216#0 255650548#0 696907727#0 696907730 339209002#1 339209007#0 456168334#0 456168334#3 22977346#1 22977346#2 685990159#2 686216550" />
+  </vehicle>
+  <vehicle id="iasi-car-092" type="passenger" depart="138" departLane="best">
+    <route edges="-1137275266 22970064#1 22970064#3 1299298578#1 -22907208#0 1300222727#0 1300222727#1 1299298578#0" />
+  </vehicle>
+  <vehicle id="iasi-car-093" type="passenger" depart="139.5" departLane="best">
+    <route edges="-207711171#1 -207711171#0 52566396#0 -303836045#1 -303836043#1 -303850818 -24750042#3 -24750042#0 303836044 44419896#0 -23088691#1" />
+  </vehicle>
+  <vehicle id="iasi-car-094" type="passenger" depart="141" departLane="best">
+    <route edges="22969797#1 22969797#2 -22907207#0 1299298578#0 1299298578#1 22907208#1 22957241 1076971039 1299298575#2 1222307768#0 1222307768#1 303586809 1222307769#0" />
+  </vehicle>
+  <vehicle id="iasi-car-095" type="passenger" depart="142.5" departLane="best">
+    <route edges="42410878#0 278007054#2 349762610 -696907296 -1303881823#0 -1069255533 -1069255531 -1069255534 -23041788#1 -23041788#0 -53192615#6" />
+  </vehicle>
+</routes>

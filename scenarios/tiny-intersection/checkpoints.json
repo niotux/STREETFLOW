@@ -1,0 +1,21 @@
+{
+  "checkpoints": [
+    {
+      "id": "west-approach",
+      "lane_id": "west_in_0",
+      "position": 150
+    },
+    {
+      "id": "east-exit",
+      "lane_id": "east_out_0",
+      "position": 50
+    }
+  ],
+  "pairs": [
+    {
+      "id": "west-to-east",
+      "from": "west-approach",
+      "to": "east-exit"
+    }
+  ]
+}
