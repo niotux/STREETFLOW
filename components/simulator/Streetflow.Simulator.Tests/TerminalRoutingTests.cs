@@ -59,7 +59,6 @@ public sealed class TerminalRoutingTests
       File.Copy(file, Path.Combine(fixture.Path, Path.GetFileName(file)), overwrite: true);
     }
 
-    fixture.ChangeDemand(d => d["generation"]!["mean_departures_per_hour"] = 600);
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
     HttpResponseMessage import = await client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(fixture.Path), JsonDefaults.Options);
@@ -67,7 +66,7 @@ public sealed class TerminalRoutingTests
     HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/projects/podu-ros/runs", new CreateCityRunRequest(42), JsonDefaults.Options);
     CityRunStatus status = (await response.Content.ReadFromJsonAsync<CityRunStatus>(JsonDefaults.Options))!;
     Assert.Equal("paused", status.State);
-    for (int batch = 0; batch < 4; batch++)
+    for (int batch = 0; batch < 8; batch++)
     {
       response = await client.PostAsJsonAsync($"/api/v1/city-runs/{status.Id}/step", new CityRunCommand(1000), JsonDefaults.Options);
       status = (await response.Content.ReadFromJsonAsync<CityRunStatus>(JsonDefaults.Options))!;
@@ -75,7 +74,20 @@ public sealed class TerminalRoutingTests
       Assert.InRange(status.PendingEntries, 0, 512);
     }
 
-    Assert.Equal(2000, status.SimulationTime);
+    Assert.Equal(4000, status.SimulationTime);
+    Assert.True(status.GridlockRecoveries > 0, "Full demand must exercise gridlock recovery");
+    Snapshot traffic = (await client.GetFromJsonAsync<Snapshot>($"/api/v1/city-runs/{status.Id}/snapshot", JsonDefaults.Options))!;
+    bool moving = false;
+    foreach (VehicleState vehicle in traffic.Vehicles)
+    {
+      if (vehicle.SpeedMps > 0.1)
+      {
+        moving = true;
+        break;
+      }
+    }
+
+    Assert.True(moving, "Traffic must keep moving after the previous gridlock");
     CityProject inputs = CityProjectLoader.Load(fixture.Path);
     CityDemandGenerator replay = new(inputs, 42, inputs.Manifest.Defaults.StartTimeSeconds);
     int generatedCount = replay.GenerateUntil(status.SimulationTime, 10000).Length;

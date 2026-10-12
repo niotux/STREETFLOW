@@ -70,6 +70,7 @@ public sealed class SumoEngine : IAsyncDisposable
       AddArgument(info, "--additional-files", string.Join(",", paths));
     }
 
+    AddArgument(info, "--time-to-teleport", configuration.MaximumBacklogSeconds.ToString(CultureInfo.InvariantCulture));
     AddArgument(info, "--max-num-vehicles", configuration.MaximumLiveVehicles.ToString(CultureInfo.InvariantCulture));
     signalIds = project.SignalIds;
     countingLines = [];
@@ -183,9 +184,9 @@ public sealed class SumoEngine : IAsyncDisposable
     AddArgument(info, "--remote-port", port.ToString(CultureInfo.InvariantCulture));
     AddArgument(info, "--seed", config.Seed.ToString(CultureInfo.InvariantCulture));
     AddArgument(info, "--step-length", config.StepSeconds.ToString(CultureInfo.InvariantCulture));
-    AddArgument(info, "--time-to-teleport", "-1");
     if (!city)
     {
+      AddArgument(info, "--time-to-teleport", "-1");
       AddArgument(info, "--tripinfo-output", Path.Combine(directory, "tripinfo.xml"));
       AddArgument(info, "--tripinfo-output.write-unfinished", "true");
     }

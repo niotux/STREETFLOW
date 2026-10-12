@@ -22,6 +22,7 @@ public sealed class CityRunCoordinator(ProjectCatalog catalog, SimulatorOptions 
   private SumoEngine? engine;
   private Snapshot? snapshot;
   private long sequence;
+  private int liveVehicles;
   private double lastSavedTime;
   public int? EngineProcessId => engine?.ProcessId;
 
@@ -89,6 +90,7 @@ public sealed class CityRunCoordinator(ProjectCatalog catalog, SimulatorOptions 
       storage.WriteRoutes(id, project, generator.Candidates);
       pendingEntries.Clear();
       sequence = 0;
+      liveVehicles = 0;
       lastSavedTime = 0;
       current = new CityRunStatus(id, configuration, "starting", 0, configuration.StartTimeSeconds, 0, pacing, DateTimeOffset.UtcNow, null, null, null, 0, 0, 0, generator.Ended);
       snapshot = new Snapshot(id, 0, 0, 0, [], []);
@@ -286,9 +288,19 @@ public sealed class CityRunCoordinator(ProjectCatalog catalog, SimulatorOptions 
     try
     {
       CityRunConfiguration configuration = current!.Configuration;
-      int live = current.ActiveVehicles + pendingEntries.Count;
-      int capacity = Math.Min(configuration.GenerationBatchSize, configuration.MaximumLiveVehicles - live);
+      int capacity = Math.Min(configuration.GenerationBatchSize, configuration.MaximumLiveVehicles - liveVehicles);
       capacity = Math.Min(capacity, configuration.MaximumPendingEntries - pendingEntries.Count);
+      PendingVehicleEntry? blockedEntry = OldestPendingEntry();
+      bool draining = false;
+      if (blockedEntry is not null)
+      {
+        draining = current.SimulationTime - blockedEntry.SubmittedAt > configuration.MaximumBacklogSeconds;
+      }
+      if (draining)
+      {
+        capacity = 0;
+      }
+
       double nextTime = current.SimulationTime + configuration.StepSeconds;
       GeneratedArrival[] arrivals = generator!.GenerateUntil(nextTime, Math.Max(0, capacity));
       await engine!.AddVehiclesAsync(arrivals, current.SimulationTime, CancellationToken.None);
@@ -298,36 +310,27 @@ public sealed class CityRunCoordinator(ProjectCatalog catalog, SimulatorOptions 
       }
 
       EngineSnapshot next = await engine.StepAsync(CancellationToken.None);
+      liveVehicles = next.ExpectedVehicles;
+      current = current with { GridlockRecoveries = current.GridlockRecoveries + next.Teleports.Length };
       foreach (string departed in next.Departed)
       {
         pendingEntries.Remove(departed);
       }
 
       double departureBacklog = Math.Max(0, next.Time - generator.NextDepartureSeconds);
-      PendingVehicleEntry? oldestEntry = null;
-      foreach (PendingVehicleEntry entry in pendingEntries.Values)
-      {
-        if (oldestEntry is null)
-        {
-          oldestEntry = entry;
-        }
-        else if (entry.SubmittedAt < oldestEntry.SubmittedAt)
-        {
-          oldestEntry = entry;
-        }
-      }
-
+      PendingVehicleEntry? oldestEntry = OldestPendingEntry();
       double entryDelay = oldestEntry is null ? 0 : next.Time - oldestEntry.SubmittedAt;
       double backlog = Math.Max(departureBacklog, entryDelay);
       double absolute = configuration.StartTimeSeconds + next.Time;
       current = current with { SimulationTime = next.Time, CityTimeSeconds = absolute % CityDemandGenerator.SecondsPerDay, Day = (int)(absolute / CityDemandGenerator.SecondsPerDay), ActiveVehicles = next.Vehicles.Length, PendingEntries = pendingEntries.Count, BacklogSeconds = backlog, GenerationEnded = generator.Ended };
       snapshot = new Snapshot(current.Id, ++sequence, next.Time, next.Vehicles.Length, next.Vehicles, next.Signals);
+      current = current with { Warning = null };
       if (backlog > configuration.MaximumBacklogSeconds)
       {
         string reason = entryDelay >= departureBacklog
           ? $"entry '{oldestEntry!.TerminalId ?? oldestEntry.EdgeId}' has been blocked for {entryDelay:F1}s"
           : $"requested departures are {departureBacklog:F1}s behind the city clock";
-        throw new InvalidOperationException($"Persistent traffic overload: {reason}. Pending entries remain bounded; inspect the entry and downstream traffic.");
+        current = current with { Warning = $"Traffic congestion: {reason}. Arrivals wait while blocked entries clear; the simulation continues." };
       }
 
       if (next.Time - lastSavedTime >= 5)
@@ -340,6 +343,24 @@ public sealed class CityRunCoordinator(ProjectCatalog catalog, SimulatorOptions 
     {
       await FailAsync(exception);
     }
+  }
+
+  private PendingVehicleEntry? OldestPendingEntry()
+  {
+    PendingVehicleEntry? oldest = null;
+    foreach (PendingVehicleEntry entry in pendingEntries.Values)
+    {
+      if (oldest is null)
+      {
+        oldest = entry;
+      }
+      else if (entry.SubmittedAt < oldest.SubmittedAt)
+      {
+        oldest = entry;
+      }
+    }
+
+    return oldest;
   }
 
   private async Task FailAsync(Exception exception)

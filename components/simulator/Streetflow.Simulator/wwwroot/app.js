@@ -149,6 +149,8 @@ async function refresh(token) {
   snapshot = nextSnapshot;
   controls();
   $('snapshot-note').textContent = status.state === 'failed' ? 'Simulation failed. Check the message above.' : !nextSnapshot.available ? 'Traffic stopped. Restart to replay this seed.' : `${nextSnapshot.total_active_count} cars on the map · orange cars are stopped`;
+  if (status.gridlock_recoveries > 0) $('snapshot-note').textContent += ` · Gridlock recovery moved ${status.gridlock_recoveries} vehicles past blocked sections`;
+  if (status.warning && !status.failure) $('snapshot-note').textContent += ` · ${status.warning}`;
   if (status.failure) showError(new Error(status.failure));
   draw();
 }

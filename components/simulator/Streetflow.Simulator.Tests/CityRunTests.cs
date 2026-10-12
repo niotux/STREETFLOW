@@ -114,7 +114,7 @@ public sealed class CityRunTests
   }
 
   [Fact]
-  public async Task PersistentOverloadFailsVisiblyWithBoundedState()
+  public async Task PersistentOverloadKeepsAdvancingWithBoundedState()
   {
     using ProjectFixture fixture = new();
     fixture.ChangeDemand(d => d["generation"]!["mean_departures_per_hour"] = 360000);
@@ -123,8 +123,13 @@ public sealed class CityRunTests
     await client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(fixture.Path), JsonDefaults.Options);
     CityRunStatus run = await Start(client, "tiny-graph");
     run = await Command(client, run.Id, "step", 100);
-    Assert.Equal("failed", run.State);
-    Assert.Contains("overload", run.Failure);
+    Assert.Equal("paused", run.State);
+    Assert.Null(run.Failure);
+    Assert.Contains("Traffic congestion", run.Warning);
+    Assert.Equal(50, run.SimulationTime);
+    run = await Command(client, run.Id, "step", 100);
+    Assert.Equal("paused", run.State);
+    Assert.Equal(100, run.SimulationTime);
     Assert.InRange(run.ActiveVehicles + run.PendingEntries, 0, 2);
     Assert.InRange(run.PendingEntries, 0, 1);
   }
