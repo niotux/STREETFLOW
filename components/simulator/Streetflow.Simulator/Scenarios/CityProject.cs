@@ -14,6 +14,9 @@ public sealed class CityProject
   public required ProjectConnection[] Connections { get; init; }
   public required string[] SignalIds { get; init; }
   public required string Revision { get; init; }
+  public ProjectTerminal[] Terminals { get; init; } = [];
+
+  public TerminalMapPoint[] TerminalPoints => TerminalMapGeometry.Read(this);
 
   public LaneMap[] Lanes
   {

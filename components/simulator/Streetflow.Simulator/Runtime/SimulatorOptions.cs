@@ -12,4 +12,8 @@ public sealed class SimulatorOptions
   public int ObservationRetention { get; set; }
   public long MaximumProjectBytes { get; set; }
   public int MaximumProjectFiles { get; set; }
+  public int MaximumLiveVehicles { get; set; }
+  public int MaximumPendingEntries { get; set; }
+  public int GenerationBatchSize { get; set; }
+  public double MaximumBacklogSeconds { get; set; }
 }

@@ -10,7 +10,7 @@ using Streetflow.Traffic.Contracts;
 
 namespace Streetflow.Simulator.Runtime;
 
-public sealed partial class RunCoordinator(ScenarioCatalog catalog, SimulatorOptions options, RunStore runStore, ILogger<RunCoordinator> logger) : BackgroundService
+public sealed partial class RunCoordinator(ScenarioCatalog catalog, SimulatorOptions options, RunStore runStore, ILogger<RunCoordinator> logger, EngineOwnership ownership) : BackgroundService
 {
   private const int MaximumRequestIdLength = 128;
   private const int MaximumStepCount = 1000;
@@ -110,6 +110,7 @@ public sealed partial class RunCoordinator(ScenarioCatalog catalog, SimulatorOpt
     string id = Guid.NewGuid().ToString("N");
     string directory = storage.DirectoryFor(id);
     selected = await PrepareRunScenarioAsync(selected, config, directory, resolvedDemand);
+    ownership.Acquire(id);
     scenario = selected;
     InitializeRun(selected, config, id, directory, pacing);
     try
@@ -261,9 +262,18 @@ public sealed partial class RunCoordinator(ScenarioCatalog catalog, SimulatorOpt
   {
     if (engine is not null)
     {
-      await engine.DisposeAsync();
-      engine = null;
+      try
+      {
+        await engine.DisposeAsync();
+      }
+      finally
+      {
+        engine = null;
+        ownership.Release(current!.Id);
+      }
     }
+
+    ownership.Release(current!.Id);
 
     current = current! with
     {

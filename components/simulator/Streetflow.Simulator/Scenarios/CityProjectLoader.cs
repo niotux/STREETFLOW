@@ -105,6 +105,18 @@ public static class CityProjectLoader
       Require(detectors.ValueKind == JsonValueKind.Array && detectors.GetArrayLength() == 0, $"{manifest.DetectorsFile}: detectors must be an empty reserved array");
     }
 
+    ProjectTerminal[] terminals = [];
+    if (manifest.TerminalsFile is not null)
+    {
+      terminals = ReadJson<ProjectTerminal[]>(directory, manifest.TerminalsFile);
+      ValidateTerminals(terminals, edges, demand, manifest.TerminalsFile);
+    }
+
+    if (demand.Generation.EndpointSelection == "terminals")
+    {
+      Require(terminals.Length > 0, $"{manifest.DemandFile}: endpoint_selection 'terminals' requires nonempty terminals_file");
+    }
+
     string revision = CalculateRevision(directory, manifest);
     List<string> signalIds = new(signals);
     signalIds.Sort(StringComparer.Ordinal);
@@ -117,7 +129,8 @@ public static class CityProjectLoader
       Junctions = junctions,
       Connections = connections,
       SignalIds = signalIds.ToArray(),
-      Revision = revision
+      Revision = revision,
+      Terminals = terminals
     };
   }
 
@@ -160,6 +173,11 @@ public static class CityProjectLoader
       references.Add(manifest.DetectorsFile);
     }
 
+    if (manifest.TerminalsFile is not null)
+    {
+      references.Add(manifest.TerminalsFile);
+    }
+
     HashSet<string> normalized = new(StringComparer.OrdinalIgnoreCase);
     foreach (string reference in references)
     {
@@ -183,6 +201,59 @@ public static class CityProjectLoader
     }
 
     return Convert.ToHexStringLower(hash.GetHashAndReset());
+  }
+
+  private static void ValidateTerminals(ProjectTerminal[] terminals, ProjectEdge[] edges, ProjectDemand demand, string file)
+  {
+    Dictionary<string, ProjectLane> ordinaryLanes = new(StringComparer.Ordinal);
+    foreach (ProjectEdge edge in edges)
+    {
+      if (!edge.Ordinary)
+      {
+        continue;
+      }
+
+      foreach (ProjectLane lane in edge.Lanes)
+      {
+        ordinaryLanes.Add(lane.Map.Id, lane);
+      }
+    }
+
+    HashSet<string> ids = new(StringComparer.Ordinal);
+    HashSet<string> laneRoles = new(StringComparer.Ordinal);
+    bool hasEntry = false;
+    bool hasExit = false;
+    foreach (ProjectTerminal terminal in terminals)
+    {
+      Require(terminal is not null, $"{file}: terminal cannot be null");
+      Require(ValidId(terminal!.Id) && ids.Add(terminal.Id), $"{file}: terminal id must be valid and unique");
+      bool isEntry = terminal.Role == "entry";
+      bool isExit = terminal.Role == "exit";
+      Require(isEntry || isExit, $"{file}: terminal '{terminal.Id}' role must be entry or exit");
+      Require(!string.IsNullOrWhiteSpace(terminal.LaneId), $"{file}: terminal '{terminal.Id}' lane_id is required");
+      Require(ordinaryLanes.TryGetValue(terminal.LaneId, out ProjectLane? lane), $"{file}: terminal '{terminal.Id}' must reference an ordinary lane");
+      Require(laneRoles.Add(terminal.LaneId + "\0" + terminal.Role), $"{file}: duplicate terminal lane and role");
+      Require(IsTerminalLaneUsable(lane!, demand), $"{file}: terminal '{terminal.Id}' lane must permit a configured vehicle class with positive weight");
+      bool validPosition = double.IsFinite(terminal.PositionM) && terminal.PositionM >= 0 && terminal.PositionM <= lane!.Map.Length;
+      Require(validPosition, $"{file}: terminal '{terminal.Id}' position_m must be finite and within its lane");
+      hasEntry |= isEntry;
+      hasExit |= isExit;
+    }
+
+    Require(terminals.Length == 0 || (hasEntry && hasExit), $"{file}: terminals must include both entry and exit roles");
+  }
+
+  private static bool IsTerminalLaneUsable(ProjectLane lane, ProjectDemand demand)
+  {
+    foreach (ProjectVehicleType type in demand.VehicleTypes)
+    {
+      if (type.Weight > 0 && lane.Permits(type.VehicleClass))
+      {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private static bool Permits(ProjectEdge edge, string vehicleClass)
@@ -234,7 +305,8 @@ public static class CityProjectLoader
     Require(demand.FormatVersion == 1, $"{file}: unsupported format_version; expected 1");
     Require(demand.Profiles is not null && demand.Generation is not null && demand.Routing is not null && demand.VehicleTypes is not null, $"{file}: profiles, generation, routing and vehicle_types are required and cannot be null");
     TrafficGenerationSettings generation = demand.Generation!;
-    Require(generation.ArrivalModel == "poisson" && generation.EndpointSelection == "boundary_and_internal", $"{file}: use arrival_model 'poisson' and endpoint_selection 'boundary_and_internal'");
+    Require(generation.ArrivalModel == "poisson", $"{file}: use arrival_model 'poisson'");
+    Require(generation.EndpointSelection == "boundary_and_internal" || generation.EndpointSelection == "terminals", $"{file}: endpoint_selection must be 'boundary_and_internal' or 'terminals'");
     Require(double.IsFinite(generation.MeanDeparturesPerHour) && generation.MeanDeparturesPerHour >= 0, $"{file}: mean_departures_per_hour must be finite and nonnegative");
     bool distancesAreFinite = double.IsFinite(generation.MinTripDistanceM) && double.IsFinite(generation.MaxTripDistanceM);
     bool distancesAreOrdered = generation.MinTripDistanceM > 0 && generation.MaxTripDistanceM >= generation.MinTripDistanceM;

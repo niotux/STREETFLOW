@@ -237,6 +237,7 @@ public sealed class ProjectCatalog
       Junctions = project.Junctions,
       Connections = project.Connections,
       SignalIds = project.SignalIds,
+      Terminals = project.Terminals,
       Revision = project.Revision
     };
     projects[stored.Manifest.Id] = stored;

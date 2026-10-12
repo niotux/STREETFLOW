@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Streetflow · Simulator</title><link rel="stylesheet" href="legacy-styles.css"><script type="module" src="legacy-app.js"></script></head>
+<body>
+<header><strong>STREETFLOW <span> / simulator</span></strong><span id="connection" role="status">Connecting…</span></header>
+<div id="error" role="alert" hidden></div>
+<main>
+<aside>
+ <h1>Traffic playground</h1><p>Real roads. Simulated traffic.</p>
+ <form id="create"><label>Scenario<select id="scenario" required></select></label><p id="scenario-note" class="muted"></p>
+ <div class="fields"><label>Seed<input id="seed" type="number" value="42" min="0" max="2147483647" required></label><label>Duration (s)<input id="duration" type="number" min="1" step="any" required></label></div>
+ <label>Demand multiplier<input id="demand" type="number" min="0" max="20" step="0.1" value="1" required></label>
+ <button id="load" class="primary">Load scenario</button></form>
+ <hr><label>Run history<select id="history"><option value="">Choose a run</option></select></label>
+ <div id="state" class="badge">No run loaded</div>
+ <div class="buttons"><button id="resume" disabled>Run</button><button id="pause" disabled>Pause</button><button id="step" disabled>Step +5s</button><button id="stop" disabled>Stop</button><button id="reset" disabled>Reset</button></div>
+ <label>Playback speed<select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option><option value="unpaced">As fast as possible</option></select></label>
+ <dl id="metrics"></dl><p class="muted">Closing this page does not stop the simulation.</p>
+</aside>
+<section class="workspace">
+ <div class="map-toolbar"><span id="map-label">Choose a scenario to begin</span><div><label><input id="cameras" type="checkbox" checked> Detectors</label><button id="fit">Fit map</button></div></div>
+ <div id="map-wrap"><canvas id="map" aria-label="Traffic map. Drag to pan, scroll to zoom, click a car to inspect it."></canvas><div id="empty">Load a scenario to see its road network.</div><div class="map-hint">Drag to pan · Scroll to zoom · Click a car</div></div>
+ <div class="map-footer"><span id="snapshot-note">No traffic snapshot</span><span id="attribution"></span></div>
+ <section class="inspection"><div class="tabs" role="tablist"><button data-tab="vehicle" class="selected">Vehicle</button><button data-tab="trips">Trips</button><button data-tab="detectors">Detectors</button><button data-tab="passages">Checkpoints</button></div>
+ <div id="vehicle" class="panel"><p class="muted">Click a car on the map or a row in Trips to inspect its journey.</p></div>
+ <div id="trips" class="panel" hidden><div class="paging"><button id="previous">Previous</button><span id="trip-page"></span><button id="next">Next</button></div><div id="trip-table"></div></div>
+ <div id="detectors" class="panel" hidden></div><div id="passages" class="panel" hidden></div>
+ </section>
+</section>
+</main>
+</body></html>

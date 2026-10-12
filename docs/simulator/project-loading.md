@@ -1,6 +1,6 @@
 # City project loading
 
-Task 3 adds backend import, storage, validation, and map inspection for the [accepted format](experiment-project-format.md). Importing does not create a run or start SUMO. Project selection in the browser and continuous traffic generation are later tasks.
+Task 3 adds backend import, storage, validation, and map inspection for the [accepted format](experiment-project-format.md). Importing does not create a run or start SUMO. Project selection and continuous traffic generation are now available in [the city UI](../../components/simulator/README.md). Import itself continues to create no run.
 
 ## Manual review
 

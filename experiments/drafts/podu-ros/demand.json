@@ -7956,8 +7956,8 @@
   "generation": {
     "arrival_model": "poisson",
     "mean_departures_per_hour": 1943.855422,
-    "endpoint_selection": "boundary_and_internal",
-    "min_trip_distance_m": 100,
+    "endpoint_selection": "terminals",
+    "min_trip_distance_m": 40,
     "max_trip_distance_m": 2000,
     "candidate_limit": 1000
   },

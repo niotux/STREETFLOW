@@ -1,6 +1,6 @@
 # Tiny city graph project
 
-Synthetic project accepted in task 2 on 2026-10-11. Backend import/map loading is available; continuous generation remains pending.
+Synthetic project accepted in task 2 on 2026-10-11. Backend import, continuous generation, and the city UI are available; manual runtime review is deferred.
 
 This folder contains a small SUMO graph, explicit flat daily profiles for all eight ordinary directed edges, an estimated mean of 600 departures/hour, generation settings, and an empty detector placeholder. The synthetic relative weights are west 1, east 0.8, south 0.6, and north 0.4, for both incoming and outgoing edges. The profile references each edge's existing map identifier. It starts at 07:00 and keeps generating traffic until stopped.
 

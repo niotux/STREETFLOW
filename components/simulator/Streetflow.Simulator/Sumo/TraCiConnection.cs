@@ -2,6 +2,8 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.Net.Sockets;
 using Streetflow.Simulator.Runtime;
+using Streetflow.Simulator.Generation;
+using System.Globalization;
 
 namespace Streetflow.Simulator.Sumo;
 
@@ -209,6 +211,59 @@ public sealed class TraCiConnection : IDisposable
   {
     WireReader response = await SendAsync([new TraCiCommand((byte)TraCiCommandId.Close, [])], token);
     ReadStatus(response, (byte)TraCiCommandId.Close);
+  }
+
+  public async Task AddVehiclesAsync(GeneratedArrival[] arrivals, double simulationTime, CancellationToken token)
+  {
+    const byte SetVehicleCommand = 0xc4;
+    const byte AddVehicleVariable = 0x85;
+    const int AddVehicleFieldCount = 14;
+    TraCiCommand[] commands = new TraCiCommand[arrivals.Length];
+    for (int index = 0; index < arrivals.Length; index++)
+    {
+      GeneratedArrival arrival = arrivals[index];
+      byte[] body = Encode(writer =>
+      {
+        writer.Byte(AddVehicleVariable);
+        writer.String(arrival.Id);
+        writer.Byte((byte)TraCiValueType.Compound);
+        writer.Int(AddVehicleFieldCount);
+        WriteTypedString(writer, arrival.Route.Id);
+        WriteTypedString(writer, arrival.Route.VehicleTypeId);
+        WriteTypedString(writer, Math.Max(arrival.DepartureSeconds, simulationTime).ToString("R", CultureInfo.InvariantCulture));
+        WriteTypedString(writer, arrival.Route.DepartureLaneIndex?.ToString(CultureInfo.InvariantCulture) ?? "best");
+        WriteTypedString(writer, arrival.Route.DeparturePositionM?.ToString("R", CultureInfo.InvariantCulture) ?? "base");
+        WriteTypedString(writer, "0");
+        WriteTypedString(writer, arrival.Route.ArrivalLaneIndex?.ToString(CultureInfo.InvariantCulture) ?? "current");
+        WriteTypedString(writer, arrival.Route.ArrivalPositionM?.ToString("R", CultureInfo.InvariantCulture) ?? "max");
+        WriteTypedString(writer, "current");
+        WriteTypedString(writer, "");
+        WriteTypedString(writer, "");
+        WriteTypedString(writer, "");
+        writer.Byte((byte)TraCiValueType.Integer);
+        writer.Int(0);
+        writer.Byte((byte)TraCiValueType.Integer);
+        writer.Int(0);
+      });
+      commands[index] = new TraCiCommand(SetVehicleCommand, body);
+    }
+
+    if (commands.Length == 0)
+    {
+      return;
+    }
+
+    WireReader response = await SendAsync(commands, token);
+    foreach (TraCiCommand command in commands)
+    {
+      ReadStatus(response, command.Id);
+    }
+  }
+
+  private static void WriteTypedString(WireWriter writer, string value)
+  {
+    writer.Byte((byte)TraCiValueType.String);
+    writer.String(value);
   }
 
   private async Task<SimulationValues> GetSimulationValuesAsync(CancellationToken token)

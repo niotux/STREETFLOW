@@ -36,4 +36,4 @@ jobs:
           dotnet-version: '10.0.x'
       - run: dotnet restore Streetflow.slnx --locked-mode
       - run: dotnet build Streetflow.slnx --no-restore
-      - run: dotnet test Streetflow.slnx --no-build --filter "FullyQualifiedName~ObservationTests|FullyQualifiedName~PassageTests|FullyQualifiedName~ProjectLoadingTests"
+      - run: dotnet test Streetflow.slnx --no-build --filter "FullyQualifiedName~ObservationTests|FullyQualifiedName~PassageTests|FullyQualifiedName~ProjectLoadingTests|FullyQualifiedName~CityGenerationTests|FullyQualifiedName~TerminalLoadingTests"

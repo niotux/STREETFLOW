@@ -1,6 +1,6 @@
 # SUMO simulator design
 
-The current proposed scope is a city simulator: load a project, generate traffic, run SUMO, and show the roads and cars. Detectors are reserved placeholders whose behavior will be defined later. Review the project format and integration tasks below before implementation. The existing backend has additional inspection/observation features described in its run guide; they are not requirements for the new project workflow.
+The current implementation is a city simulator: load a project, generate traffic, run SUMO, and show the roads and cars. Detectors are reserved placeholders whose behavior will be defined later. See [operation instructions](../../components/simulator/README.md) and [deferred manual checks](review-checklist.md). The existing backend has additional inspection/observation features described in its run guide; they are not requirements for the new project workflow.
 
 The new simulator targets **Windows, Linux, and macOS**. Its scenario format accepts arbitrary networks; small Iași sections are development fixtures rather than a dataset-size restriction. Achievable speed and capacity depend on resources and scenario complexity. Its backend uses C# / .NET 10, SUMO, PostgreSQL, and Docker Compose. The web inspector uses plain HTML and JavaScript.
 
@@ -8,7 +8,7 @@ The new simulator targets **Windows, Linux, and macOS**. Its scenario format acc
 
 | Document | What it defines |
 | --- | --- |
-| [Experiment project format](experiment-project-format.md) | City files, continuous seeded traffic generation, and run controls; awaiting review |
+| [Experiment project format](experiment-project-format.md) | Accepted city files, continuous seeded traffic generation, and run controls |
 | [Experiment integration tasks](experiment-integration-plan.md) | Backend/UI changes and concrete user feedback checkpoints before integration |
 | [Backend run guide](backend.md) | Running, configuring, and testing the implemented backend |
 | [Stack decision](stack-decision.md) | Language, integration, storage, packaging, and verification scope |
@@ -20,7 +20,7 @@ The new simulator targets **Windows, Linux, and macOS**. Its scenario format acc
 
 ## Existing backend context
 
-The following describes existing capabilities. The proposed city-project workflow above narrows the next implementation scope and leaves detector behavior for a later task.
+The following describes existing capabilities. The implemented city-project workflow above narrows the current scope and leaves detector behavior for a later task.
 
 - SUMO owns vehicle and junction simulation; the wrapper owns configuration, observation generation, inspection, and records.
 - One simulator service owns one active run and one SUMO process initially.

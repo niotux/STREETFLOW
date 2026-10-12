@@ -13,5 +13,6 @@
   "defaults": {
     "start_time_seconds": 68940,
     "step_seconds": 0.5
-  }
+  },
+  "terminals_file": "terminals.json"
 }

@@ -1,12 +1,39 @@
 # Podu Roș intersection project
 
-Project accepted in task 2 on 2026-10-11. Backend import/map loading is available; continuous generation remains pending.
+Project accepted in task 2 on 2026-10-11. Backend import, continuous generation, and the city UI are available; manual runtime review is deferred.
 
 This is a separate real-map project around the Piața Podu Roș roundabout, its bridge, and the Nicolina, Socola, Bahlui/Mangeron, Palat, and neighboring approaches. It is not the tiny synthetic junction or a renamed central-city network. The old OSM extract starts at latitude 47.155 and omits the roundabout; a fresh local OpenStreetMap extract was obtained for this project.
 
 The network contains 106 passenger-usable ordinary directed edges in one weak connection component, 162 ordinary connections, one roundabout, and ten signal programs. Every usable edge has one explicit profile with 14 contiguous intervals covering the day. The converted map spans approximately 758 × 718 metres. Directed reachability still constrains journeys: weak connectivity alone does not mean every endpoint pair is usable. SUMO owns lanes, junction connectors, movement, and signals. Signal timing and junction inference are conversion estimates, not verified local timing plans. No vehicles or routes are authored. Detectors are an empty reserved array. The starting city time is 19:09, with a 0.5-second engine step; the daily profiles repeat until stopped. This default opens at the beginning of the approximate recorded-window replay, so its local variation is visible immediately.
 
 [Map preview](../../../assets/maps/podu-ros.svg).
+
+## Intersection terminals
+
+[`terminals.json`](terminals.json) marks **22 entry lanes and 27 exit lanes**, at 23 exterior approach nodes on 29 directed edges. Each point refers to an existing ordinary lane; no artificial nodes, fixed turns, network changes, or ring origins are introduced. All passenger-permitted lanes at the selected exterior road ends receive a point. Entry points sit 6 metres from their lane's start, so a default 5-metre vehicle has room behind its front; exit points sit at the lane's end. The shortest selected entry lane is 7.53 metres long, on the west-boundary Cantemir approach, rather than an interior 20-centimetre splitter.
+
+Boundary selection uses the retained OSM source and the documented conversion box: a road-end junction has one distinct neighboring ordinary junction, and its original geographic location lies outside that box. The 23 nodes comprise 17 SUMO `dead_end` junctions and six `priority` junctions: paired bidirectional ends on Sfântul Lazăr, Traian, Socola, Aleea Rozelor, an unnamed west-side local road, and Palat. The source road continues outside the retained network at these boundaries; the point represents a study boundary, not an actual physical dead end. Inbound-only and outbound-only boundary roads are retained as modeled, without inventing a reverse lane.
+
+| Approach | Entry lanes | Exit lanes |
+| --- | ---: | ---: |
+| Bulevardul Dimitrie Cantemir | 6 | 3 |
+| Strada Sfântul Lazăr | 2 | 2 |
+| Strada Traian | 1 | 1 |
+| Bulevardul Profesor Dimitrie Mangeron | 2 | 0 |
+| Aleea Decebal | 1 | 2 |
+| Bulevardul Socola | 2 | 2 |
+| Șoseaua Nicolina | 2 | 2 |
+| Șoseaua Națională | 0 | 2 |
+| Bulevardul Regele Ferdinand I al României | 0 | 3 |
+| Aleea Rozelor | 1 | 3 |
+| Bulevardul Regele Mihai I al României | 0 | 2 |
+| Bulevardul Țuțora | 1 | 1 |
+| Strada Palat | 2 | 2 |
+| Unnamed exterior local roads | 2 | 2 |
+
+Three interior local ends (`2281135906`, `253486518`, and `726578956`) remain transit/local streets, with no intersection terminal. This selection does not equate every graph dead end with an external entrance or exit. Some exterior ends connect only neighboring local streets rather than the central ring; legal reachability and journey-length limits still decide which terminal pairs can generate journeys. Two entry lanes (`1390424230_0` and `-1068015153#1_1`) need to change lanes before their first downstream connector; their 46.46-metre and 80.35-metre edges provide room, but inferred SUMO connectivity and lane changes remain model limitations. The terminal annotations do not repair or calibrate junction geometry and signal timings.
+
+Reproduce the annotations with `python3 docs/research/data/podu-ros/prepare_terminals.py` from the repository root. The script is preparation tooling; importing or running the project does not require Python. Terminal labels and locations identify the study boundary, not measured approach demand.
 
 ## Reproducing the map
 
@@ -57,4 +84,6 @@ For every other usable edge `e`, let `L(e)` be its number of passenger-permitted
 
 Observed-track starts and first mapped edge matches count different events. The source CSVs and geometric association rules remain outside the runnable project; the project contains only the resulting per-edge preferences. This preparation defines neither fixed journeys nor guaranteed observed road density.
 
-To reproduce `demand.json`, read [spatial-estimates.csv](../../../docs/research/data/podu-ros/spatial-estimates.csv) for all 106 edge identifiers, support basis, and outside-window values; use [mapped-edge-track-starts.csv](../../../docs/research/data/podu-ros/mapped-edge-track-starts.csv) for the 14 supported edges and [observed-track-starts.csv](../../../docs/research/data/podu-ros/observed-track-starts.csv) for the others. Add the two flat outside-window intervals and the 12 recorded-proxy intervals at `68940 + elapsed_seconds`, applying the formulas above and rounding weights to six decimals. Fractional seconds preserve the final bin's duration. The profile must reference the exact map edge identifier, not the road's display name. Journey bounds of 100–2,000 metres, a candidate limit of 1,000, three route alternatives, and a 1.5 detour ratio are operational estimates for this small map.
+To reproduce `demand.json`, read [spatial-estimates.csv](../../../docs/research/data/podu-ros/spatial-estimates.csv) for all 106 edge identifiers, support basis, and outside-window values; use [mapped-edge-track-starts.csv](../../../docs/research/data/podu-ros/mapped-edge-track-starts.csv) for the 14 supported edges and [observed-track-starts.csv](../../../docs/research/data/podu-ros/observed-track-starts.csv) for the others. Add the two flat outside-window intervals and the 12 recorded-proxy intervals at `68940 + elapsed_seconds`, applying the formulas above and rounding weights to six decimals. Fractional seconds preserve the final bin's duration. The profile must reference the exact map edge identifier, not the road's display name. Journey bounds of 40–2,000 metres, a candidate limit of 1,000, three route alternatives, and a 1.5 detour ratio are operational estimates for this small map.
+
+Terminal routing uses explicit lane connectivity across short splitter roads and permits strategic lane changes only where at least 20 m of the current road remains. This is a conservative planning allowance, not a measured driver calibration. Candidate preparation covers viable entrance/exit lanes before filling its remaining budget. The minimum trip distance is now 40 m, allowing the short clipped boundary-to-boundary approaches (about 48 m and 86 m) to participate; the former arbitrary 100 m setting excluded those terminals. Edge profile weights and the camera-derived overall rate are unchanged.

@@ -30,12 +30,12 @@ Start with the [component architecture](docs/architecture.md), then the [simulat
 ```sh
 docker compose up --build -d --wait
 curl http://localhost:8080/health
-curl http://localhost:8080/api/v1/scenarios
+curl http://localhost:8080/api/v1/projects
 ```
 
-Open **http://localhost:8080**, choose a scenario, click **Load scenario**, then **Run**. The inspector shows roads, cars, signal states, detector coverage, trips, and checkpoint travel times. Drag to pan, scroll to zoom, and click a car to inspect it.
+Open **http://localhost:8080**, import a project ZIP or a bundled server folder such as `/app/projects/podu-ros`, then click **Start traffic**. The city view shows roads, moving cars, the city clock, and run controls. Drag to pan and scroll to zoom. The existing scenario inspector remains at `/legacy-inspector.html`.
 
-Only Docker with Compose and a browser are required to run it; .NET, SUMO, and PostgreSQL are inside the containers. See the [run guide](docs/simulator/backend.md) for platform setup, how the components work, APIs, and development. The API is at `http://localhost:8080/api/v1`; OpenAPI is at `/openapi/v1.json`. Docker stores results and PostgreSQL data in named volumes.
+Only Docker with Compose and a browser are required to run it; .NET, SUMO, and PostgreSQL are inside the containers. See the [city run guide](components/simulator/README.md) for project import, replay, limits, and troubleshooting; the [legacy backend guide](docs/simulator/backend.md) describes observations and recording. The API is at `http://localhost:8080/api/v1`; OpenAPI is at `/openapi/v1.json`. Docker stores results and PostgreSQL data in named volumes.
 
 On this development machine, the system Docker daemon works under the `default` context. If Docker Desktop is stopped and the selected context points to its missing socket, use `docker --context default compose ...`.
 

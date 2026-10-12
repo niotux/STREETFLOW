@@ -5,6 +5,8 @@ using System.Net.Sockets;
 using System.Xml.Linq;
 using Streetflow.Simulator.Runtime;
 using Streetflow.Simulator.Scenarios;
+using Streetflow.Simulator.City;
+using Streetflow.Simulator.Generation;
 
 namespace Streetflow.Simulator.Sumo;
 
@@ -45,6 +47,37 @@ public sealed class SumoEngine : IAsyncDisposable
     countingLines = CreateCountingLines(scenario);
     string additionalPath = WriteDetectors(config, directory);
     ProcessStartInfo info = CreateStartInfo(config, directory, options.SumoBinary, port, additionalPath);
+    signalIds = ReadSignalIds(directory);
+    return await LaunchAsync(info, directory, port, options.EngineTimeoutSeconds, token);
+  }
+
+  public async Task<string> StartCityAsync(CityProject project, CityRunConfiguration configuration, string directory, SimulatorOptions options, CancellationToken token)
+  {
+    int port = FindAvailablePort();
+    RunConfiguration config = new(project.Manifest.Id, project.Revision, configuration.Seed, configuration.StepSeconds, 1, 0);
+    ProcessStartInfo info = CreateStartInfo(config, directory, options.SumoBinary, port, null, city: true);
+    // Project references are validated and copied into the technical run package.
+    int networkIndex = info.ArgumentList.IndexOf("--net-file") + 1;
+    info.ArgumentList[networkIndex] = ProjectPaths.Resolve(project.Directory, project.Manifest.Network.File);
+    if (project.Manifest.AdditionalFiles.Length > 0)
+    {
+      List<string> paths = [];
+      foreach (string file in project.Manifest.AdditionalFiles)
+      {
+        paths.Add(ProjectPaths.Resolve(project.Directory, file));
+      }
+
+      AddArgument(info, "--additional-files", string.Join(",", paths));
+    }
+
+    AddArgument(info, "--max-num-vehicles", configuration.MaximumLiveVehicles.ToString(CultureInfo.InvariantCulture));
+    signalIds = project.SignalIds;
+    countingLines = [];
+    return await LaunchAsync(info, directory, port, options.EngineTimeoutSeconds, token);
+  }
+
+  private async Task<string> LaunchAsync(ProcessStartInfo info, string directory, int port, double timeoutSeconds, CancellationToken token)
+  {
     process = Process.Start(info) ?? throw new InvalidOperationException("SUMO did not start");
     log = new(Path.Combine(directory, "engine.log"))
     {
@@ -53,10 +86,11 @@ public sealed class SumoEngine : IAsyncDisposable
     // Only stderr writes this file; stdout is drained independently to avoid pipe deadlock.
     stderrCopy = CopyLogAsync(process.StandardError, log);
     stdoutCopy = process.StandardOutput.ReadToEndAsync(token);
-    connection = await ConnectAsync(port, options.EngineTimeoutSeconds, token);
-    signalIds = ReadSignalIds(directory);
+    connection = await ConnectAsync(port, timeoutSeconds, token);
     return await connection.VersionAsync(token);
   }
+
+  public Task AddVehiclesAsync(GeneratedArrival[] arrivals, double simulationTime, CancellationToken token) => connection!.AddVehiclesAsync(arrivals, simulationTime, token);
 
   public Task<EngineSnapshot> StepAsync(CancellationToken token)
   {
@@ -135,7 +169,7 @@ public sealed class SumoEngine : IAsyncDisposable
     return additionalPath;
   }
 
-  private static ProcessStartInfo CreateStartInfo(RunConfiguration config, string directory, string binary, int port, string additionalPath)
+  private static ProcessStartInfo CreateStartInfo(RunConfiguration config, string directory, string binary, int port, string? additionalPath, bool city = false)
   {
     ProcessStartInfo info = new(binary)
     {
@@ -150,13 +184,19 @@ public sealed class SumoEngine : IAsyncDisposable
     AddArgument(info, "--seed", config.Seed.ToString(CultureInfo.InvariantCulture));
     AddArgument(info, "--step-length", config.StepSeconds.ToString(CultureInfo.InvariantCulture));
     AddArgument(info, "--time-to-teleport", "-1");
-    AddArgument(info, "--tripinfo-output", Path.Combine(directory, "tripinfo.xml"));
-    AddArgument(info, "--tripinfo-output.write-unfinished", "true");
+    if (!city)
+    {
+      AddArgument(info, "--tripinfo-output", Path.Combine(directory, "tripinfo.xml"));
+      AddArgument(info, "--tripinfo-output.write-unfinished", "true");
+    }
     AddArgument(info, "--no-step-log", "true");
     AddArgument(info, "--duration-log.disable", "true");
     AddArgument(info, "--xml-validation", "never");
     AddArgument(info, "--xml-validation.net", "never");
-    AddArgument(info, "--additional-files", additionalPath);
+    if (additionalPath is not null)
+    {
+      AddArgument(info, "--additional-files", additionalPath);
+    }
     return info;
   }
 

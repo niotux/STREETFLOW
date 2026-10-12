@@ -1,6 +1,6 @@
 # City simulator execution plan
 
-Status: task 1 accepted by the user on 2026-10-11; task 2 accepted by the user on 2026-10-11; task 3 implemented, awaiting user review. This document is the implementation handoff; later tasks remain gated on their individual reviews.
+Status: task 1 accepted by the user on 2026-10-11; task 2 accepted by the user on 2026-10-11; task 3 provisionally accepted on 2026-10-12. Tasks 4–8 are implemented and verified under the user’s authorization to proceed using tests, with manual review deferred. See [the short review checklist](review-checklist.md).
 
 ## What we are building
 
@@ -11,16 +11,14 @@ Use C#/.NET 10 for the backend, SUMO for vehicle movement and junctions, and pla
 ## Where we stand
 
 - The existing application runs SUMO through C#/TraCI and has controls, a browser map, tests, and Docker packaging.
-- The legacy scenario workflow remains available. The new city-project loader imports folders/ZIPs, persists validated inputs, and exposes map/demand APIs. Continuous per-edge generation is task 4.
+- The legacy scenario workflow remains available. The new city-project loader imports folders/ZIPs, persists validated inputs, and exposes map/demand APIs. Continuous per-edge generation, controls, the city UI, and Docker delivery are implemented.
 - [The accepted format](experiment-project-format.md) and [draft projects](../../experiments/README.md) are available. Iași has 713 passenger-usable ordinary road edges; the tiny graph has eight. Podu Roș adds 106 usable edges. All three projects reference actual map identifiers and were accepted in task 2; directory names remain under drafts/ for continuity.
 - [Research inputs](../research/data/iasi-pmud-2023/README.md) contain extracted source material. These are separate from the files the simulator loads.
-- Tasks 1–2 are accepted. Task 3 adds project loading alongside the existing runtime; its review is pending.
+- Tasks 1–2 are accepted. Task 3 is provisionally accepted; tasks 4–8 are implemented and verified; manual behavior/design review is deferred.
 
 ## Review rule: after every task
 
-Complete one task, run its checks, and present its concrete deliverable to the user. Explain what changed, show how to try or inspect it, and give the check results. **Then wait for the user's feedback before advancing to the next task.** If changes are requested, revise that same task and present it again. Silence is not acceptance.
-
-This applies to backend, data preparation, UI design, working UI, and Docker delivery. Subagents may work independently within the current task, but cannot bypass its review checkpoint or start a later implementation task. Update this document with accepted decisions and task status after each review.
+On 2026-10-12 the user authorized proceeding through the remaining tasks without waiting for individual reviews, trusting automated checks for now. Keep each task's results and pending manual checks recorded. This supersedes the earlier stop-after-every-task rule for this implementation. Manual approval of behavior and visual design remains deferred, not assumed.
 
 ## Tasks in order
 
@@ -80,7 +78,7 @@ Checks: all JSON parses; graph/file references resolve; all usable edges have pr
 
 ### 3. Implement project loading
 
-**Status:** implemented; awaiting user review. Tasks 1–2 are accepted.
+**Status:** provisionally accepted on 2026-10-12 after the user refactored the code and reported passing tests. Manual review deferred.
 
 Delivered: isolated persistent package copies, folder/ZIP import, strict file/network/profile validation, project listing, paginated map geometry, and demand inspection. See [requests and manual review](project-loading.md). Importing creates no run and starts no SUMO process. Checks cover all three projects, restart persistence, malformed inputs, archive traversal/symlinks, duplicate IDs, and resource limits. A preexisting observation-ordering failure found during regression testing was corrected by sorting camera IDs before emitting frames; the same test exposed duplicate fallback crossing counts for shared camera lines, fixed by counting each physical line once per passage. Verification: native build passes with zero warnings/errors; 47 project-loading cases and the full SUMO suite pass (69 passed, one PostgreSQL test skipped because no test database is configured). A live HTTP smoke check imported all three projects, returned Podu Roș geometry, and confirmed zero runs after import.
 
@@ -92,11 +90,13 @@ Deliverable: backend endpoints that import, list, and load a project, with docum
 
 Checks: import both projects; reject malformed files, unknown/missing/duplicate edges, and unsafe archive paths; imported projects survive service restart.
 
-**User review:** try importing/loading a project and inspect error behavior. Wait for feedback before building generation.
+**User review:** try importing/loading a project and inspect error behavior. Manual inspection is deferred; generation proceeded under the user’s authorization.
 
 ### 4. Implement seeded continuous traffic generation
 
-**Status:** not started. Requires task 3 acceptance.
+**Status:** implemented and tested; manual review deferred under the 2026-10-12 authorization.
+
+Delivered: `Generation/CityDemandGenerator.cs` and `CandidateRoutes.cs` generate seeded piecewise Poisson arrivals, bounded permitted shortest paths and detour alternatives, and distance-weighted spatial choices. Independent timing/choice streams and integrated hazard preserve arrivals across batch boundaries and backpressure. Tests cover all three projects, rate scaling, route preference, zero-weight transit, explicit no-positive-candidate errors, alternatives, midnight, and delayed-generation replay. Candidate discovery is bounded and approximate; [the run guide](../../components/simulator/README.md) states its limits.
 
 Start with Scenarios/DemandGenerator.cs and ScenarioPreparation.cs. Replace fixed scenario demand in the new project workflow with the accepted generator. Read current edge weights, generate reachable endpoints and legal candidate journeys, choose routes using those weights, and add arrivals in bounded batches.
 
@@ -110,7 +110,9 @@ Checks: same project/seed/version reproduces choices; different seeds vary them;
 
 ### 5. Integrate continuous runs and controls
 
-**Status:** not started. Requires task 4 acceptance.
+**Status:** implemented and tested; manual review deferred under the 2026-10-12 authorization.
+
+Delivered: a dedicated city coordinator and TraCI vehicle insertion, live snapshots, start/pause/resume/step/stop/restart/pacing endpoints, city clock, and recorded input/version/limit metadata. One engine owner is shared with legacy runs. No city observations/detectors/completed-trip history is activated. Defaults: 5000 live vehicles, 512 pending entries, 64 arrivals per step, 300 simulation seconds of backlog or pending-entry age before visible failure. Pause freezes simulation/generation; stop closes the engine and cancels remaining traffic; nonrepeating traffic drains after midnight without ending the run. SUMO integration checks exercise moving traffic and identical replay on Tiny, Iași, and Podu Roș, engine cleanup, controls, overload, zero traffic, midnight drain, and service-restart replay.
 
 Start with Runtime/RunCoordinator.cs, Runtime/Models.cs, Sumo/SumoEngine.cs, and Api/Endpoints.cs. Connect project loading and generation to start, pause, resume, step, stop, restart, city clock, and playback speed. SUMO owns movement and signals.
 
@@ -120,21 +122,25 @@ Deliverable: usable control endpoints and live map/vehicle snapshots. Do not act
 
 Checks: controls, restart cleanup, pending entries, repeated days, continuous operation, and bounded retained state. Preserve unrelated existing functionality.
 
-**User review:** run both projects, try every control, and inspect clock/traffic behavior before UI work advances.
+**User review:** run both projects, try every control, and inspect clock/traffic behavior during deferred manual review.
 
 ### 6. Propose the simple web view
 
-**Status:** not started. Requires task 5 acceptance.
+**Status:** proposal prepared and implemented under the user’s authorization; visual acceptance is deferred.
+
+Delivered: [the view proposal](web-view.md), with [desktop](../../assets/images/city-view-desktop.png) and [mobile](../../assets/images/city-view-mobile.png) previews of the working UI. The user authorized proceeding without the earlier design gate; this is not recorded as manual design acceptance.
 
 Prepare a lightweight preview using plain HTML/JavaScript. Show project import/selection, map, moving cars, seed, starting city time, playback speed, and controls. Avoid analysis tables and detector counts; detectors remain undefined placeholders.
 
 Deliverable: a concrete preview or working mockup the user can inspect.
 
-**User review:** explicitly ask what they like or dislike. Revise the proposal until accepted before implementing the full UI.
+**User review:** explicitly ask what they like or dislike. Design feedback is deferred; implementation proceeded under the user’s authorization.
 
 ### 7. Implement the accepted web view
 
-**Status:** not started. Requires task 6 acceptance.
+**Status:** implemented and browser-tested; manual review deferred.
+
+Delivered: ZIP/server-folder import, project selection and map preview, seed/start-time/speed controls, moving cars, city clock, pan/zoom/fit, and clear errors. The previous inspector remains at `/legacy-inspector.html`. Headless Chromium checked invalid ZIP handling, folder/ZIP imports, all three maps with moving traffic, midnight, controls, active-run reconnect, and desktop/mobile layout without JavaScript errors.
 
 Work in components/simulator/Streetflow.Simulator/wwwroot/index.html, app.js, and styles.css. Connect the accepted view to import, loading, snapshots, and controls. Display understandable loading and validation errors.
 
@@ -146,7 +152,9 @@ Checks: import/load tiny and Iași, show movement, use all controls, handle erro
 
 ### 8. Verify Docker packaging and document operation
 
-**Status:** not started. Requires task 7 acceptance.
+**Status:** implemented and verified on Linux x64; manual setup review deferred.
+
+Delivered: bundled example projects in the runtime image, persistent imported packages/run inputs on the existing data volume, [operation/replay/limits/troubleshooting documentation](../../components/simulator/README.md), and portable generator checks in CI. Fresh isolated Compose startup passed with healthy simulator/PostgreSQL containers. All three imports and saved city runs survived container recreation. The packaged test image passed all 91 tests, including PostgreSQL, with no skips. Native build passed with zero warnings/errors. Browser smoke checks passed against Compose. Windows/macOS engine execution and ARM64 remain untested.
 
 Reuse Dockerfile, compose.yaml, and docker/. Keep SUMO and .NET dependencies inside containers and imported projects on persistent storage. Update components/simulator/README.md with prerequisites, build/start/stop commands, port, project import, seed replay, and troubleshooting.
 
@@ -160,6 +168,18 @@ Checks: relevant .NET tests, fresh Compose startup, browser smoke check, project
 
 ## Starting points for the next implementer
 
-Read this plan, then [the format](experiment-project-format.md), [the source README](../research/data/iasi-pmud-2023/README.md), and both project READMEs. Confirm the current task's acceptance status before changing runtime code. Preserve legacy code and fixtures; the first milestone changes the new project workflow.
+Read this plan, then [the format](experiment-project-format.md), [the source README](../research/data/iasi-pmud-2023/README.md), and both project READMEs. Follow the current review authorization recorded above. Preserve legacy code and fixtures; the first milestone changes the new project workflow.
 
 Use the existing test project at components/simulator/Streetflow.Simulator.Tests. Tests should verify the new behavior and failure cases. Keep source conversion, generation verification, and simulator UI separate: the user wants to see a city running, not a data-analysis application.
+
+## Intersection terminal follow-up (2026-10-13)
+
+The user requested lane terminals for the intersection and map display, with workers and root inspection. Three workers prepared exterior lane annotations, backend loading/map support, and the existing dark UI markers. Root reconciled them, implemented terminal-only lane-continuous routing and fixed the misleading overload diagnosis.
+
+Podu Roș now has 49 explicit points: 22 entry lanes and 27 exit lanes, prepared from retained OSM boundary evidence rather than hardcoded runtime locations. No ring/internal endpoints are used. `endpoint_selection: terminals` is explicit; city projects retain their existing endpoint policy. Minimum journey distance is 40 m to cover short clipped boundary pairs. Lane search conservatively avoids changes on short fragments, with a 20 m manoeuvring-distance allowance and 3-second lane-change search cost. All ports are represented across seeds 1/42/1337.
+
+The original high camera-track proxy still produces congestion with inferred junction geometry/signals. That is a recorded unresolved model issue, not hidden by increasing queue limits or changing measured-profile estimates. The longer flow verification uses an explicitly 600/hour fixture and runs 2000 simulation seconds, beyond the original 483.5-second failure; it verifies cars leave at exits. Default-rate failure now identifies the specific blocked entry and retains the last snapshot.
+
+The existing imported map/run packages were preserved. A separate review copy, `podu-ros-terminals` (Podu Roș · lane terminals), is loaded at [localhost:8080](http://localhost:8080/?project=podu-ros-terminals). Browser checks cover all markers, grouped-lane zoom, per-lane selection, run maps, mobile layout, controls, and no JavaScript errors. Root inspected [the map preview](../../assets/images/podu-ros-terminals.png) and [a focused lane](../../assets/images/podu-ros-terminal-lane.png).
+
+Final follow-up verification: native build has zero warnings/errors; all 108 tests pass including PostgreSQL, terminal validation/persistence, coverage across three seeds, and the 2000-second reduced-rate flow/exit check. Chromium inspection passed against the updated Compose service; the original imports and run history remain available.

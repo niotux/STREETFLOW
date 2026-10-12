@@ -1,31 +1,70 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Streetflow · Simulator</title><link rel="stylesheet" href="styles.css"><script type="module" src="app.js"></script></head>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Streetflow · City simulator</title>
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js"></script>
+</head>
 <body>
-<header><strong>STREETFLOW <span> / simulator</span></strong><span id="connection" role="status">Connecting…</span></header>
-<div id="error" role="alert" hidden></div>
-<main>
-<aside>
- <h1>Traffic playground</h1><p>Real roads. Simulated traffic.</p>
- <form id="create"><label>Scenario<select id="scenario" required></select></label><p id="scenario-note" class="muted"></p>
- <div class="fields"><label>Seed<input id="seed" type="number" value="42" min="0" max="2147483647" required></label><label>Duration (s)<input id="duration" type="number" min="1" step="any" required></label></div>
- <label>Demand multiplier<input id="demand" type="number" min="0" max="20" step="0.1" value="1" required></label>
- <button id="load" class="primary">Load scenario</button></form>
- <hr><label>Run history<select id="history"><option value="">Choose a run</option></select></label>
- <div id="state" class="badge">No run loaded</div>
- <div class="buttons"><button id="resume" disabled>Run</button><button id="pause" disabled>Pause</button><button id="step" disabled>Step +5s</button><button id="stop" disabled>Stop</button><button id="reset" disabled>Reset</button></div>
- <label>Playback speed<select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option><option value="unpaced">As fast as possible</option></select></label>
- <dl id="metrics"></dl><p class="muted">Closing this page does not stop the simulation.</p>
-</aside>
-<section class="workspace">
- <div class="map-toolbar"><span id="map-label">Choose a scenario to begin</span><div><label><input id="cameras" type="checkbox" checked> Detectors</label><button id="fit">Fit map</button></div></div>
- <div id="map-wrap"><canvas id="map" aria-label="Traffic map. Drag to pan, scroll to zoom, click a car to inspect it."></canvas><div id="empty">Load a scenario to see its road network.</div><div class="map-hint">Drag to pan · Scroll to zoom · Click a car</div></div>
- <div class="map-footer"><span id="snapshot-note">No traffic snapshot</span><span id="attribution"></span></div>
- <section class="inspection"><div class="tabs" role="tablist"><button data-tab="vehicle" class="selected">Vehicle</button><button data-tab="trips">Trips</button><button data-tab="detectors">Detectors</button><button data-tab="passages">Checkpoints</button></div>
- <div id="vehicle" class="panel"><p class="muted">Click a car on the map or a row in Trips to inspect its journey.</p></div>
- <div id="trips" class="panel" hidden><div class="paging"><button id="previous">Previous</button><span id="trip-page"></span><button id="next">Next</button></div><div id="trip-table"></div></div>
- <div id="detectors" class="panel" hidden></div><div id="passages" class="panel" hidden></div>
- </section>
-</section>
-</main>
-</body></html>
+  <header><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">≋</span>STREETFLOW<span class="brand-subtitle">SIMULATION STUDIO</span></a><span id="connection" role="status" data-connected="false">Connecting…</span></header>
+  <main>
+    <aside>
+      <span class="eyebrow">SIMULATION SETUP</span>
+      <h1>Your city.<br> In motion.</h1>
+      <p class="intro">Build a traffic run. Explore the flow.</p>
+      <section class="setup-panel" aria-label="Project setup">
+      <h2 class="panel-title"><span>01</span> City project</h2>
+      <label for="project">Project</label>
+      <select id="project"><option value="">Import a project to begin</option></select>
+      <p id="project-note" class="muted">Choose a project folder or a ZIP archive.</p>
+      <button id="import" class="import-button" type="button">Import <span aria-hidden="true">+</span></button>
+      <input id="zip" type="file" accept=".zip,application/zip" hidden>
+      <input id="local-folder" type="file" webkitdirectory multiple hidden>
+      <details><summary>Advanced · server folder</summary><form id="folder-form"><label for="folder">Project folder path</label><input id="folder" type="text" placeholder="/path/to/city-project" required><button type="submit">Import folder</button></form></details>
+      </section>
+      <section class="setup-panel" aria-label="Run settings">
+      <h2 class="panel-title"><span>02</span> Run settings</h2>
+      <form id="start-form">
+        <div class="field-pair"><div><label for="seed">Seed</label><input id="seed" type="number" value="42" min="0" max="2147483647" required></div><div><label for="start-time">Start time</label><input id="start-time" type="time" value="07:00" step="1" required></div></div>
+        <label id="speed-label">Playback speed</label>
+        <div class="speed-control">
+          <div class="dial-row"><div id="speed-dial" class="dial" role="slider" tabindex="0" aria-labelledby="speed-label" aria-describedby="dial-help" aria-valuemin="0" aria-valuemax="5" aria-valuenow="1" aria-valuetext="1×, real time"><span class="dial-pointer"></span></div><div class="dial-readout"><strong id="dial-value">1×</strong><span id="dial-description">Real time</span></div></div>
+          <div class="speed-presets" aria-label="Speed presets"><button type="button" data-speed="0.5" aria-pressed="false">0.5×</button><button type="button" data-speed="1" aria-pressed="true">1×</button><button type="button" data-speed="2" aria-pressed="false">2×</button><button type="button" data-speed="5" aria-pressed="false">5×</button><button type="button" data-speed="10" aria-pressed="false">10×</button><button type="button" data-speed="unpaced" aria-label="Maximum speed" aria-pressed="false">MAX</button></div>
+          <p id="dial-help" class="dial-help">Drag to turn · Arrow keys to adjust</p>
+        </div>
+        <select id="speed" aria-label="Playback speed" hidden><option value="0.5">0.5×</option><option value="1" selected>1× · real time</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option><option value="unpaced">As fast as possible</option></select>
+        <button id="start" class="primary" type="submit" disabled>Start traffic <span aria-hidden="true">▶</span></button>
+      </form>
+      <p id="run-note" class="muted">Use the same seed to replay the same traffic.</p>
+      </section>
+      <p class="muted footnote">Traffic profiles include estimates. This view does not represent measured road density.</p>
+      <a class="legacy-link" href="legacy-inspector.html">Existing scenario inspector ↗</a>
+    </aside>
+    <section class="workspace" aria-label="City simulation">
+      <div class="workspace-heading"><div><span class="eyebrow">NETWORK VIEW</span><h2 id="map-label">Choose your city</h2></div><div class="view-actions"><button id="focus-view" type="button" aria-pressed="false">Focus view</button><button id="fit" aria-label="Fit road network to view">↗ Fit map</button></div></div>
+      <div class="telemetry" aria-label="Simulation metrics"><div class="metric"><span>ACTIVE VEHICLES</span><strong id="vehicle-count">—</strong><small>Cars in the network</small></div><div class="metric"><span>ROAD NETWORK</span><strong id="lane-count">—</strong><small>Mapped lanes</small></div><div class="metric"><span>PLAYBACK</span><strong id="playback-value">1×</strong><small>Simulation speed</small></div></div>
+      <div id="error" role="alert" hidden></div>
+      <div id="map-wrap">
+        <canvas id="map" aria-label="Road network and simulated moving cars. Drag to pan and scroll to zoom."></canvas>
+        <div id="empty"><span class="empty-icon" aria-hidden="true">⌁</span><span class="eyebrow">READY WHEN YOU ARE</span><strong>Your streets start here</strong><span>Import a project folder or ZIP to explore its network.</span></div>
+        <div class="map-hint">Drag to pan <span> / </span> Scroll to zoom</div>
+        <div class="map-legend"><span><i class="moving-dot"></i> Moving</span><span><i class="stopped-dot"></i> Stopped</span><span id="entry-legend" hidden><i class="entry-dot"></i> Entry</span><span id="exit-legend" hidden><i class="exit-dot"></i> Exit</span></div>
+        <div id="terminal-tooltip" class="terminal-tooltip" hidden></div>
+        <div class="zoom-controls" aria-label="Map zoom"><button id="zoom-in" type="button" aria-label="Zoom in">+</button><button id="zoom-out" type="button" aria-label="Zoom out">−</button></div>
+        <div class="clock"><span id="city-day">CITY TIME</span><strong id="city-clock">—</strong></div>
+      </div>
+      <div id="terminal-inspector" class="terminal-inspector" hidden><label for="terminal-choice" id="terminal-label">Lane terminals</label><select id="terminal-choice"><option value="">Choose a lane terminal</option></select><button id="terminal-focus" type="button" disabled>Show lane</button><span id="terminal-detail" role="status">Hover a terminal to inspect it. Click a numbered group to zoom.</span></div>
+      <div class="control-bar"><span id="state" role="status">No project loaded</span><div class="controls"><button id="toggle" disabled>Pause</button><button id="step" title="Pause traffic to advance one simulation step" disabled>Step</button><button id="stop" disabled>Stop</button><button id="restart" disabled>Restart</button></div></div>
+      <div class="map-footer"><span id="snapshot-note">Roads load before traffic starts.</span><span id="attribution"></span></div>
+    </section>
+  </main>
+  <dialog id="import-dialog" aria-labelledby="import-title">
+    <div class="dialog-heading"><h2 id="import-title">Import a project</h2><button id="close-import" type="button" aria-label="Close import">×</button></div>
+    <p class="muted">Choose your project from your computer.</p>
+    <button id="choose-folder" class="import-choice" type="button"><strong>Open folder ↗</strong><span>Select a folder containing your city project.</span></button>
+    <button id="choose-zip" class="import-choice" type="button"><strong>Open ZIP ↗</strong><span>Select a packaged project archive.</span></button>
+  </dialog>
+</body>
+</html>

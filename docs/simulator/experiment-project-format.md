@@ -1,6 +1,6 @@
 # City project format
 
-Status: format and generation rules accepted by the user on 2026-10-11 (task 1). Prepared projects await task 2 review; runtime integration has not started.
+Status: format and generation rules accepted by the user on 2026-10-11 (task 1). All three projects were accepted in task 2. Loading, generation, controls, UI, and Docker integration are implemented; manual review is deferred under the user’s 2026-10-12 authorization.
 
 An edge is one directed road segment. A traffic profile belongs to that edge and describes how busy it should be over the day. Every ordinary road edge that the configured vehicles can use has its own profile. Junction connector edges remain part of the network and need no separate profile.
 
@@ -122,3 +122,20 @@ The UI selects a project and seed, shows the city, and provides start/pause/resu
 detectors.json is an empty reserved array with no behavior defined yet. The city runs until stopped. Imported projects and technical state/files use the existing Docker storage.
 
 See [the integration tasks](experiment-integration-plan.md).
+
+## Optional lane terminals
+
+`experiment.json` can reference `"terminals_file": "terminals.json"`. The file is an array of named points on ordinary lanes:
+
+```json
+[
+  {"id":"west-entry", "lane_id":"west_in_0", "role":"entry", "position_m":6, "label":"West approach"},
+  {"id":"east-exit", "lane_id":"east_out_0", "role":"exit", "position_m":200, "label":"East approach"}
+]
+```
+
+Positions are SUMO distances along lanes; the example exit value must match the actual map. IDs and lane/role pairs are unique. Both roles are required for a nonempty file. Terminals participate in the input revision and saved run package. Map responses expose their computed coordinates.
+
+Set `generation.endpoint_selection` to `"terminals"` to generate only entrance-to-exit journeys. This requires a nonempty terminal file. Existing `"boundary_and_internal"` keeps city endpoint behavior, even if terminal markers are present for display. Terminals define endpoints, not fixed routes or measured departure probabilities.
+
+Terminal routing follows permitted lane connections, constrains the departure and arrival lane/position, and avoids relying on lane changes across tiny road fragments. Its conservative planning allowance is 20 m available road for a lane change, with a 3-second manoeuvring cost in path search and detour comparisons. SUMO still owns movement and safety; this allowance is not a driver calibration or a guarantee that congestion cannot block a journey.

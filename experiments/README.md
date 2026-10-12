@@ -1,6 +1,6 @@
 # City projects
 
-These three projects follow the accepted city-project format and were accepted in task 2. Their folders retain the drafts/ location. The backend now supports [folder/ZIP import and map loading](../docs/simulator/project-loading.md); continuous traffic generation is the next task.
+These three projects follow the accepted city-project format and were accepted in task 2. Their folders retain the drafts/ location. The backend now supports [folder/ZIP import and map loading](../docs/simulator/project-loading.md); [continuous traffic and the city UI](../components/simulator/README.md) are now implemented.
 
 | Project | Contents |
 | --- | --- |

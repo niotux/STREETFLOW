@@ -51,7 +51,7 @@ public static class ProjectEndpoints
       totalEdges++;
     }
 
-    return new ProjectMapResponse(project.Manifest.Id, project.Revision, project.Manifest.Network.Attribution, "SUMO local meters", lanes.Length, project.Junctions.Length, totalEdges, start, Endpoints.Page(lanes, start, size), Endpoints.Page(project.Junctions, start, size), edges.ToArray(), project.SignalIds);
+    return new ProjectMapResponse(project.Manifest.Id, project.Revision, project.Manifest.Network.Attribution, "SUMO local meters", lanes.Length, project.Junctions.Length, totalEdges, start, Endpoints.Page(lanes, start, size), Endpoints.Page(project.Junctions, start, size), edges.ToArray(), project.SignalIds, project.TerminalPoints);
   }
 
   private static async Task<IResult> ImportZipAsync(HttpRequest request, ProjectCatalog catalog, SimulatorOptions options, CancellationToken token)

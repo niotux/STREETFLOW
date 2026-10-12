@@ -1,6 +1,6 @@
 # Central Iași city project
 
-Project accepted in task 2 on 2026-10-11. Backend import/map loading is available; continuous generation remains pending.
+Project accepted in task 2 on 2026-10-11. Backend import, continuous generation, and the city UI are available; manual runtime review is deferred.
 
 This folder contains the existing OSM-derived central road graph and explicit profiles for all 713 passenger-usable ordinary directed edges. Each profile has 24 hourly traffic weights. Its edge identifier is taken directly from network.net.xml.
 

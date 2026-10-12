@@ -9,6 +9,7 @@ public sealed record ProjectManifest
   public required ProjectNetwork Network { get; init; }
   public required string DemandFile { get; init; }
   public string? DetectorsFile { get; init; }
+  public string? TerminalsFile { get; init; }
   public string[] AdditionalFiles { get; init; } = [];
   public ProjectDefaults Defaults { get; init; } = new();
 }

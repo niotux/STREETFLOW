@@ -4,6 +4,7 @@ using Streetflow.Simulator.Api;
 using Streetflow.Simulator.Persistence;
 using Streetflow.Simulator.Runtime;
 using Streetflow.Simulator.Scenarios;
+using Streetflow.Simulator.City;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 SimulatorOptions options = new()
@@ -16,7 +17,11 @@ SimulatorOptions options = new()
   EngineTimeoutSeconds = 15,
   ObservationRetention = 2000,
   MaximumProjectBytes = 256L * 1024 * 1024,
-  MaximumProjectFiles = 4096
+  MaximumProjectFiles = 4096,
+  MaximumLiveVehicles = 5000,
+  MaximumPendingEntries = 512,
+  GenerationBatchSize = 64,
+  MaximumBacklogSeconds = 300
 };
 builder.Configuration.GetSection("Simulator").Bind(options);
 string workspace = FindWorkspace(builder.Environment.ContentRootPath);
@@ -43,6 +48,7 @@ WebApplication app = builder.Build();
 ConfigurePipeline(app);
 await app.Services.GetRequiredService<RunCoordinator>().InitializeAsync(CancellationToken.None);
 _ = app.Services.GetRequiredService<ProjectCatalog>();
+await app.Services.GetRequiredService<CityRunCoordinator>().InitializeAsync();
 await app.RunAsync();
 static string FindWorkspace(string startPath)
 {
@@ -94,7 +100,11 @@ static void RegisterServices(WebApplicationBuilder builder, SimulatorOptions opt
   builder.Services.AddSingleton<ProjectCatalog>();
   builder.Services.AddSingleton<RunStore>();
   builder.Services.AddSingleton<RunCoordinator>();
+  builder.Services.AddSingleton<EngineOwnership>();
+  builder.Services.AddSingleton<CityRunStorage>();
+  builder.Services.AddSingleton<CityRunCoordinator>();
   builder.Services.AddHostedService(serviceProvider => serviceProvider.GetRequiredService<RunCoordinator>());
+  builder.Services.AddHostedService(serviceProvider => serviceProvider.GetRequiredService<CityRunCoordinator>());
   builder.Services.ConfigureHttpJsonOptions(json =>
   {
     json.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
@@ -137,6 +147,7 @@ static void ConfigurePipeline(WebApplication app)
   app.MapOpenApi();
   app.MapSimulatorApi();
   app.MapProjectApi();
+  app.MapCityRunApi();
 }
 
 public partial class Program;
