@@ -43,7 +43,7 @@ public sealed class BackendFactory : WebApplicationFactory<Program>
       }
 
       services.RemoveAll<SimulatorOptions>();
-      services.AddSingleton(new SimulatorOptions { ScenarioRoot = Path.Combine(directory.FullName, "scenarios"), DataRoot = DataRoot, SumoBinary = SumoBinary ?? Environment.GetEnvironmentVariable("Simulator__SumoBinary") ?? "sumo", ConnectionString = ConnectionString, ObservationRetention = Retention, EngineTimeoutSeconds = 5, NetconvertBinary = "netconvert", DuarouterBinary = "duarouter", MaximumProjectBytes = 256L * 1024 * 1024, MaximumProjectFiles = 4096, MaximumLiveVehicles = MaximumLiveVehicles, MaximumPendingEntries = MaximumPendingEntries, GenerationBatchSize = 64, MaximumBacklogSeconds = MaximumBacklogSeconds });
+      services.AddSingleton(new SimulatorOptions { ScenarioRoot = Path.Combine(directory.FullName, "scenarios"), DataRoot = DataRoot, SumoBinary = SumoBinary ?? Environment.GetEnvironmentVariable("Simulator__SumoBinary") ?? "sumo", ConnectionString = ConnectionString, ObservationRetention = Retention, EngineTimeoutSeconds = 5, NetconvertBinary = "netconvert", DuarouterBinary = "duarouter", MaximumProjectBytes = 256L * 1024 * 1024, MaximumProjectFiles = 4096, MaximumLiveVehicles = MaximumLiveVehicles, MaximumPendingEntries = MaximumPendingEntries, GenerationBatchSize = 64, MaximumBacklogSeconds = MaximumBacklogSeconds, MaximumTransformerStates = 512, MaximumTransformerRouteMovements = 10000, MaximumTransformerCachedContexts = 128, MaximumDynamicRoutes = 4096 });
     });
   }
 }

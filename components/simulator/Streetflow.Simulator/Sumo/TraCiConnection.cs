@@ -15,6 +15,8 @@ public sealed class TraCiConnection : IDisposable
   private readonly TimeSpan timeout;
   private readonly NetworkStream stream;
   private readonly Dictionary<string, VehicleState> vehicles = new(StringComparer.Ordinal);
+  private readonly Dictionary<string, string> dynamicRoutes = new(StringComparer.Ordinal);
+  public int MaximumDynamicRoutes { private get; set; }
   private HashSet<LoopEntryKey> lastLoopEntries = [];
   private static readonly TraCiVariable[] VehicleVariables = [TraCiVariable.LaneId, TraCiVariable.LanePosition, TraCiVariable.Position, TraCiVariable.Speed, TraCiVariable.Angle, TraCiVariable.RoadId];
   public TraCiConnection(TcpClient client, TimeSpan timeout)
@@ -135,7 +137,7 @@ public sealed class TraCiConnection : IDisposable
     return new TraCiCommand((byte)TraCiCommandId.SubscribeVehicle, body);
   }
 
-  private async Task<SignalState[]> GetSignalsAsync(string[] signalIds, CancellationToken token)
+  public async Task<SignalState[]> GetSignalsAsync(string[] signalIds, CancellationToken token)
   {
     SignalState[] signals = new SignalState[signalIds.Length];
     for (int offset = 0; offset < signalIds.Length; offset += TraCiProtocol.QueryBatchSize)
@@ -155,6 +157,18 @@ public sealed class TraCiConnection : IDisposable
     }
 
     return signals;
+  }
+
+  public async Task SetSignalStateAsync(string signalId, string state, CancellationToken token)
+  {
+    byte[] body = Encode(writer =>
+    {
+      writer.Byte((byte)TraCiVariable.TrafficLightState);
+      writer.String(signalId);
+      WriteTypedString(writer, state);
+    });
+    WireReader response = await SendAsync([new TraCiCommand((byte)TraCiCommandId.SetTrafficLight, body)], token);
+    ReadStatus(response, (byte)TraCiCommandId.SetTrafficLight);
   }
 
   private async Task<LineCrossing[]> GetCrossingsAsync(CountingLine[] lines, CancellationToken token)
@@ -218,17 +232,18 @@ public sealed class TraCiConnection : IDisposable
     const byte SetVehicleCommand = 0xc4;
     const byte AddVehicleVariable = 0x85;
     const int AddVehicleFieldCount = 14;
-    TraCiCommand[] commands = new TraCiCommand[arrivals.Length];
+    List<TraCiCommand> commands = [];
     for (int index = 0; index < arrivals.Length; index++)
     {
       GeneratedArrival arrival = arrivals[index];
+      string routeId = ResolveRoute(arrival.Route, commands);
       byte[] body = Encode(writer =>
       {
         writer.Byte(AddVehicleVariable);
         writer.String(arrival.Id);
         writer.Byte((byte)TraCiValueType.Compound);
         writer.Int(AddVehicleFieldCount);
-        WriteTypedString(writer, arrival.Route.Id);
+        WriteTypedString(writer, routeId);
         WriteTypedString(writer, arrival.Route.VehicleTypeId);
         WriteTypedString(writer, Math.Max(arrival.DepartureSeconds, simulationTime).ToString("R", CultureInfo.InvariantCulture));
         WriteTypedString(writer, arrival.Route.DepartureLaneIndex?.ToString(CultureInfo.InvariantCulture) ?? "best");
@@ -245,19 +260,54 @@ public sealed class TraCiConnection : IDisposable
         writer.Byte((byte)TraCiValueType.Integer);
         writer.Int(0);
       });
-      commands[index] = new TraCiCommand(SetVehicleCommand, body);
+      commands.Add(new TraCiCommand(SetVehicleCommand, body));
     }
 
-    if (commands.Length == 0)
+    if (commands.Count == 0)
     {
       return;
     }
 
-    WireReader response = await SendAsync(commands, token);
+    WireReader response = await SendAsync(commands.ToArray(), token);
     foreach (TraCiCommand command in commands)
     {
       ReadStatus(response, command.Id);
     }
+  }
+
+  private string ResolveRoute(RouteCandidate route, List<TraCiCommand> commands)
+  {
+    if (!route.IsDynamic)
+    {
+      return route.Id;
+    }
+
+    string key = string.Join("\0", route.Edges);
+    if (dynamicRoutes.TryGetValue(key, out string? existing))
+    {
+      return existing;
+    }
+
+    if (dynamicRoutes.Count >= MaximumDynamicRoutes)
+    {
+      throw new ApiException(400, "generation_error", $"Dynamic SUMO routes exceed the configured limit of {MaximumDynamicRoutes}; traffic was not redirected");
+    }
+
+    const byte AddRouteVariable = 0x80;
+    byte[] body = Encode(writer =>
+    {
+      writer.Byte(AddRouteVariable);
+      writer.String(route.Id);
+      writer.Byte((byte)TraCiValueType.StringList);
+      writer.Int(route.Edges.Length);
+      foreach (string edge in route.Edges)
+      {
+        writer.String(edge);
+      }
+    });
+    commands.Add(new TraCiCommand((byte)TraCiCommandId.SetRoute, body));
+    dynamicRoutes.Add(key, route.Id);
+    return route.Id;
   }
 
   private static void WriteTypedString(WireWriter writer, string value)

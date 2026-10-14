@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "pattern": "^\\S+$"
+      },
+      "lane_id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "pattern": "^\\S+$"
+      },
+      "role": {
+        "enum": [
+          "entry",
+          "exit"
+        ]
+      },
+      "position_m": {
+        "type": "number",
+        "minimum": 0
+      },
+      "label": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "required": [
+      "id",
+      "lane_id",
+      "role",
+      "position_m"
+    ],
+    "additionalProperties": false
+  },
+  "minItems": 2
+}

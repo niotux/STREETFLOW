@@ -47,7 +47,7 @@ public sealed class CityGenerationTests
     CityProject project = Load(id);
     CityDemandGenerator generator = new(project, 7, 0);
     Assert.NotEmpty(generator.Candidates);
-    Assert.True(generator.Candidates.Length <= project.Demand.Generation.CandidateLimit);
+    Assert.True(generator.Candidates.Length <= project.Demand!.Generation.CandidateLimit);
     Dictionary<string, ProjectEdge> edges = new(StringComparer.Ordinal);
     foreach (ProjectEdge edge in project.Edges)
     {
@@ -56,7 +56,7 @@ public sealed class CityGenerationTests
 
     foreach (RouteCandidate route in generator.Candidates)
     {
-      Assert.InRange(route.DistanceM, project.Demand.Generation.MinTripDistanceM, project.Demand.Generation.MaxTripDistanceM);
+      Assert.InRange(route.DistanceM, project.Demand!.Generation.MinTripDistanceM, project.Demand!.Generation.MaxTripDistanceM);
       Assert.Equal(route.Edges.Length, new HashSet<string>(route.Edges).Count);
       foreach (string edge in route.Edges)
       {
@@ -96,7 +96,7 @@ public sealed class CityGenerationTests
       integral += generator.RatePerSecond(hour * 3600) * 3600;
     }
 
-    Assert.Equal(project.Demand.Generation.MeanDeparturesPerHour * 24, integral, precision: 6);
+    Assert.Equal(project.Demand!.Generation.MeanDeparturesPerHour * 24, integral, precision: 6);
   }
 
   [Fact]
@@ -246,7 +246,7 @@ public sealed class CityGenerationTests
     bool hasAlternative = false;
     foreach (List<RouteCandidate> alternatives in pairs.Values)
     {
-      Assert.InRange(alternatives.Count, 1, project.Demand.Routing.MaxAlternatives);
+      Assert.InRange(alternatives.Count, 1, project.Demand!.Routing.MaxAlternatives);
       hasAlternative = hasAlternative || alternatives.Count > 1;
       double shortest = double.PositiveInfinity;
       foreach (RouteCandidate route in alternatives)
@@ -256,7 +256,7 @@ public sealed class CityGenerationTests
 
       foreach (RouteCandidate route in alternatives)
       {
-        Assert.True(route.TravelTimeSeconds <= shortest * project.Demand.Routing.MaxDetourRatio);
+        Assert.True(route.TravelTimeSeconds <= shortest * project.Demand!.Routing.MaxDetourRatio);
       }
     }
 

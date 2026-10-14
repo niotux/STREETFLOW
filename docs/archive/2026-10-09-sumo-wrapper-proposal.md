@@ -1,6 +1,6 @@
 # STREETFLOW simulator implementation plan
 
-**Archived proposal.** Superseded by [docs/simulator](../simulator/README.md). The Python/uv recommendation and traffic-light-first assumption below are historical, not active decisions.
+**Archived proposal.** Superseded by [docs/simulator](../components/simulator/README.md). The Python/uv recommendation and traffic-light-first assumption below are historical, not active decisions.
 
 Use SUMO as the traffic simulation engine and build a small STREETFLOW service around it. The simulator supplies a reproducible road network, vehicles, demand, detectors, and ordinary traffic control. The product under test reads observations and sends commands through a separate interface. Its optimization and AI logic live outside the simulator.
 

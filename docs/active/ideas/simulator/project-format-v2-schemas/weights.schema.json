@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "format_version": {
+      "type": "integer",
+      "const": 2
+    },
+    "tensors": {
+      "type": "object",
+      "properties": {
+        "arrival_rates": {
+          "type": "object",
+          "properties": {
+            "dtype": {
+              "const": "float64"
+            },
+            "axis_order": {
+              "const": [
+                "period",
+                "origin"
+              ]
+            },
+            "shape": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "dtype",
+            "axis_order",
+            "shape",
+            "values"
+          ],
+          "additionalProperties": false
+        },
+        "journey_logits": {
+          "type": "object",
+          "properties": {
+            "dtype": {
+              "const": "float64"
+            },
+            "axis_order": {
+              "const": [
+                "period",
+                "origin",
+                "destination",
+                "category",
+                "vehicle_type"
+              ]
+            },
+            "shape": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "minItems": 5,
+              "maxItems": 5
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "dtype",
+            "axis_order",
+            "shape",
+            "values"
+          ],
+          "additionalProperties": false
+        },
+        "movement_logits": {
+          "type": "object",
+          "properties": {
+            "dtype": {
+              "const": "float64"
+            },
+            "axis_order": {
+              "const": [
+                "period",
+                "origin",
+                "destination",
+                "category",
+                "vehicle_type",
+                "movement"
+              ]
+            },
+            "shape": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "minItems": 6,
+              "maxItems": 6
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "dtype",
+            "axis_order",
+            "shape",
+            "values"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "arrival_rates",
+        "journey_logits",
+        "movement_logits"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "format_version",
+    "tensors"
+  ],
+  "additionalProperties": false
+}

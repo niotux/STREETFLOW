@@ -20,4 +20,4 @@ The project contains only the manifest, graph, traffic rules, optional placehold
 
 Network attribution: © OpenStreetMap contributors, https://www.openstreetmap.org/copyright. Generated signal programs and spatial weighting are approximate.
 
-Review [the format](../../../docs/simulator/experiment-project-format.md) and [tasks](../../../docs/simulator/experiment-integration-plan.md).
+Review [the format](../../../docs/components/simulator/experiment-project-format.md) and [tasks](../../../docs/archive/experiment-integration-plan.md).

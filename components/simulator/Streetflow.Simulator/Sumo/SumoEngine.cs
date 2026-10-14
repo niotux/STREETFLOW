@@ -74,7 +74,9 @@ public sealed class SumoEngine : IAsyncDisposable
     AddArgument(info, "--max-num-vehicles", configuration.MaximumLiveVehicles.ToString(CultureInfo.InvariantCulture));
     signalIds = project.SignalIds;
     countingLines = [];
-    return await LaunchAsync(info, directory, port, options.EngineTimeoutSeconds, token);
+    string version = await LaunchAsync(info, directory, port, options.EngineTimeoutSeconds, token);
+    connection!.MaximumDynamicRoutes = configuration.TransformerLimits?.MaximumDynamicRoutes ?? options.MaximumDynamicRoutes;
+    return version;
   }
 
   private async Task<string> LaunchAsync(ProcessStartInfo info, string directory, int port, double timeoutSeconds, CancellationToken token)
@@ -92,6 +94,10 @@ public sealed class SumoEngine : IAsyncDisposable
   }
 
   public Task AddVehiclesAsync(GeneratedArrival[] arrivals, double simulationTime, CancellationToken token) => connection!.AddVehiclesAsync(arrivals, simulationTime, token);
+
+  public Task<SignalState[]> GetSignalsAsync(CancellationToken token) => connection!.GetSignalsAsync(signalIds, token);
+
+  public Task SetSignalStateAsync(string signalId, string state, CancellationToken token) => connection!.SetSignalStateAsync(signalId, state, token);
 
   public Task<EngineSnapshot> StepAsync(CancellationToken token)
   {
@@ -184,6 +190,11 @@ public sealed class SumoEngine : IAsyncDisposable
     AddArgument(info, "--remote-port", port.ToString(CultureInfo.InvariantCulture));
     AddArgument(info, "--seed", config.Seed.ToString(CultureInfo.InvariantCulture));
     AddArgument(info, "--step-length", config.StepSeconds.ToString(CultureInfo.InvariantCulture));
+    if (city)
+    {
+      AddArgument(info, "--tls.all-off", "true");
+    }
+
     if (!city)
     {
       AddArgument(info, "--time-to-teleport", "-1");

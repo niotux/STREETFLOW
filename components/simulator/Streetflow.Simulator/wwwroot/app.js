@@ -1,11 +1,45 @@
 import {archiveFolder} from './folder-archive.js';
+import {initializeWorkspace} from './workspace.js?v=workspace-4';
+import {vehicleSettingsXml} from './sumo-settings.js?v=workspace-1';
+import {VehicleMotion} from './vehicle-motion.js?v=motion-2';
+import {signalAppearance, deviceState, deviceDescription, layoutSignalMarkers} from './signals.js?v=physical-devices-1';
 const $ = id => document.getElementById(id);
+const workspace = initializeWorkspace();
 const canvas = $('map');
 const context = canvas.getContext('2d');
+const vehicleMotion = new VehicleMotion();
+const roadCanvas = document.createElement('canvas');
+const roadContext = roadCanvas.getContext('2d');
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+let animationFrame = 0, roadCache = null, signalLayoutDirty = true;
 let projects = [], selectedProject = null, run = null, network = null, snapshot = null;
+let trafficInput = null;
 let busy = false, generation = 0, initialized = false;
 let width = 1, height = 1, view = {x: 0, y: 0, scale: 1}, drag = null;
 let terminalGroups = [], selectedTerminal = null;
+let signalMarkers = [];
+
+function acceptSnapshot(value, animate = run?.state === 'running') {
+  snapshot = value;
+  const now = performance.now();
+  vehicleMotion.update(value, animate && !document.hidden && !reducedMotion.matches, now, run?.pacing, run?.configuration.step_seconds);
+  if (!vehicleMotion.isAnimating(now)) {
+    cancelAnimationFrame(animationFrame);
+    animationFrame = 0;
+  } else if (!animationFrame) {
+    animationFrame = requestAnimationFrame(animateVehicles);
+  }
+}
+function animateVehicles(now) {
+  animationFrame = 0;
+  draw(now);
+  if (!document.hidden && vehicleMotion.isAnimating(now)) animationFrame = requestAnimationFrame(animateVehicles);
+}
+document.addEventListener('visibilitychange', () => {
+  acceptSnapshot(snapshot, false);
+  if (!document.hidden) draw();
+});
+reducedMotion.addEventListener('change', () => { acceptSnapshot(snapshot, false); draw(); });
 
 async function api(path, method = 'GET', body) {
   const response = await fetch(`/api/v1${path}`, {
@@ -28,16 +62,85 @@ function timeText(seconds) {
   const total = Math.floor(seconds);
   return [Math.floor(total / 3600), Math.floor(total / 60) % 60, total % 60].map(value => String(value).padStart(2, '0')).join(':');
 }
+async function readTrafficInput(id) {
+  const demand = await api(`/projects/${encodeURIComponent(id)}/demand`);
+  const weights = demand.format_version === 2 ? await api(`/projects/${encodeURIComponent(id)}/weights`) : null;
+  return {demand, weights};
+}
+function profileTimeSummary(demand) {
+  if (demand.format_version === 2) return `Transformer Routes · ${demand.axes.period.length} daily periods · journeys sampled from model weights.`;
+  let firstChange = Infinity, lastChange = -Infinity;
+  for (const profile of demand.profiles) {
+    for (let index = 1; index < profile.intervals.length; index++) {
+      const current = profile.intervals[index], previous = profile.intervals[index - 1];
+      if (current.weight === previous.weight) continue;
+      firstChange = Math.min(firstChange, current.start_seconds);
+      lastChange = Math.max(lastChange, current.start_seconds);
+    }
+  }
+  if (!Number.isFinite(firstChange)) return 'Stored traffic profiles are constant throughout the day.';
+  return `Stored traffic profiles change between ${timeText(firstChange)} and ${timeText(lastChange)}; outside that window they are constant.`;
+}
+function showDemand(demand, weights) {
+  trafficInput = {demand, weights};
+  showArrivalRate();
+  const types = demand.format_version === 2 ? demand.axes.vehicle_type : demand.vehicle_types;
+  $('vehicle-type').replaceChildren();
+  for (const type of types) {
+    const option = new Option(`${type.id} · ${type.vehicle_class}`, type.id);
+    option.dataset.vehicleClass = type.vehicle_class;
+    $('vehicle-type').add(option);
+  }
+  $('export-sumo').disabled = types.length === 0;
+  let minimum = Infinity, maximum = -Infinity;
+  for (const lane of network?.lanes || []) {
+    if (lane.id.startsWith(':')) continue;
+    minimum = Math.min(minimum, lane.speed * 3.6);
+    maximum = Math.max(maximum, lane.speed * 3.6);
+  }
+  $('road-speed-value').textContent = Number.isFinite(minimum) ? `${Math.round(minimum)}–${Math.round(maximum)} km/h` : '—';
+}
+function showArrivalRate() {
+  if (!trafficInput) return;
+  const {demand, weights} = trafficInput;
+  let rate = demand.generation?.mean_departures_per_hour;
+  if (demand.format_version === 2) {
+    const clock = run?.city_time_seconds ?? selectedProject?.manifest.defaults.start_time_seconds ?? 0;
+    const period = demand.axes.period.findIndex(item => clock >= item.start_seconds && clock < item.end_seconds);
+    rate = 0;
+    const origins = demand.axes.origin.length;
+    for (let origin = 0; origin < origins; origin++) rate += weights.tensors.arrival_rates.values[period * origins + origin];
+  }
+  $('demand-value').textContent = `${rate.toLocaleString()} / h`;
+}
+$('sumo-form').onsubmit = event => {
+  event.preventDefault();
+  const selected = $('vehicle-type').selectedOptions[0];
+  if (!selected) return;
+  const settings = {
+    id: selected.value, vehicleClass: selected.dataset.vehicleClass,
+    minGap: Number($('min-gap').value), headway: Number($('headway').value),
+    speedFactor: Number($('speed-factor').value), speedDeviation: Number($('speed-deviation').value),
+    acceleration: Number($('acceleration').value), deceleration: Number($('deceleration').value)
+  };
+  const url = URL.createObjectURL(new Blob([vehicleSettingsXml(settings)], {type: 'application/xml'}));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'streetflow-vehicles.add.xml';
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
 function pacing() {
   const value = $('speed').value;
   return {mode: value === 'unpaced' ? 'unpaced' : 'realtime', multiplier: value === 'unpaced' ? 1 : Number(value)};
 }
 function controls() {
+  showArrivalRate();
   $('project').disabled = busy || active();
   $('zip').disabled = busy || active();
   $('local-folder').disabled = busy || active();
   $('import').disabled = busy || active();
-  $('import').firstChild.textContent = busy ? 'Working… ' : 'Import ';
+  $('import').firstChild.textContent = busy ? 'Working… ' : 'Import project ';
   $('fit').disabled = !network;
   $('zoom-in').disabled = !network;
   $('zoom-out').disabled = !network;
@@ -45,11 +148,14 @@ function controls() {
   $('folder-form').querySelector('button').disabled = busy || active();
   $('seed').disabled = busy || active();
   $('start-time').disabled = busy || active();
-  $('start').disabled = busy || active() || !selectedProject;
+  $('load').disabled = busy || active() || !selectedProject;
+  $('step-seconds').disabled = busy || active();
+  $('start').disabled = busy || run?.state !== 'paused';
+  $('start').textContent = run?.simulation_time > 0 ? '▶ Resume' : '▶ Start';
   $('speed').disabled = busy;
   syncSpeed();
-  $('toggle').disabled = busy || !active();
-  $('toggle').textContent = run?.state === 'paused' ? 'Resume' : 'Pause';
+  $('toggle').disabled = busy || run?.state !== 'running';
+  $('toggle').textContent = 'Pause';
   $('step').disabled = busy || run?.state !== 'paused';
   $('stop').disabled = busy || !active();
   $('restart').disabled = busy || !run;
@@ -59,7 +165,13 @@ function controls() {
   $('lane-count').textContent = network ? network.lanes.length.toLocaleString() : '—';
   $('city-clock').textContent = timeText(run?.city_time_seconds ?? selectedProject?.manifest.defaults.start_time_seconds);
   $('city-day').textContent = run ? `CITY TIME · DAY ${run.day + 1}` : 'CITY TIME';
-  $('run-note').textContent = active() ? 'Closing this page leaves traffic running.' : 'Use the same seed to replay the same traffic.';
+  $('run-note').textContent = run?.state === 'running' ? 'Traffic keeps running if you close this page.' : run?.state === 'paused' ? 'Simulation loaded and paused. Start or advance one step.' : 'Load a simulation in Loader, then start here.';
+  $('load-note').textContent = active() ? 'Simulation loaded. Stop it in Runner before loading another.' : 'Load prepares a paused run. Runner controls the traffic.';
+  $('arrived-count').textContent = run ? (run.arrived_vehicles || 0).toLocaleString() : '—';
+  $('pending-count').textContent = run ? run.pending_entries.toLocaleString() : '—';
+  $('elapsed-value').textContent = timeText(run?.simulation_time);
+  $('backlog-value').textContent = run ? `${run.backlog_seconds.toFixed(1)} s` : '—';
+  $('recovery-value').textContent = run ? (run.gridlock_recoveries || 0).toLocaleString() : '—';
 }
 async function action(work) {
   if (busy) return;
@@ -79,7 +191,7 @@ async function refreshProjects() {
     const option = new Option('Import a project to begin', '');
     $('project').add(option);
   }
-  for (const project of projects) $('project').add(new Option(project.manifest.name, project.manifest.id));
+  for (const project of projects) $('project').add(new Option(`${project.manifest.name} · ${project.model_kind || "Edge Population"}`, project.manifest.id));
   if (projects.some(project => project.manifest.id === value)) $('project').value = value;
 }
 async function openProject(id) {
@@ -87,7 +199,7 @@ async function openProject(id) {
   const info = projects.find(project => project.manifest.id === id);
   if (!info) return;
   selectedProject = info;
-  run = null; snapshot = null; network = null;
+  run = null; acceptSnapshot(null); network = null; trafficInput = null;
   $('map-label').textContent = 'Loading streets…';
   const map = {lanes: [], junctions: [], terminals: []};
   for (let offset = 0; ; offset += 10000) {
@@ -96,20 +208,28 @@ async function openProject(id) {
     map.lanes.push(...page.lanes);
     map.junctions.push(...page.junctions);
     map.attribution = page.attribution;
-    if (offset === 0) map.terminals = page.terminals || [];
+    if (offset === 0) {
+      map.terminals = page.terminals || [];
+      map.traffic_devices = page.traffic_devices || [];
+    }
     if (offset + 10000 >= Math.max(page.total_lanes, page.total_junctions)) break;
   }
   if (token !== generation) return;
+  const {demand, weights} = await readTrafficInput(id);
+  if (token !== generation) return;
   showMap(map, info.manifest.name);
   $('start-time').value = timeText(info.manifest.defaults.start_time_seconds);
-  $('project-note').textContent = info.manifest.description || `${info.usable_edge_count} directed roads · daily traffic profiles`;
-  $('snapshot-note').textContent = 'Map ready. Start traffic when you’re ready.';
+  $('step-seconds').value = info.manifest.defaults.step_seconds;
+  showDemand(demand, weights);
+  $('project-note').textContent = `${info.manifest.description || info.manifest.name} ${profileTimeSummary(demand)}`;
+  $('snapshot-note').textContent = 'Network ready. Load a simulation in Loader.';
   controls();
 }
 function showMap(map, name) {
   network = map;
+  vehicleMotion.setNetwork(map);
   selectedTerminal = null;
-  terminalGroups = [];
+  signalMarkers = [];
   $('terminal-tooltip').hidden = true;
   const terminals = map.terminals || [];
   $('terminal-inspector').hidden = terminals.length === 0;
@@ -130,13 +250,22 @@ async function openRun(status) {
   const map = await api(`/city-runs/${status.id}/map`);
   if (token !== generation) return;
   run = status;
-  snapshot = null;
+  acceptSnapshot(null);
   selectedProject = projects.find(project => project.manifest.id === status.configuration.project_id) || null;
   $('project').value = status.configuration.project_id;
   $('seed').value = status.configuration.seed;
   $('start-time').value = timeText(status.configuration.start_time_seconds);
-  $('speed').value = status.pacing.mode === 'unpaced' ? 'unpaced' : String(status.pacing.multiplier);
+  $('step-seconds').value = status.configuration.step_seconds;
+  const playback = status.pacing.mode === 'unpaced' ? 'unpaced' : String(status.pacing.multiplier);
+  if (!Array.from($('speed').options).some(option => option.value === playback)) $('speed').add(new Option(`${playback}×`, playback));
+  $('speed').value = playback;
   showMap(map, selectedProject?.manifest.name || status.configuration.project_id);
+  if (selectedProject) {
+    const {demand, weights} = await readTrafficInput(selectedProject.manifest.id);
+    if (token !== generation) return;
+    $('project-note').textContent = `${selectedProject.manifest.description || selectedProject.manifest.name} ${profileTimeSummary(demand)}`;
+    showDemand(demand, weights);
+  }
   await refresh(token);
   controls();
 }
@@ -146,9 +275,9 @@ async function refresh(token) {
   const [status, nextSnapshot] = await Promise.all([api(`/city-runs/${id}`), api(`/city-runs/${id}/snapshot`)]);
   if (token !== generation || busy) return;
   run = status;
-  snapshot = nextSnapshot;
+  acceptSnapshot(nextSnapshot);
   controls();
-  $('snapshot-note').textContent = status.state === 'failed' ? 'Simulation failed. Check the message above.' : !nextSnapshot.available ? 'Traffic stopped. Restart to replay this seed.' : `${nextSnapshot.total_active_count} cars on the map · orange cars are stopped`;
+  $('snapshot-note').textContent = status.state === 'failed' ? 'Simulation failed. Check the message above.' : !nextSnapshot.available ? 'Traffic stopped. Start a new run to simulate traffic.' : `${nextSnapshot.total_active_count} cars on the map · ${status.arrived_vehicles || 0} exited · ${status.pending_entries} waiting to enter`;
   if (status.gridlock_recoveries > 0) $('snapshot-note').textContent += ` · Gridlock recovery moved ${status.gridlock_recoveries} vehicles past blocked sections`;
   if (status.warning && !status.failure) $('snapshot-note').textContent += ` · ${status.warning}`;
   if (status.failure) showError(new Error(status.failure));
@@ -184,44 +313,52 @@ $('folder-form').onsubmit = event => {
   event.preventDefault();
   action(async () => importResult(await api('/projects/import/folder', 'POST', {path: $('folder').value})));
 };
-$('start-form').onsubmit = event => {
+$('load-form').onsubmit = event => {
   event.preventDefault();
+  if (!$('step-seconds').checkValidity()) {
+    workspace.show('sumo');
+    $('step-seconds').reportValidity();
+    return;
+  }
   action(async () => {
     const parts = $('start-time').value.split(':').map(Number);
     const start = parts[0] * 3600 + parts[1] * 60 + (parts[2] || 0);
-    const status = await api(`/projects/${encodeURIComponent(selectedProject.manifest.id)}/runs`, 'POST', {seed: Number($('seed').value), start_time_seconds: start, start_paused: false, pacing: pacing()});
+    const status = await api(`/projects/${encodeURIComponent(selectedProject.manifest.id)}/runs`, 'POST', {seed: Number($('seed').value), start_time_seconds: start, start_paused: true, step_seconds: Number($('step-seconds').value), pacing: pacing()});
     await openRun(status);
+    workspace.show('runner');
     if (status.failure) throw new Error(status.failure);
   });
 };
-for (const command of ['toggle', 'step', 'stop', 'restart']) $(command).onclick = () => action(async () => {
-  const name = command === 'toggle' ? run.state === 'paused' ? 'resume' : 'pause' : command;
+for (const command of ['start', 'toggle', 'step', 'stop', 'restart']) $(command).onclick = () => action(async () => {
+  const name = command === 'start' ? 'resume' : command === 'toggle' ? 'pause' : command;
   const result = await api(`/city-runs/${run.id}/${name}`, 'POST', {});
   if (name === 'restart') await openRun(result);
   else {
     run = result;
-    snapshot = await api(`/city-runs/${run.id}/snapshot`);
+    acceptSnapshot(await api(`/city-runs/${run.id}/snapshot`), false);
     controls(); draw();
   }
   if (result.failure) throw new Error(result.failure);
 });
 $('speed').onchange = () => {
   syncSpeed();
-  if (active()) action(async () => { run = await api(`/city-runs/${run.id}/pacing`, 'POST', {pacing: pacing()}); });
+  if (active()) action(async () => {
+    run = await api(`/city-runs/${run.id}/pacing`, 'POST', {pacing: pacing()});
+    vehicleMotion.setPacing(run.pacing);
+  });
 };
 const speedValues = ['0.5', '1', '2', '5', '10', 'unpaced'];
-const speedDial = $('speed-dial');
+const speedSlider = $('speed-slider');
 function syncSpeed() {
   const value = $('speed').value;
   const index = speedValues.indexOf(value);
   const label = value === 'unpaced' ? 'MAX' : `${value}×`;
-  speedDial.style.setProperty('--angle', `${-135 + index * 54}deg`);
-  speedDial.setAttribute('aria-valuenow', index);
-  speedDial.setAttribute('aria-valuetext', value === 'unpaced' ? 'As fast as possible' : `${value} times speed`);
-  speedDial.setAttribute('aria-disabled', String(busy));
-  $('dial-value').textContent = label;
-  $('playback-value').textContent = label;
-  $('dial-description').textContent = value === 'unpaced' ? 'Maximum speed' : value === '1' ? 'Real time' : 'Playback speed';
+  speedSlider.value = index < 0 ? 1 : index;
+  speedSlider.style.setProperty('--speed-progress', `${Number(speedSlider.value) * 20}%`);
+  speedSlider.setAttribute('aria-valuetext', value === 'unpaced' ? 'As fast as possible' : `${value} times speed`);
+  speedSlider.disabled = busy;
+  $('speed-value').textContent = label;
+  $('playback-value').textContent = run && active() ? run.pacing.mode === 'unpaced' ? 'MAX' : `${run.pacing.multiplier}×` : label;
   for (const button of document.querySelectorAll('[data-speed]')) {
     button.setAttribute('aria-pressed', String(button.dataset.speed === value));
     button.disabled = busy;
@@ -229,46 +366,19 @@ function syncSpeed() {
 }
 function setSpeed(index, commit = true) {
   if (busy) return;
-  $('speed').value = speedValues[Math.max(0, Math.min(5, index))];
+  $('speed').value = speedValues[Math.max(0, Math.min(speedValues.length - 1, index))];
   syncSpeed();
   if (commit) $('speed').dispatchEvent(new Event('change'));
 }
 for (const button of document.querySelectorAll('[data-speed]')) {
   button.onclick = () => setSpeed(speedValues.indexOf(button.dataset.speed));
 }
-function turnDial(event) {
-  const box = speedDial.getBoundingClientRect();
-  const x = event.clientX - box.left - box.width / 2;
-  const y = event.clientY - box.top - box.height / 2;
-  const angle = Math.atan2(x, -y) * 180 / Math.PI;
-  setSpeed(Math.round((Math.max(-135, Math.min(135, angle)) + 135) / 54), false);
-}
-let turningDial = false;
-speedDial.onpointerdown = event => {
-  if (busy) return;
-  turningDial = true;
-  speedDial.focus();
-  speedDial.setPointerCapture(event.pointerId);
-  turnDial(event);
-};
-speedDial.onpointermove = event => { if (turningDial) turnDial(event); };
-speedDial.onpointerup = speedDial.onpointercancel = () => {
-  if (!turningDial) return;
-  turningDial = false;
-  $('speed').dispatchEvent(new Event('change'));
-};
-speedDial.onkeydown = event => {
-  const index = speedValues.indexOf($('speed').value);
-  const increments = {ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1};
-  if (event.key in increments || event.key === 'Home' || event.key === 'End') {
-    event.preventDefault();
-    setSpeed(event.key === 'Home' ? 0 : event.key === 'End' ? 5 : index + increments[event.key]);
-  }
-};
+speedSlider.oninput = () => setSpeed(Number(speedSlider.value), false);
+speedSlider.onchange = () => $('speed').dispatchEvent(new Event('change'));
 $('focus-view').onclick = () => {
   const focused = document.body.classList.toggle('focus-view');
   $('focus-view').setAttribute('aria-pressed', String(focused));
-  $('focus-view').textContent = focused ? 'Exit focus' : 'Focus view';
+  $('focus-view').textContent = focused ? 'Exit focus' : 'Focus map';
 };
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && document.body.classList.contains('focus-view')) $('focus-view').click();
@@ -276,6 +386,57 @@ document.addEventListener('keydown', event => {
 $('zoom-in').onclick = () => { view.scale = Math.min(30, view.scale * 1.35); draw(); };
 $('zoom-out').onclick = () => { view.scale = Math.max(0.005, view.scale / 1.35); draw(); };
 function screen(x, y) { return {x: width / 2 + (x - view.x) * view.scale, y: height / 2 - (y - view.y) * view.scale}; }
+function drawSignals() {
+  const size = Math.max(0.72, Math.min(1, view.scale));
+  if (signalLayoutDirty) {
+    signalMarkers = layoutSignalMarkers(network.traffic_devices || [], point => screen(point.x, point.y), width, height, size);
+    signalLayoutDirty = false;
+  }
+  for (const marker of signalMarkers) {
+    context.strokeStyle = '#c9c2b878';
+    context.lineWidth = 1;
+    context.beginPath();
+    context.moveTo(marker.anchor.x, marker.anchor.y);
+    context.lineTo(marker.x, marker.y);
+    context.stroke();
+    context.fillStyle = '#e8dfd1';
+    context.beginPath();
+    context.arc(marker.anchor.x, marker.anchor.y, 2, 0, Math.PI * 2);
+    context.fill();
+  }
+  for (const marker of signalMarkers) {
+    const code = deviceState(marker.point, snapshot?.available ? snapshot.device_states || [] : []);
+    context.fillStyle = '#111214';
+    context.strokeStyle = '#e8dfd1';
+    context.lineWidth = 1.5;
+    context.beginPath();
+    context.roundRect(marker.x - 7 * size, marker.y - 16 * size, 14 * size, 32 * size, 3 * size);
+    context.fill();
+    context.stroke();
+    const lamps = [
+      {color: '#ff5148', lit: code === 'r' || code === 'u'},
+      {color: '#ffcf38', lit: code === 'y' || code === 'Y' || code === 'u'},
+      {color: '#44eb88', lit: code === 'g' || code === 'G' || code === 's'}
+    ];
+    for (let index = 0; index < lamps.length; index++) {
+      const lamp = lamps[index];
+      context.fillStyle = lamp.lit ? lamp.color : '#343638';
+      context.beginPath();
+      context.arc(marker.x, marker.y + (index - 1) * 9 * size, 3.5 * size, 0, Math.PI * 2);
+      context.fill();
+    }
+  }
+}
+function signalAt(event) {
+  const rectangle = canvas.getBoundingClientRect();
+  const x = event.clientX - rectangle.left, y = event.clientY - rectangle.top;
+  let closest = null, distance = 18;
+  for (const marker of signalMarkers) {
+    const next = Math.hypot(marker.x - x, marker.y - y);
+    if (next < distance) { closest = marker; distance = next; }
+  }
+  return closest;
+}
 function terminalDescription(terminal) {
   return `${terminal.role === 'entry' ? 'Entry' : 'Exit'} · ${terminal.lane_id}${terminal.label ? ` · ${terminal.label}` : ''}`;
 }
@@ -346,8 +507,17 @@ function terminalAt(event) {
   return closest;
 }
 function hoverTerminal(event) {
+  const marker = signalAt(event);
   const group = terminalAt(event);
   const tooltip = $('terminal-tooltip');
+  if (marker) {
+    tooltip.hidden = false;
+    canvas.style.cursor = 'pointer';
+    tooltip.textContent = `${signalAppearance(deviceState(marker.point, snapshot?.available ? snapshot.device_states || [] : [])).label} · ${deviceDescription(marker.point)}`;
+    tooltip.style.left = `${Math.max(8, Math.min(width - 288, marker.x + 14))}px`;
+    tooltip.style.top = `${Math.max(8, Math.min(height - 100, marker.y + 14))}px`;
+    return;
+  }
   tooltip.hidden = !group;
   canvas.style.cursor = group ? 'pointer' : 'grab';
   if (!group) return;
@@ -365,33 +535,49 @@ function fit() {
   view = {x: (minX + maxX) / 2, y: (minY + maxY) / 2, scale: Math.min(width / Math.max(1, maxX - minX), height / Math.max(1, maxY - minY)) * 0.82};
   draw();
 }
-function draw() {
-  context.clearRect(0, 0, width, height);
-  if (!network) return;
-  context.lineCap = 'round'; context.lineJoin = 'round';
+function drawRoads() {
+  const cacheMatches = roadCache && roadCache.network === network && roadCache.x === view.x && roadCache.y === view.y && roadCache.scale === view.scale && roadCanvas.width === canvas.width && roadCanvas.height === canvas.height;
+  if (cacheMatches) return;
+  roadCanvas.width = canvas.width;
+  roadCanvas.height = canvas.height;
+  roadContext.setTransform(window.devicePixelRatio || 1, 0, 0, window.devicePixelRatio || 1, 0, 0);
+  roadContext.lineCap = 'round'; roadContext.lineJoin = 'round';
   for (const lane of network.lanes) {
-    context.strokeStyle = lane.id.startsWith(':') ? '#4d4842' : '#82776a';
-    context.lineWidth = Math.max(1, Math.min(9, 3.2 * view.scale));
-    context.beginPath();
+    roadContext.strokeStyle = lane.id.startsWith(':') ? '#334959' : '#68899d';
+    roadContext.lineWidth = Math.max(1, Math.min(9, 3.2 * view.scale));
+    roadContext.beginPath();
     lane.shape.forEach((point, index) => {
       const position = screen(point.x, point.y);
-      if (index) context.lineTo(position.x, position.y);
-      else context.moveTo(position.x, position.y);
+      if (index) roadContext.lineTo(position.x, position.y);
+      else roadContext.moveTo(position.x, position.y);
     });
-    context.stroke();
+    roadContext.stroke();
   }
-  for (const car of snapshot?.vehicles || []) {
+  roadCache = {network, x: view.x, y: view.y, scale: view.scale};
+  signalLayoutDirty = true;
+}
+function draw(now = performance.now()) {
+  context.clearRect(0, 0, width, height);
+  if (!network) return;
+  drawRoads();
+  context.drawImage(roadCanvas, 0, 0, roadCanvas.width, roadCanvas.height, 0, 0, width, height);
+  context.lineCap = 'round'; context.lineJoin = 'round';
+  for (const car of vehicleMotion.sample(now)) {
     const position = screen(car.x, car.y);
     if (position.x < -20 || position.y < -20 || position.x > width + 20 || position.y > height + 20) continue;
     const size = Math.max(5, Math.min(15, 4.5 * view.scale));
     context.save();
+    context.globalAlpha = car.opacity ?? 1;
     context.translate(position.x, position.y);
     context.rotate(car.angle * Math.PI / 180);
-    context.fillStyle = car.speed_mps < 0.1 ? '#efa957' : '#5b94ff';
+    context.fillStyle = car.speed_mps < 0.1 ? '#efa957' : '#6ac9df';
     context.fillRect(-size * 0.3, -size * 0.5, size * 0.6, size);
+    context.fillStyle = '#e4edf7';
+    context.fillRect(-size * 0.22, -size * 0.35, size * 0.44, Math.max(1, size * 0.13));
     context.restore();
   }
   drawTerminals();
+  drawSignals();
 }
 new ResizeObserver(() => {
   const rectangle = canvas.getBoundingClientRect();

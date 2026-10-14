@@ -12,6 +12,84 @@ public sealed class TerminalRoutingTests
   private static string PoduRos => Path.Combine(ProjectLoadingTests.Workspace, "experiments", "drafts", "podu-ros");
 
   [Theory]
+  [InlineData("podu-ros")]
+  [InlineData("podu-ros-commute")]
+  public void ThroughJourneysDoNotUseSideStreetTurnaroundShortcuts(string id)
+  {
+    string folder = Path.Combine(ProjectLoadingTests.Workspace, "experiments", "drafts", id);
+    CityProject project = CityProjectLoader.Load(folder);
+    CityDemandGenerator generator = new(project, 42, project.Manifest.Defaults.StartTimeSeconds);
+    Dictionary<string, HashSet<string>> turnarounds = new(StringComparer.Ordinal);
+    foreach (ProjectConnection connection in project.Connections)
+    {
+      if (connection.Direction != "t")
+      {
+        continue;
+      }
+
+      if (!turnarounds.TryGetValue(connection.From, out HashSet<string>? destinations))
+      {
+        destinations = new(StringComparer.Ordinal);
+        turnarounds.Add(connection.From, destinations);
+      }
+
+      destinations.Add(connection.To);
+    }
+
+    Assert.NotEmpty(turnarounds);
+    foreach (RouteCandidate route in generator.Candidates)
+    {
+      for (int index = 1; index < route.Edges.Length; index++)
+      {
+        if (turnarounds.TryGetValue(route.Edges[index - 1], out HashSet<string>? destinations))
+        {
+          Assert.DoesNotContain(route.Edges[index], destinations);
+        }
+      }
+    }
+  }
+
+  [Fact]
+  public async Task MorningNicolinaTrafficDoesNotReproduceTheSideStreetGridlock()
+  {
+    string folder = Path.Combine(ProjectLoadingTests.Workspace, "experiments", "drafts", "podu-ros-commute");
+    await using BackendFactory factory = new();
+    using HttpClient client = factory.CreateClient();
+    HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(folder), JsonDefaults.Options);
+    response.EnsureSuccessStatusCode();
+    response = await client.PostAsJsonAsync("/api/v1/projects/podu-ros-commute/runs", new CreateCityRunRequest(42), JsonDefaults.Options);
+    CityRunStatus status = (await response.Content.ReadFromJsonAsync<CityRunStatus>(JsonDefaults.Options))!;
+    Assert.True(status.State == "paused", status.Failure);
+    for (int batch = 0; batch < 5; batch++)
+    {
+      response = await client.PostAsJsonAsync($"/api/v1/city-runs/{status.Id}/step", new CityRunCommand(1000), JsonDefaults.Options);
+      status = (await response.Content.ReadFromJsonAsync<CityRunStatus>(JsonDefaults.Options))!;
+      Assert.True(status.State == "paused", status.Failure);
+    }
+
+    Assert.True(status.ArrivedVehicles > 1500, $"Only {status.ArrivedVehicles} vehicles cleared the map");
+    Assert.True(status.PendingEntries < 100, $"{status.PendingEntries} entries are waiting");
+    Assert.True(status.BacklogSeconds < status.Configuration.MaximumBacklogSeconds);
+    Assert.True(status.GridlockRecoveries < 20);
+    Snapshot snapshot = (await client.GetFromJsonAsync<Snapshot>($"/api/v1/city-runs/{status.Id}/snapshot", JsonDefaults.Options))!;
+    int north = 0;
+    int south = 0;
+    foreach (VehicleState vehicle in snapshot.Vehicles)
+    {
+      if (vehicle.EdgeId == "1134276130#0")
+      {
+        north++;
+      }
+      else if (vehicle.EdgeId == "305271347")
+      {
+        south++;
+      }
+    }
+
+    Assert.True(north > south * 2, $"Nicolina north={north}, south={south}");
+  }
+
+  [Theory]
   [InlineData(1)]
   [InlineData(42)]
   [InlineData(1337)]
@@ -75,7 +153,6 @@ public sealed class TerminalRoutingTests
     }
 
     Assert.Equal(4000, status.SimulationTime);
-    Assert.True(status.GridlockRecoveries > 0, "Full demand must exercise gridlock recovery");
     Snapshot traffic = (await client.GetFromJsonAsync<Snapshot>($"/api/v1/city-runs/{status.Id}/snapshot", JsonDefaults.Options))!;
     bool moving = false;
     foreach (VehicleState vehicle in traffic.Vehicles)
@@ -94,6 +171,18 @@ public sealed class TerminalRoutingTests
     Assert.True(status.ActiveVehicles + status.PendingEntries < generatedCount, "At least one generated car must clear its exit and leave the live network");
     CityRunMap map = (await client.GetFromJsonAsync<CityRunMap>($"/api/v1/city-runs/{status.Id}/map", JsonDefaults.Options))!;
     Assert.Equal(49, map.Terminals.Length);
+    Assert.Equal(81, map.SignalPoints.Length);
+    Assert.Equal(10, traffic.Signals.Length);
+    Dictionary<string, string> states = new(StringComparer.Ordinal);
+    foreach (SignalState signal in traffic.Signals)
+    {
+      states.Add(signal.Id, signal.State);
+    }
+
+    foreach (SignalMapPoint point in map.SignalPoints)
+    {
+      Assert.InRange(point.LinkIndex, 0, states[point.SignalId].Length - 1);
+    }
     response = await client.PostAsJsonAsync($"/api/v1/city-runs/{status.Id}/stop", new CityRunCommand(), JsonDefaults.Options);
     status = (await response.Content.ReadFromJsonAsync<CityRunStatus>(JsonDefaults.Options))!;
     Assert.Equal("stopped", status.State);

@@ -6,6 +6,7 @@ namespace Streetflow.Simulator.Generation;
 public sealed class CandidateRoutes
 {
   private readonly CityProject project;
+  private readonly ProjectDemand demand;
   private readonly Random random;
   private readonly List<RouteCandidate> candidates = [];
   private readonly Dictionary<string, RouteEndpoints> routeEndpoints = new(StringComparer.Ordinal);
@@ -15,6 +16,7 @@ public sealed class CandidateRoutes
   public CandidateRoutes(CityProject project, int seed)
   {
     this.project = project;
+    demand = project.Demand ?? throw new InvalidOperationException("Candidate routes require Edge Population demand");
     random = new Random(seed);
     foreach (ProjectEdge edge in project.Edges)
     {
@@ -27,7 +29,7 @@ public sealed class CandidateRoutes
 
   public RouteCandidate[] Build()
   {
-    foreach (ProjectVehicleType type in project.Demand.VehicleTypes)
+    foreach (ProjectVehicleType type in demand.VehicleTypes)
     {
       if (type.Weight > 0)
       {
@@ -43,7 +45,7 @@ public sealed class CandidateRoutes
     vehicleClass = type.VehicleClass;
     List<RouteGraphEdge> graph = CreateGraph(type.VehicleClass);
     terminalPlanner = null;
-    if (project.Demand.Generation.EndpointSelection == "terminals")
+    if (demand.Generation.EndpointSelection == "terminals")
     {
       terminalPlanner = new TerminalRoutePlanner(project, graph, vehicleClass);
       BuildForTerminals(type, graph);
@@ -60,7 +62,7 @@ public sealed class CandidateRoutes
     Shuffle(starts);
     Shuffle(ends);
     int count = 0;
-    int shortestBudget = Math.Max(1, project.Demand.Generation.CandidateLimit / project.Demand.Routing.MaxAlternatives);
+    int shortestBudget = Math.Max(1, demand.Generation.CandidateLimit / demand.Routing.MaxAlternatives);
     // Round-robin starts avoids spending the entire budget on one road/component.
     RouteSearch[] searches = new RouteSearch[graph.Count];
     for (int index = 0; index < graph.Count; index++)
@@ -100,12 +102,12 @@ public sealed class CandidateRoutes
   {
     // Add bounded alternatives by excluding each movement in a shortest path.
     int shortestCount = count;
-    for (int index = first; index < first + shortestCount && count < project.Demand.Generation.CandidateLimit; index++)
+    for (int index = first; index < first + shortestCount && count < demand.Generation.CandidateLimit; index++)
     {
       RouteCandidate shortest = candidates[index];
       int alternatives = 1;
       HashSet<string> seen = new(StringComparer.Ordinal) { string.Join(" ", shortest.Edges) };
-      for (int movement = 1; movement < shortest.Edges.Length && alternatives < project.Demand.Routing.MaxAlternatives; movement++)
+      for (int movement = 1; movement < shortest.Edges.Length && alternatives < demand.Routing.MaxAlternatives; movement++)
       {
         int from = Find(graph, shortest.Edges[movement - 1]);
         int to = Find(graph, shortest.Edges[movement]);
@@ -119,7 +121,7 @@ public sealed class CandidateRoutes
           continue;
         }
 
-        bool withinDetour = alternate.TravelTimeSeconds <= shortest.TravelTimeSeconds * project.Demand.Routing.MaxDetourRatio;
+        bool withinDetour = alternate.TravelTimeSeconds <= shortest.TravelTimeSeconds * demand.Routing.MaxDetourRatio;
         if (withinDetour && seen.Add(string.Join(" ", alternate.Edges)))
         {
           candidates.Add(alternate);
@@ -132,7 +134,7 @@ public sealed class CandidateRoutes
           alternatives++;
         }
 
-        if (count >= project.Demand.Generation.CandidateLimit)
+        if (count >= demand.Generation.CandidateLimit)
         {
           break;
         }
@@ -148,7 +150,7 @@ public sealed class CandidateRoutes
     ShuffleEndpoints(exits);
     int first = candidates.Count;
     int count = 0;
-    int budget = Math.Max(1, project.Demand.Generation.CandidateLimit / project.Demand.Routing.MaxAlternatives);
+    int budget = Math.Max(1, demand.Generation.CandidateLimit / demand.Routing.MaxAlternatives);
     HashSet<string> pairs = new(StringComparer.Ordinal);
     HashSet<string> usedExits = new(StringComparer.Ordinal);
     // Cover viable source and destination lanes before filling the remaining budget.
@@ -298,6 +300,11 @@ public sealed class CandidateRoutes
 
     foreach (ProjectConnection connection in project.Connections)
     {
+      if (connection.Direction == "t")
+      {
+        continue;
+      }
+
       if (!indices.TryGetValue(connection.From, out int from) || !indices.TryGetValue(connection.To, out int to))
       {
         continue;
@@ -434,7 +441,7 @@ public sealed class CandidateRoutes
       }
     }
 
-    TrafficGenerationSettings settings = project.Demand.Generation;
+    TrafficGenerationSettings settings = demand.Generation;
     if (distance < settings.MinTripDistanceM || distance > settings.MaxTripDistanceM)
     {
       return null;

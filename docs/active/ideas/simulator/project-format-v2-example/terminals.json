@@ -1,0 +1,44 @@
+[
+  {
+    "id": "south-entry",
+    "lane_id": "south_in_0",
+    "role": "entry",
+    "position_m": 6
+  },
+  {
+    "id": "north-entry",
+    "lane_id": "north_in_0",
+    "role": "entry",
+    "position_m": 6
+  },
+  {
+    "id": "east-entry",
+    "lane_id": "east_in_0",
+    "role": "entry",
+    "position_m": 6
+  },
+  {
+    "id": "north-exit",
+    "lane_id": "north_out_0",
+    "role": "exit",
+    "position_m": 186
+  },
+  {
+    "id": "south-exit",
+    "lane_id": "south_out_0",
+    "role": "exit",
+    "position_m": 186
+  },
+  {
+    "id": "west-exit",
+    "lane_id": "west_out_0",
+    "role": "exit",
+    "position_m": 186
+  },
+  {
+    "id": "east-exit",
+    "lane_id": "east_out_0",
+    "role": "exit",
+    "position_m": 186
+  }
+]

@@ -3,68 +3,99 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Streetflow · City simulator</title>
-  <link rel="stylesheet" href="styles.css">
-  <script type="module" src="app.js"></script>
+  <meta name="theme-color" content="#090e13">
+  <title>Streetflow · Balthasar simulation studio</title>
+  <link rel="stylesheet" href="styles.css?v=workspace-4">
+  <script type="module" src="app.js?v=traffic-models-motion-2"></script>
 </head>
 <body>
-  <header><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">≋</span>STREETFLOW<span class="brand-subtitle">SIMULATION STUDIO</span></a><span id="connection" role="status" data-connected="false">Connecting…</span></header>
-  <main>
-    <aside>
-      <span class="eyebrow">SIMULATION SETUP</span>
-      <h1>Your city.<br> In motion.</h1>
-      <p class="intro">Build a traffic run. Explore the flow.</p>
-      <section class="setup-panel" aria-label="Project setup">
-      <h2 class="panel-title"><span>01</span> City project</h2>
-      <label for="project">Project</label>
-      <select id="project"><option value="">Import a project to begin</option></select>
-      <p id="project-note" class="muted">Choose a project folder or a ZIP archive.</p>
-      <button id="import" class="import-button" type="button">Import <span aria-hidden="true">+</span></button>
-      <input id="zip" type="file" accept=".zip,application/zip" hidden>
-      <input id="local-folder" type="file" webkitdirectory multiple hidden>
-      <details><summary>Advanced · server folder</summary><form id="folder-form"><label for="folder">Project folder path</label><input id="folder" type="text" placeholder="/path/to/city-project" required><button type="submit">Import folder</button></form></details>
-      </section>
-      <section class="setup-panel" aria-label="Run settings">
-      <h2 class="panel-title"><span>02</span> Run settings</h2>
-      <form id="start-form">
-        <div class="field-pair"><div><label for="seed">Seed</label><input id="seed" type="number" value="42" min="0" max="2147483647" required></div><div><label for="start-time">Start time</label><input id="start-time" type="time" value="07:00" step="1" required></div></div>
-        <label id="speed-label">Playback speed</label>
-        <div class="speed-control">
-          <div class="dial-row"><div id="speed-dial" class="dial" role="slider" tabindex="0" aria-labelledby="speed-label" aria-describedby="dial-help" aria-valuemin="0" aria-valuemax="5" aria-valuenow="1" aria-valuetext="1×, real time"><span class="dial-pointer"></span></div><div class="dial-readout"><strong id="dial-value">1×</strong><span id="dial-description">Real time</span></div></div>
+  <header class="title-bar">
+    <a class="brand" href="/" title="MAGI component selection"><span class="brand-mark" aria-hidden="true">≋</span><span>STREETFLOW<small>BALTHASAR / SIMULATION STUDIO</small></span></a>
+    <nav class="applet-launchers" aria-label="Applets">
+      <button type="button" data-open-applet="runner" aria-controls="runner-applet" aria-pressed="true"><span aria-hidden="true">▷</span> Runner</button>
+      <button type="button" data-open-applet="loader" aria-controls="loader-applet" aria-pressed="true"><span aria-hidden="true">↥</span> Loader</button>
+      <button type="button" data-open-applet="analyzer" aria-controls="analyzer-applet" aria-pressed="false"><span aria-hidden="true">▥</span> Analyzer</button>
+      <button type="button" data-open-applet="sumo" aria-controls="sumo-applet" aria-pressed="false"><span aria-hidden="true">⚙</span> SUMO</button>
+    </nav>
+    <div class="header-status"><span id="connection" role="status" data-connected="false">Connecting…</span><button id="reset-layout" type="button" title="Restore default window positions" aria-label="Reset window layout">⊞</button></div>
+  </header>
+  <main id="studio" class="workspace" aria-label="Simulation workspace">
+    <div id="map-wrap">
+      <canvas id="map" aria-label="Road network, traffic lights and simulated moving cars. Drag to pan and scroll to zoom."></canvas>
+      <div class="workspace-heading"><div><span class="eyebrow">LIVE NETWORK / SUMO</span><h1 id="map-label">Your city. In motion.</h1></div><div class="view-actions"><button id="focus-view" type="button" aria-pressed="false">Focus map</button><button id="fit" type="button" aria-label="Fit road network to view">↗ Fit</button></div></div>
+      <div id="empty"><span class="empty-icon" aria-hidden="true">⌁</span><span class="eyebrow">THE CITY IS YOUR CANVAS</span><strong>Set the streets in motion.</strong><span>Open Loader to import a city and prepare your simulation.</span><button type="button" data-open-applet="loader">Open Loader ↗</button></div>
+      <div class="map-hint">Drag to pan <span>/</span> Scroll to zoom</div>
+      <div class="map-legend"><span><i class="moving-dot"></i> Moving</span><span><i class="stopped-dot"></i> Stopped</span><span id="entry-legend" hidden><i class="entry-dot"></i> Entry</span><span id="exit-legend" hidden><i class="exit-dot"></i> Exit</span></div>
+      <div id="terminal-tooltip" class="terminal-tooltip" hidden></div>
+      <div class="zoom-controls" aria-label="Map zoom"><button id="zoom-in" type="button" aria-label="Zoom in">+</button><button id="zoom-out" type="button" aria-label="Zoom out">−</button></div>
+      <div class="clock"><span id="city-day">CITY TIME</span><strong id="city-clock">—</strong></div>
+    </div>
+    <div id="error" role="alert" hidden></div>
+    <div id="snap-preview" aria-hidden="true" hidden></div>
+    <div id="applet-layer">
+      <section id="runner-applet" class="applet" data-applet="runner" aria-labelledby="runner-title">
+        <div class="applet-heading" tabindex="0" aria-label="Move Runner. Use arrow keys to move on the grid."><span class="applet-number">01</span><h2 id="runner-title">Runner</h2><span class="applet-category">PLAYBACK</span></div>
+        <div class="applet-body">
+          <div class="runner-status"><span id="state" role="status">No project loaded</span><span class="live-label">ENGINE</span></div>
+          <div class="transport"><button id="start" class="primary" type="button" disabled><span aria-hidden="true">▶</span> Start</button><button id="step" type="button" title="Pause traffic to advance one simulation step" disabled>Step ⏵</button><button id="stop" type="button" disabled>Stop ■</button></div>
+          <div class="secondary-transport"><button id="toggle" type="button" disabled>Pause</button><button id="restart" type="button" disabled title="Reload the saved simulation from the beginning, paused">Reset run ↺</button></div>
+          <div class="section-label"><label id="speed-label" for="speed-slider">Playback speed</label><strong id="speed-value">1×</strong></div>
+          <input id="speed-slider" type="range" min="0" max="5" step="1" value="1" aria-describedby="speed-help">
           <div class="speed-presets" aria-label="Speed presets"><button type="button" data-speed="0.5" aria-pressed="false">0.5×</button><button type="button" data-speed="1" aria-pressed="true">1×</button><button type="button" data-speed="2" aria-pressed="false">2×</button><button type="button" data-speed="5" aria-pressed="false">5×</button><button type="button" data-speed="10" aria-pressed="false">10×</button><button type="button" data-speed="unpaced" aria-label="Maximum speed" aria-pressed="false">MAX</button></div>
-          <p id="dial-help" class="dial-help">Drag to turn · Arrow keys to adjust</p>
+          <select id="speed" aria-label="Playback speed" hidden><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option><option value="unpaced">Maximum</option></select>
+          <p id="speed-help" class="muted">Playback changes the clock rate, not vehicle driving speed.</p>
+          <p id="run-note" class="applet-note">Load a simulation in Loader, then start here.</p>
         </div>
-        <select id="speed" aria-label="Playback speed" hidden><option value="0.5">0.5×</option><option value="1" selected>1× · real time</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option><option value="unpaced">As fast as possible</option></select>
-        <button id="start" class="primary" type="submit" disabled>Start traffic <span aria-hidden="true">▶</span></button>
-      </form>
-      <p id="run-note" class="muted">Use the same seed to replay the same traffic.</p>
       </section>
-      <p class="muted footnote">Traffic profiles include estimates. This view does not represent measured road density.</p>
-      <a class="legacy-link" href="legacy-inspector.html">Existing scenario inspector ↗</a>
-    </aside>
-    <section class="workspace" aria-label="City simulation">
-      <div class="workspace-heading"><div><span class="eyebrow">NETWORK VIEW</span><h2 id="map-label">Choose your city</h2></div><div class="view-actions"><button id="focus-view" type="button" aria-pressed="false">Focus view</button><button id="fit" aria-label="Fit road network to view">↗ Fit map</button></div></div>
-      <div class="telemetry" aria-label="Simulation metrics"><div class="metric"><span>ACTIVE VEHICLES</span><strong id="vehicle-count">—</strong><small>Cars in the network</small></div><div class="metric"><span>ROAD NETWORK</span><strong id="lane-count">—</strong><small>Mapped lanes</small></div><div class="metric"><span>PLAYBACK</span><strong id="playback-value">1×</strong><small>Simulation speed</small></div></div>
-      <div id="error" role="alert" hidden></div>
-      <div id="map-wrap">
-        <canvas id="map" aria-label="Road network and simulated moving cars. Drag to pan and scroll to zoom."></canvas>
-        <div id="empty"><span class="empty-icon" aria-hidden="true">⌁</span><span class="eyebrow">READY WHEN YOU ARE</span><strong>Your streets start here</strong><span>Import a project folder or ZIP to explore its network.</span></div>
-        <div class="map-hint">Drag to pan <span> / </span> Scroll to zoom</div>
-        <div class="map-legend"><span><i class="moving-dot"></i> Moving</span><span><i class="stopped-dot"></i> Stopped</span><span id="entry-legend" hidden><i class="entry-dot"></i> Entry</span><span id="exit-legend" hidden><i class="exit-dot"></i> Exit</span></div>
-        <div id="terminal-tooltip" class="terminal-tooltip" hidden></div>
-        <div class="zoom-controls" aria-label="Map zoom"><button id="zoom-in" type="button" aria-label="Zoom in">+</button><button id="zoom-out" type="button" aria-label="Zoom out">−</button></div>
-        <div class="clock"><span id="city-day">CITY TIME</span><strong id="city-clock">—</strong></div>
-      </div>
-      <div id="terminal-inspector" class="terminal-inspector" hidden><label for="terminal-choice" id="terminal-label">Lane terminals</label><select id="terminal-choice"><option value="">Choose a lane terminal</option></select><button id="terminal-focus" type="button" disabled>Show lane</button><span id="terminal-detail" role="status">Hover a terminal to inspect it. Click a numbered group to zoom.</span></div>
-      <div class="control-bar"><span id="state" role="status">No project loaded</span><div class="controls"><button id="toggle" disabled>Pause</button><button id="step" title="Pause traffic to advance one simulation step" disabled>Step</button><button id="stop" disabled>Stop</button><button id="restart" disabled>Restart</button></div></div>
-      <div class="map-footer"><span id="snapshot-note">Roads load before traffic starts.</span><span id="attribution"></span></div>
-    </section>
+      <section id="loader-applet" class="applet" data-applet="loader" aria-labelledby="loader-title">
+        <div class="applet-heading" tabindex="0" aria-label="Move Loader. Use arrow keys to move on the grid."><span class="applet-number">02</span><h2 id="loader-title">Loader</h2><span class="applet-category">PREPARATION</span></div>
+        <div class="applet-body">
+          <span class="eyebrow">01 / SELECT YOUR NETWORK</span>
+          <label for="project">City project</label><select id="project"><option value="">Import a project to begin</option></select>
+          <p id="project-note" class="muted">Choose a project folder or a ZIP archive.</p>
+          <button id="import" class="import-button" type="button">Import project <span aria-hidden="true">+</span></button>
+          <input id="zip" type="file" accept=".zip,application/zip" hidden><input id="local-folder" type="file" webkitdirectory multiple hidden>
+          <details><summary>Import a server folder</summary><form id="folder-form"><label for="folder">Project folder path</label><input id="folder" type="text" placeholder="/path/to/city-project" required><button type="submit">Import folder</button></form></details>
+          <div class="section-divider"></div><span class="eyebrow">02 / PREPARE THE SIMULATION</span>
+          <form id="load-form"><div class="field-pair"><div><label for="seed">Random seed</label><input id="seed" type="number" value="42" min="0" max="2147483647" required></div><div><label for="start-time">City start time</label><input id="start-time" type="time" value="07:00" step="1" required></div></div><button id="load" class="primary" type="submit" disabled>Load simulation <span aria-hidden="true">↗</span></button></form>
+          <p id="load-note" class="applet-note">Load prepares a paused run. Runner controls the traffic.</p>
+          <a class="legacy-link" href="legacy-inspector.html">Scenario inspector ↗</a>
+        </div>
+      </section>
+      <section id="analyzer-applet" class="applet" data-applet="analyzer" aria-labelledby="analyzer-title" hidden>
+        <div class="applet-heading" tabindex="0" aria-label="Move Analyzer. Use arrow keys to move on the grid."><span class="applet-number">03</span><h2 id="analyzer-title">Analyzer</h2><span class="applet-category">TELEMETRY</span></div>
+        <div class="applet-body">
+          <span class="eyebrow">CURRENT SIMULATION</span>
+          <div class="telemetry"><div class="metric"><span>ACTIVE VEHICLES</span><strong id="vehicle-count">—</strong><small>On the network</small></div><div class="metric"><span>MAPPED LANES</span><strong id="lane-count">—</strong><small>Road network</small></div><div class="metric"><span>ARRIVED</span><strong id="arrived-count">—</strong><small>Completed journeys</small></div><div class="metric"><span>PENDING</span><strong id="pending-count">—</strong><small>Waiting to enter</small></div></div>
+          <dl class="readings"><div><dt>Playback target</dt><dd id="playback-value">1×</dd></div><div><dt>Elapsed simulation</dt><dd id="elapsed-value">—</dd></div><div><dt>Arrival backlog</dt><dd id="backlog-value">—</dd></div><div><dt>Gridlock recoveries</dt><dd id="recovery-value">—</dd></div></dl>
+          <div id="terminal-inspector" class="terminal-inspector" hidden><label for="terminal-choice" id="terminal-label">Lane terminals</label><select id="terminal-choice"><option value="">Choose a lane terminal</option></select><button id="terminal-focus" type="button" disabled>Show lane ↗</button><span id="terminal-detail" role="status">Hover a terminal to inspect it. Click a numbered group to zoom.</span></div>
+          <p class="applet-note">Live counters from the simulator. Estimates and road preferences are not measured traffic densities.</p>
+        </div>
+      </section>
+      <section id="sumo-applet" class="applet" data-applet="sumo" aria-labelledby="sumo-title" hidden>
+        <div class="applet-heading" tabindex="0" aria-label="Move SUMO. Use arrow keys to move on the grid."><span class="applet-number">04</span><h2 id="sumo-title">SUMO</h2><span class="applet-category">TRAFFIC MODEL</span></div>
+        <div class="applet-body">
+          <span class="eyebrow">ENGINE / APPLIED WHEN LOADING</span>
+          <label for="step-seconds">Simulation step <span class="unit">seconds</span></label><input id="step-seconds" type="number" min="0.05" max="5" step="0.05" value="0.5" required>
+          <dl class="readings"><div><dt>Lane speed limits</dt><dd id="road-speed-value">—</dd></div><div><dt>Requested arrivals</dt><dd id="demand-value">—</dd></div><div><dt>Signals</dt><dd>External control</dd></div></dl>
+          <p class="muted">Road limits come from the network. Arrival rates come from demand. Spacing and driver behavior belong to SUMO vehicle types.</p>
+          <div class="section-divider"></div><span class="eyebrow">VEHICLE TYPE / DRAFT EXPORT</span>
+          <p class="muted">Export a SUMO vehicle-type draft. Applying driver settings in Streetflow needs backend support.</p>
+          <form id="sumo-form">
+            <label for="vehicle-type">Vehicle type</label><select id="vehicle-type"><option value="">Select a project first</option></select>
+            <div class="field-pair"><div><label for="min-gap">Standstill gap <span class="unit">m</span></label><input id="min-gap" type="number" min="0" max="100" step="0.1" value="2.5" required></div><div><label for="headway">Time headway <span class="unit">s</span></label><input id="headway" type="number" min="0.05" max="30" step="0.05" value="1" required></div></div>
+            <div class="field-pair"><div><label for="speed-factor">Speed / road limit</label><input id="speed-factor" type="number" min="0.1" max="3" step="0.05" value="1" required></div><div><label for="speed-deviation">Speed variation</label><input id="speed-deviation" type="number" min="0" max="1" step="0.01" value="0.1" required></div></div>
+            <div class="field-pair"><div><label for="acceleration">Acceleration <span class="unit">m/s²</span></label><input id="acceleration" type="number" min="0.1" max="20" step="0.1" value="2.6" required></div><div><label for="deceleration">Deceleration <span class="unit">m/s²</span></label><input id="deceleration" type="number" min="0.1" max="20" step="0.1" value="4.5" required></div></div>
+            <button id="export-sumo" type="submit" class="import-button" disabled>Export vehicle draft <span aria-hidden="true">↓</span></button>
+          </form>
+          <details><summary>About this export</summary><p class="muted">The XML can be used in a standalone SUMO scenario. Streetflow generates its vehicle types internally; its current importer cannot apply this draft. Retain it for backend integration, or merge it into a separate SUMO scenario's vehicle definitions.</p></details>
+          <p class="applet-note">A speed factor of 1 follows road limits; actual average speed depends on traffic. Export values are an editable draft, not readings from the loaded project.</p>
+        </div>
+      </section>
+    </div>
+    <footer class="map-footer"><span id="snapshot-note">Import a city. Load a simulation. Start in Runner.</span><span id="attribution"></span><span class="grid-label">16 PX GRID / EDGES SNAP TOGETHER</span></footer>
+    <div id="workspace-announcement" class="visually-hidden" role="status" aria-live="polite"></div>
   </main>
-  <dialog id="import-dialog" aria-labelledby="import-title">
-    <div class="dialog-heading"><h2 id="import-title">Import a project</h2><button id="close-import" type="button" aria-label="Close import">×</button></div>
-    <p class="muted">Choose your project from your computer.</p>
-    <button id="choose-folder" class="import-choice" type="button"><strong>Open folder ↗</strong><span>Select a folder containing your city project.</span></button>
-    <button id="choose-zip" class="import-choice" type="button"><strong>Open ZIP ↗</strong><span>Select a packaged project archive.</span></button>
-  </dialog>
+  <dialog id="import-dialog" aria-labelledby="import-title"><div class="dialog-heading"><h2 id="import-title">Import a project</h2><button id="close-import" type="button" aria-label="Close import">×</button></div><p class="muted">Choose your project from your computer.</p><button id="choose-folder" class="import-choice" type="button"><strong>Open folder ↗</strong><span>Select a folder containing your city project.</span></button><button id="choose-zip" class="import-choice" type="button"><strong>Open ZIP ↗</strong><span>Select a packaged project archive.</span></button></dialog>
 </body>
 </html>

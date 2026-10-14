@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Streetflow.Simulator.Runtime;
+using Streetflow.Traffic.Contracts;
 
 namespace Streetflow.Simulator.Scenarios;
 
@@ -8,15 +9,26 @@ public sealed class CityProject
   [JsonIgnore]
   public required string Directory { get; init; }
   public required ProjectManifest Manifest { get; init; }
-  public required ProjectDemand Demand { get; init; }
+  public ProjectDemand? Demand { get; init; }
+  public TransformerModel? TransformerModel { get; init; }
+  public TransformerWeights? TransformerWeights { get; init; }
+  [JsonIgnore]
+  public ProjectVehicleType[] TransformerVehicleTypes { get; init; } = [];
+  public ProjectVehicleType[] VehicleTypes => Demand is not null ? Demand.VehicleTypes : TransformerVehicleTypes;
+  public string ModelKind => Manifest.FormatVersion == 2 ? "Transformer Routes" : "Edge Population";
   public required ProjectEdge[] Edges { get; init; }
   public required JunctionMap[] Junctions { get; init; }
   public required ProjectConnection[] Connections { get; init; }
   public required string[] SignalIds { get; init; }
   public required string Revision { get; init; }
+  public ProjectTrafficLights? TrafficLights { get; init; }
+  public string WorldId => TrafficLights?.WorldId ?? Manifest.Id;
+  public string WorldRevision { get; init; } = "";
+  public TlcDevice[] TrafficDevices => TrafficDeviceMapping.Read(this);
   public ProjectTerminal[] Terminals { get; init; } = [];
 
   public TerminalMapPoint[] TerminalPoints => TerminalMapGeometry.Read(this);
+  public SignalMapPoint[] SignalPoints => SignalMapGeometry.Read(this);
 
   public LaneMap[] Lanes
   {
@@ -65,7 +77,7 @@ public sealed class CityProject
   {
     foreach (ProjectLane lane in edge.Lanes)
     {
-      foreach (ProjectVehicleType type in Demand.VehicleTypes)
+      foreach (ProjectVehicleType type in VehicleTypes)
       {
         if (lane.Permits(type.VehicleClass))
         {

@@ -18,7 +18,21 @@ public sealed class CityRunStorage(SimulatorOptions options)
     Directory.CreateDirectory(package);
     CopyFile(project.Directory, package, "experiment.json");
     CopyFile(project.Directory, package, project.Manifest.Network.File);
-    CopyFile(project.Directory, package, project.Manifest.DemandFile);
+    if (project.Manifest.DemandFile is not null)
+    {
+      CopyFile(project.Directory, package, project.Manifest.DemandFile);
+    }
+
+    if (project.Manifest.JourneyModelFile is not null)
+    {
+      CopyFile(project.Directory, package, project.Manifest.JourneyModelFile);
+      CopyFile(project.Directory, package, project.TransformerModel!.WeightsFile);
+    }
+    if (project.Manifest.TrafficLightsFile is not null)
+    {
+      CopyFile(project.Directory, package, project.Manifest.TrafficLightsFile);
+    }
+
     if (project.Manifest.DetectorsFile is not null)
     {
       CopyFile(project.Directory, package, project.Manifest.DetectorsFile);
@@ -47,7 +61,7 @@ public sealed class CityRunStorage(SimulatorOptions options)
   public void WriteRoutes(string id, CityProject project, RouteCandidate[] candidates)
   {
     XElement routes = new("routes");
-    foreach (ProjectVehicleType type in project.Demand.VehicleTypes)
+    foreach (ProjectVehicleType type in project.VehicleTypes)
     {
       routes.Add(new XElement("vType", new XAttribute("id", type.Id), new XAttribute("vClass", type.VehicleClass)));
     }

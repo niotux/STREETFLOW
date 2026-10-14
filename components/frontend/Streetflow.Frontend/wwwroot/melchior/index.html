@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090e13">
+  <title>Streetflow · Melchior logistics</title>
+  <link rel="stylesheet" href="/balthasar/styles.css">
+  <link rel="stylesheet" href="/magi.css">
+  <script type="module" src="/melchior/app.js?v=physical-devices-1"></script>
+</head>
+<body class="magi-page">
+  <header class="title-bar">
+    <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">≋</span><span>STREETFLOW<small>MELCHIOR / LOGISTICS CONTROL</small></span></a>
+    <nav class="component-nav" aria-label="MAGI components"><a href="/">MAGI</a><a href="/melchior/" aria-current="page">Melchior</a><a href="/balthasar/">Balthasar ↗</a></nav>
+    <span id="connection" role="status" data-connected="false">Connecting…</span>
+  </header>
+  <div id="error" class="logistics-error" role="alert" hidden></div>
+  <main class="logistics-layout">
+    <section class="control-panel" aria-labelledby="connection-title">
+      <div class="applet-heading"><span class="applet-number">01</span><h2 id="connection-title">Connection</h2><span class="applet-category">TLCAPI</span></div>
+      <div class="applet-body">
+        <form id="connection-form">
+          <label for="target-host">Server address</label><input id="target-host" type="url" required placeholder="http://localhost" aria-describedby="connection-help">
+          <div class="connection-fields"><div><label for="target-port">Port</label><input id="target-port" type="number" required min="1" max="65535" placeholder="8080"></div></div>
+          <button type="submit" class="primary">Save connection ↗</button>
+        </form>
+        <p id="connection-help" class="status-note">The address is reached from Melchior's server. In Docker, use <code>http://simulator</code> and port <code>8080</code>. A compatible Casper service can be connected here later.</p>
+        <div class="section-divider"></div>
+        <label for="run">Active session</label><select id="run" disabled><option value="">Connect to discover runs</option></select>
+        <button id="refresh-runs" type="button">Refresh connection ↻</button>
+        <p id="run-note" class="status-note">The active world appears automatically when the provider loads it.</p>
+        <div class="section-divider"></div>
+        <span class="eyebrow">MANUAL CONTROL</span><p class="status-note">Each change is sent immediately. Lights hold their state until another command or a run restart. On enables at red; off restores road priority.</p>
+        <p class="applet-note">Commands affect the selected physical device and all the lights mapped to it.</p>
+      </div>
+    </section>
+    <section class="network-panel" aria-label="Traffic light network">
+      <canvas id="map" aria-label="Road network and traffic lights. Drag to pan, scroll to zoom, or select a traffic light."></canvas>
+      <div class="workspace-heading"><div><span class="eyebrow">CONNECTED NETWORK / MANUAL</span><h1 id="map-label">Waiting for a city.</h1></div><div class="view-actions"><button id="fit" type="button" disabled>↗ Fit</button></div></div>
+      <div id="map-empty"><span class="empty-icon" aria-hidden="true">◎</span><strong>Your lights. Your controls.</strong><span>The provider supplies the active map and its configured physical devices.</span></div>
+      <div id="map-detail">Select a traffic light to open its controller.</div>
+    </section>
+    <section class="control-panel signals-panel" aria-labelledby="signals-title">
+      <div class="applet-heading"><span class="applet-number">02</span><h2 id="signals-title">Traffic lights</h2><span class="applet-category">SWITCHBOARD</span></div>
+      <div class="applet-body">
+        <label for="signal-filter">Find a device</label><input id="signal-filter" class="signal-filter" type="search" placeholder="Device name or lane ID">
+        <label for="controller">Physical device</label><select id="controller" disabled><option value="">No physical devices configured</option></select>
+        <p id="signal-summary" class="status-note">Select a run to begin.</p>
+        <div id="switchboard" hidden>
+          <div class="controller-toolbar"><input id="controller-enabled" type="checkbox" role="switch"><label for="controller-enabled">Device enabled</label></div>
+          <div id="controller-state" class="signal-state"></div>
+          <div id="controller-actions" class="lamp-controls" aria-label="Control selected device"></div>
+          <p id="command-status" class="command-status" role="status" aria-live="polite"></p>
+          <div id="movements" class="movement-list"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

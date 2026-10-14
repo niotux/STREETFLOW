@@ -41,6 +41,11 @@ internal sealed class TerminalRoutePlanner
 
     foreach (ProjectConnection connection in project.Connections)
     {
+      if (connection.Direction == "t")
+      {
+        continue;
+      }
+
       if (!edgeIndices.TryGetValue(connection.From, out int from) || !edgeIndices.TryGetValue(connection.To, out int to))
       {
         continue;

@@ -1,15 +1,15 @@
-# City projects
+# City project catalog
 
-These three projects follow the accepted city-project format and were accepted in task 2. Their folders retain the drafts/ location. The backend now supports [folder/ZIP import and map loading](../docs/simulator/project-loading.md); [continuous traffic and the city UI](../components/simulator/README.md) are now implemented.
+This folder contains inputs for the current simulator workflow. The projects remain under `drafts/` for path continuity, although their format and contents were accepted. They can be imported through the [project loader](../docs/components/simulator/project-loading.md); runtime behavior and open review items are in the [simulator guide](../components/simulator/README.md) and [review checklist](../docs/active/plans/simulator/review-checklist.md).
 
-| Project | Contents |
-| --- | --- |
-| [Central Iași](drafts/iasi-central-day/README.md) | Real road graph, explicit daily profiles for 713 directed edges, generation settings, and empty detector placeholder |
-| [Tiny graph](drafts/tiny-graph/README.md) | Synthetic road graph and traffic rules for testing the same generator |
-| [Podu Roș](drafts/podu-ros/README.md) | Fresh local intersection map, 106 edge profiles, evening camera-sample evidence, and explicit estimates outside camera coverage |
+| Project | Topic and evidence | Status |
+| --- | --- | --- |
+| [Four-way physical-device fixtures](../docs/components/simulator/traffic-light-devices.md) | Edge Population, Transformer Routes baseline, and north-to-east copies with four authored devices | Original projects/imports preserved; shared world enables cached-map reuse |
+| [Central Iași](drafts/iasi-central-day/README.md) | City road graph with estimated daily edge profiles | Accepted input; estimates are documented in its README |
+| [Tiny graph](drafts/tiny-graph/README.md) | Synthetic graph for generator and workflow checks | Accepted input; synthetic traffic values |
+| [Four-way Transformer Routes](drafts/four-way-transformer-routes/README.md) | Same four-way map with version 2 model weights and directional/turn probabilities | Runnable synthetic test; version 1 Tiny graph remains Edge Population |
+| [Four-way north-to-east experiment](drafts/four-way-north-east/README.md) | Same map with 900 north arrivals/hour and 96% selecting the east exit, all day | Synthetic weight-tuning experiment; baseline preserved |
+| [Podu Roș](drafts/podu-ros/README.md) | Real intersection map with evening camera-sample evidence and explicit estimates outside coverage | Accepted input; not calibrated full-day demand |
+| [Podu Roș commute estimate](drafts/podu-ros-commute/README.md) | Directional morning/evening commute variant on the Podu Roș network | In-progress estimate; derived from observed direction and existing camera proxies |
 
-Projects contain simulation inputs. Vehicles and routes are generated during execution. Source-paper preparation files are kept separately under docs/research/data and are not loaded by the simulator.
-
-All three folders are complete draft inputs awaiting task 2 acceptance; the existing loader does not run them yet. Each contains a manifest, SUMO network, `demand.json`, empty `detectors.json`, and preparation notes. Iași's 17,112 hourly edge weights reproduce the verified approximate source curve with explicit lane/priority estimates; the tiny project's eight profiles are synthetic. Those two use an estimated full-day mean of 600 departures/hour. Podu Roș uses a separate local camera sample: 14 edges have geometrically inferred evening preferences, 92 use declared estimates, and unobserved hours are flat extrapolations. Its approximately 1,944/hour generation baseline is a selected-camera-track throughput proxy, not measured full-intersection demand. Review the evidence and model assumptions in each README before integrating them.
-
-Review [the project format](../docs/simulator/experiment-project-format.md) and [the task plan](../docs/simulator/experiment-integration-plan.md).
+The projects contain maps, demand inputs, and detector placeholders. SUMO generates vehicle trips and routes at runtime. Research source files and preparation scripts are listed in the [research index](../docs/research/README.md); individual source folders describe whether their contents are measured, estimated, or archived.

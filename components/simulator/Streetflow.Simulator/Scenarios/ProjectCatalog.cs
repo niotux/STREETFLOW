@@ -233,11 +233,16 @@ public sealed class ProjectCatalog
       Directory = Path.Combine(destination, "package"),
       Manifest = project.Manifest,
       Demand = project.Demand,
+      TransformerModel = project.TransformerModel,
+      TransformerWeights = project.TransformerWeights,
+      TransformerVehicleTypes = project.TransformerVehicleTypes,
       Edges = project.Edges,
       Junctions = project.Junctions,
       Connections = project.Connections,
       SignalIds = project.SignalIds,
       Terminals = project.Terminals,
+      TrafficLights = project.TrafficLights,
+      WorldRevision = project.WorldRevision,
       Revision = project.Revision
     };
     projects[stored.Manifest.Id] = stored;

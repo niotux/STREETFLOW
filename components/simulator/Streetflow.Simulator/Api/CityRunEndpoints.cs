@@ -16,6 +16,8 @@ public static class CityRunEndpoints
     runs.MapGet("/{id}", (string id, CityRunCoordinator coordinator, CancellationToken token) => coordinator.GetAsync(id, token));
     runs.MapGet("/{id}/snapshot", (string id, CityRunCoordinator coordinator, CancellationToken token) => coordinator.SnapshotAsync(id, token));
     runs.MapGet("/{id}/map", (string id, CityRunCoordinator coordinator, CancellationToken token) => coordinator.MapAsync(id, token));
+    runs.MapGet("/{id}/signals", (string id, CityRunCoordinator coordinator, CancellationToken token) => coordinator.SignalsAsync(id, token));
+    runs.MapPut("/{id}/signals/{signalId}", (string id, string signalId, SignalControlRequest request, CityRunCoordinator coordinator, CancellationToken token) => coordinator.ControlSignalAsync(id, signalId, request, token));
     runs.MapPost("/{id}/{command}", (string id, string command, CityRunCommand request, CityRunCoordinator coordinator, CancellationToken token) => coordinator.CommandAsync(id, command, request, token));
   }
 }

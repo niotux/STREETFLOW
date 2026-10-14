@@ -1,6 +1,6 @@
 # Scenarios and traffic demand
 
-Archived proposal. The revised direction is [graph-based experiment projects](../simulator/experiment-project-format.md), with [reviewable integration tasks](../simulator/experiment-integration-plan.md). The activity-based approach below is not part of the current project integration scope.
+Archived proposal. The revised direction is [graph-based experiment projects](../components/simulator/experiment-project-format.md), with [reviewable integration tasks](experiment-integration-plan.md). The activity-based approach below is not part of the current project integration scope.
 
 A scenario combines a road network with a timed demand description, vehicle behavior, signal plans, detector placement, and any incidents. A map alone does not determine how many people drive or where they go.
 

@@ -10,4 +10,4 @@ The 600 departures/hour baseline, signals, passenger-only fleet, and all spatial
 
 Endpoints, routes, and vehicles are generated while running. The generator uses the same graph-based process as the Iași project. This small test graph does not impose a junction shape on the project format.
 
-Review [the format](../../../docs/simulator/experiment-project-format.md) and [tasks](../../../docs/simulator/experiment-integration-plan.md).
+Review [the format](../../../docs/components/simulator/experiment-project-format.md) and [tasks](../../../docs/archive/experiment-integration-plan.md).

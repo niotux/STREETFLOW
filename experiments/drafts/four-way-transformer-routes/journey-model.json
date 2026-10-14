@@ -1,0 +1,139 @@
+{
+  "format_version": 2,
+  "architecture": "contextual_journey_v1",
+  "arrival_model": "nonhomogeneous_poisson",
+  "repeat_daily": true,
+  "route_time": "planned_departure",
+  "weights_file": "weights.json",
+  "axes": {
+    "period": [
+      {
+        "start_seconds": 0,
+        "end_seconds": 25200
+      },
+      {
+        "start_seconds": 25200,
+        "end_seconds": 32400
+      },
+      {
+        "start_seconds": 32400,
+        "end_seconds": 57600
+      },
+      {
+        "start_seconds": 57600,
+        "end_seconds": 68400
+      },
+      {
+        "start_seconds": 68400,
+        "end_seconds": 86400
+      }
+    ],
+    "origin": [
+      "south-entry",
+      "north-entry",
+      "east-entry",
+      "west-entry"
+    ],
+    "destination": [
+      {
+        "id": "south",
+        "terminal_ids": [
+          "south-exit"
+        ],
+        "label": "South exit"
+      },
+      {
+        "id": "north",
+        "terminal_ids": [
+          "north-exit"
+        ],
+        "label": "North exit"
+      },
+      {
+        "id": "east",
+        "terminal_ids": [
+          "east-exit"
+        ],
+        "label": "East exit"
+      },
+      {
+        "id": "west",
+        "terminal_ids": [
+          "west-exit"
+        ],
+        "label": "West exit"
+      }
+    ],
+    "category": [
+      "default"
+    ],
+    "vehicle_type": [
+      {
+        "id": "car",
+        "vehicle_class": "passenger",
+        "label": "Passenger car"
+      }
+    ],
+    "movement": [
+      {
+        "incoming_edge_id": "east_in",
+        "outgoing_edge_id": "north_out"
+      },
+      {
+        "incoming_edge_id": "east_in",
+        "outgoing_edge_id": "south_out"
+      },
+      {
+        "incoming_edge_id": "east_in",
+        "outgoing_edge_id": "west_out"
+      },
+      {
+        "incoming_edge_id": "north_in",
+        "outgoing_edge_id": "east_out"
+      },
+      {
+        "incoming_edge_id": "north_in",
+        "outgoing_edge_id": "south_out"
+      },
+      {
+        "incoming_edge_id": "north_in",
+        "outgoing_edge_id": "west_out"
+      },
+      {
+        "incoming_edge_id": "south_in",
+        "outgoing_edge_id": "east_out"
+      },
+      {
+        "incoming_edge_id": "south_in",
+        "outgoing_edge_id": "north_out"
+      },
+      {
+        "incoming_edge_id": "south_in",
+        "outgoing_edge_id": "west_out"
+      },
+      {
+        "incoming_edge_id": "west_in",
+        "outgoing_edge_id": "east_out"
+      },
+      {
+        "incoming_edge_id": "west_in",
+        "outgoing_edge_id": "north_out"
+      },
+      {
+        "incoming_edge_id": "west_in",
+        "outgoing_edge_id": "south_out"
+      }
+    ]
+  },
+  "evidence": [
+    {
+      "tensor_names": [
+        "arrival_rates",
+        "journey_logits",
+        "movement_logits"
+      ],
+      "kind": "authored_assumption",
+      "note": "All rates, clock windows, destination shares, and movement scores are synthetic test assumptions. Morning south-to-north and evening north-to-south imitate the requested commute direction qualitatively; they are not measured Podu Ros traffic or trained transformer parameters."
+    }
+  ]
+}

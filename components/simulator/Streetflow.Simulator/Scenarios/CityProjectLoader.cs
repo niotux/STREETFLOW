@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -9,7 +10,7 @@ using Streetflow.Simulator.Runtime;
 
 namespace Streetflow.Simulator.Scenarios;
 
-public static class CityProjectLoader
+public static partial class CityProjectLoader
 {
   private const int SecondsPerDay = 86400;
   private const int HashBufferSize = 65536;
@@ -63,8 +64,25 @@ public static class CityProjectLoader
     directory = Path.GetFullPath(directory);
     ProjectManifest manifest = ReadJson<ProjectManifest>(directory, "experiment.json");
     ValidateManifest(manifest);
-    ProjectDemand demand = ReadJson<ProjectDemand>(directory, manifest.DemandFile);
-    ValidateSettings(demand, manifest.DemandFile);
+    ProjectDemand? demand = null;
+    TransformerModel? transformerModel = null;
+    TransformerWeights? transformerWeights = null;
+    ProjectVehicleType[] vehicleTypes;
+    if (manifest.FormatVersion == 1)
+    {
+      demand = ReadJson<ProjectDemand>(directory, manifest.DemandFile!);
+      ValidateSettings(demand, manifest.DemandFile!);
+      vehicleTypes = demand.VehicleTypes;
+    }
+    else
+    {
+      ValidateTransformerManifestFields(directory);
+      transformerModel = ReadJson<TransformerModel>(directory, manifest.JourneyModelFile!);
+      ValidateTransformerSettings(transformerModel, manifest.JourneyModelFile!);
+      transformerWeights = ReadJson<TransformerWeights>(directory, transformerModel.WeightsFile);
+      ValidateTransformerWeights(transformerModel, transformerWeights);
+      vehicleTypes = ReadTransformerVehicleTypes(transformerModel);
+    }
     XElement net = ReadXml(directory, manifest.Network!.File, "net");
     foreach (XElement element in net.Descendants())
     {
@@ -98,7 +116,10 @@ public static class CityProjectLoader
       }
     }
 
-    ValidateProfiles(demand, edges, manifest.DemandFile);
+    if (demand is not null)
+    {
+      ValidateProfiles(demand, edges, manifest.DemandFile!);
+    }
     if (manifest.DetectorsFile is not null)
     {
       JsonElement detectors = ReadJson<JsonElement>(directory, manifest.DetectorsFile);
@@ -109,15 +130,22 @@ public static class CityProjectLoader
     if (manifest.TerminalsFile is not null)
     {
       terminals = ReadJson<ProjectTerminal[]>(directory, manifest.TerminalsFile);
-      ValidateTerminals(terminals, edges, demand, manifest.TerminalsFile);
+      ValidateTerminals(terminals, edges, vehicleTypes, manifest.TerminalsFile);
     }
 
-    if (demand.Generation.EndpointSelection == "terminals")
+    if (demand is not null && demand.Generation.EndpointSelection == "terminals")
     {
       Require(terminals.Length > 0, $"{manifest.DemandFile}: endpoint_selection 'terminals' requires nonempty terminals_file");
     }
 
-    string revision = CalculateRevision(directory, manifest);
+    if (transformerModel is not null && transformerWeights is not null)
+    {
+      ValidateTransformerNetwork(transformerModel, transformerWeights, edges, connections, terminals, manifest.JourneyModelFile!);
+    }
+
+    ProjectTrafficLights? trafficLights = ReadTrafficLights(directory, manifest, edges, connections);
+    string worldRevision = CalculateWorldRevision(directory, manifest);
+    string revision = CalculateRevision(directory, manifest, transformerModel);
     List<string> signalIds = new(signals);
     signalIds.Sort(StringComparer.Ordinal);
     return new CityProject
@@ -125,18 +153,34 @@ public static class CityProjectLoader
       Directory = directory,
       Manifest = manifest,
       Demand = demand,
+      TransformerModel = transformerModel,
+      TransformerWeights = transformerWeights,
+      TransformerVehicleTypes = transformerModel is null ? [] : vehicleTypes,
       Edges = edges,
       Junctions = junctions,
       Connections = connections,
       SignalIds = signalIds.ToArray(),
       Revision = revision,
+      TrafficLights = trafficLights,
+      WorldRevision = worldRevision,
       Terminals = terminals
     };
   }
 
   private static void ValidateManifest(ProjectManifest manifest)
   {
-    Require(manifest.FormatVersion == 1, "experiment.json: unsupported format_version; expected 1");
+    Require(manifest.FormatVersion == 1 || manifest.FormatVersion == 2, "experiment.json: unsupported format_version; expected 1 or 2");
+    if (manifest.FormatVersion == 1)
+    {
+      Require(!string.IsNullOrWhiteSpace(manifest.DemandFile), "experiment.json: Edge Population requires demand_file");
+      Require(manifest.JourneyModelFile is null, "experiment.json: Edge Population cannot use journey_model_file");
+    }
+    else
+    {
+      Require(manifest.DemandFile is null, "experiment.json: Transformer Routes cannot use demand_file");
+      Require(!string.IsNullOrWhiteSpace(manifest.JourneyModelFile), "experiment.json: Transformer Routes requires journey_model_file");
+      Require(!string.IsNullOrWhiteSpace(manifest.TerminalsFile), "experiment.json: Transformer Routes requires terminals_file");
+    }
     Require(ValidId(manifest.Id), "experiment.json: id must contain 1–128 non-whitespace characters");
     Require(manifest.Id.Length <= MaximumProjectIdLength, "experiment.json: id must contain 1–128 non-whitespace characters");
     Require(!string.IsNullOrWhiteSpace(manifest.Name), "experiment.json: name is required");
@@ -164,9 +208,19 @@ public static class CityProjectLoader
     }
   }
 
-  private static string CalculateRevision(string directory, ProjectManifest manifest)
+  private static string CalculateRevision(string directory, ProjectManifest manifest, TransformerModel? model)
   {
-    List<string> references = ["experiment.json", manifest.Network.File, manifest.DemandFile];
+    List<string> references = ["experiment.json", manifest.Network.File];
+    if (manifest.DemandFile is not null)
+    {
+      references.Add(manifest.DemandFile);
+    }
+
+    if (model is not null)
+    {
+      references.Add(manifest.JourneyModelFile!);
+      references.Add(model.WeightsFile);
+    }
     references.AddRange(manifest.AdditionalFiles);
     if (manifest.DetectorsFile is not null)
     {
@@ -178,6 +232,16 @@ public static class CityProjectLoader
       references.Add(manifest.TerminalsFile);
     }
 
+    if (manifest.TrafficLightsFile is not null)
+    {
+      references.Add(manifest.TrafficLightsFile);
+    }
+
+    return HashProjectFiles(directory, references);
+  }
+
+  private static string HashProjectFiles(string directory, List<string> references)
+  {
     HashSet<string> normalized = new(StringComparer.OrdinalIgnoreCase);
     foreach (string reference in references)
     {
@@ -203,7 +267,7 @@ public static class CityProjectLoader
     return Convert.ToHexStringLower(hash.GetHashAndReset());
   }
 
-  private static void ValidateTerminals(ProjectTerminal[] terminals, ProjectEdge[] edges, ProjectDemand demand, string file)
+  private static void ValidateTerminals(ProjectTerminal[] terminals, ProjectEdge[] edges, ProjectVehicleType[] vehicleTypes, string file)
   {
     Dictionary<string, ProjectLane> ordinaryLanes = new(StringComparer.Ordinal);
     foreach (ProjectEdge edge in edges)
@@ -233,7 +297,7 @@ public static class CityProjectLoader
       Require(!string.IsNullOrWhiteSpace(terminal.LaneId), $"{file}: terminal '{terminal.Id}' lane_id is required");
       Require(ordinaryLanes.TryGetValue(terminal.LaneId, out ProjectLane? lane), $"{file}: terminal '{terminal.Id}' must reference an ordinary lane");
       Require(laneRoles.Add(terminal.LaneId + "\0" + terminal.Role), $"{file}: duplicate terminal lane and role");
-      Require(IsTerminalLaneUsable(lane!, demand), $"{file}: terminal '{terminal.Id}' lane must permit a configured vehicle class with positive weight");
+      Require(IsTerminalLaneUsable(lane!, vehicleTypes), $"{file}: terminal '{terminal.Id}' lane must permit a configured vehicle class with positive weight");
       bool validPosition = double.IsFinite(terminal.PositionM) && terminal.PositionM >= 0 && terminal.PositionM <= lane!.Map.Length;
       Require(validPosition, $"{file}: terminal '{terminal.Id}' position_m must be finite and within its lane");
       hasEntry |= isEntry;
@@ -243,9 +307,9 @@ public static class CityProjectLoader
     Require(terminals.Length == 0 || (hasEntry && hasExit), $"{file}: terminals must include both entry and exit roles");
   }
 
-  private static bool IsTerminalLaneUsable(ProjectLane lane, ProjectDemand demand)
+  private static bool IsTerminalLaneUsable(ProjectLane lane, ProjectVehicleType[] vehicleTypes)
   {
-    foreach (ProjectVehicleType type in demand.VehicleTypes)
+    foreach (ProjectVehicleType type in vehicleTypes)
     {
       if (type.Weight > 0 && lane.Permits(type.VehicleClass))
       {
@@ -483,7 +547,15 @@ public static class CityProjectLoader
       bool lanesAreValid = HasLane(byId, from, fromLane) && HasLane(byId, to, toLane);
       Require(lanesAreValid, $"{file}: invalid connection '{from}' lane {fromLane} -> '{to}' lane {toLane}");
       Require(via is null || laneIds.Contains(via), $"{file}: connection '{from}' -> '{to}' has unknown via lane '{via}'");
-      result.Add(new(from, to, fromLane, toLane, via));
+      string? signalId = (string?)connection.Attribute("tl");
+      int? linkIndex = null;
+      if (signalId is not null)
+      {
+        linkIndex = Integer(connection, "linkIndex", file);
+        Require(linkIndex >= 0, $"{file}: connection '{from}' -> '{to}' has negative signal link index");
+      }
+
+      result.Add(new(from, to, fromLane, toLane, via, signalId, linkIndex, (string?)connection.Attribute("dir")));
     }
 
     return result.ToArray();
@@ -618,7 +690,7 @@ public static class CityProjectLoader
     return true;
   }
 
-  private static void Require(bool condition, string message)
+  private static void Require([DoesNotReturnIf(false)] bool condition, string message)
   {
     if (!condition)
     {

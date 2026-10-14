@@ -1,6 +1,6 @@
 # STREETFLOW
 
-This is the preserved **legacy simulator**, including its original viewer, importer, examples, and tests. The new simulator design is in [docs/simulator](../../docs/simulator/README.md), and the project component split is in [docs/architecture.md](../../docs/architecture.md). Commands below assume this directory is your working directory; the repository root also builds this executable.
+This is the preserved **legacy simulator**, including its original viewer, importer, examples, and tests. The new simulator design is in [docs/simulator](../../docs/components/simulator/README.md), and the project component split is in [docs/architecture.md](../../docs/components/architecture.md). Commands below assume this directory is your working directory; the repository root also builds this executable.
 
 A C++ traffic simulator controlled from the terminal, with an animated city view in your browser. The city is your directed graph: load a `CITY.IN` file, spawn cars, and watch traffic move through lanes and traffic lights.
 

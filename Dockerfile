@@ -4,6 +4,8 @@ COPY global.json Directory.Build.props Streetflow.slnx ./
 COPY components/ components/
 RUN dotnet restore Streetflow.slnx --locked-mode
 RUN dotnet publish components/simulator/Streetflow.Simulator -c Release --no-restore -o /out
+RUN dotnet publish components/streetflow/Streetflow.Logistics -c Release --no-restore -o /out-logistics
+RUN dotnet publish components/frontend/Streetflow.Frontend -c Release --no-restore -o /out-frontend
 
 FROM build AS test
 USER root
@@ -27,3 +29,21 @@ USER app
 ENV ASPNETCORE_URLS=http://+:8080 Simulator__ScenarioRoot=/app/scenarios Simulator__DataRoot=/app/data
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "Streetflow.Simulator.dll"]
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.12-noble AS web-runtime
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+ENV URLS=http://+:8080
+EXPOSE 8080
+
+FROM web-runtime AS logistics
+COPY --from=build /out-logistics/ ./
+RUN mkdir -p /app/data && chown -R app:app /app/data
+USER app
+ENTRYPOINT ["dotnet", "Streetflow.Logistics.dll"]
+
+FROM web-runtime AS frontend
+COPY --from=build /out-frontend/ ./
+USER app
+ENTRYPOINT ["dotnet", "Streetflow.Frontend.dll"]

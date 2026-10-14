@@ -3,12 +3,13 @@ using Streetflow.Simulator.Scenarios;
 
 namespace Streetflow.Simulator.Generation;
 
-public sealed class CityDemandGenerator
+public sealed class CityDemandGenerator : ICityTrafficGenerator
 {
-  public const string Version = "city-weights-v2-terminals";
+  public const string Version = "city-weights-v3-through";
   public const double SecondsPerDay = 86400;
   private const double SecondsPerHour = 3600;
   private readonly CityProject project;
+  private readonly ProjectDemand demand;
   private readonly double startTime;
   private readonly Random timing;
   private readonly Random choices;
@@ -23,12 +24,13 @@ public sealed class CityDemandGenerator
   public CityDemandGenerator(CityProject project, int seed, double startTime)
   {
     this.project = project;
+    demand = project.Demand ?? throw new ApiException(400, "generation_error", "Edge Population requires demand profiles");
     this.startTime = startTime;
     timing = new Random(seed);
     choices = new Random(seed ^ 0x5f3759df);
     SortedSet<double> times = new() { 0, SecondsPerDay };
     double dailyIntegral = 0;
-    foreach (EdgeTrafficProfile profile in project.Demand.Profiles)
+    foreach (EdgeTrafficProfile profile in demand.Profiles)
     {
       profiles.Add(profile.Edge, profile);
       foreach (TrafficInterval interval in profile.Intervals)
@@ -47,24 +49,24 @@ public sealed class CityDemandGenerator
 
   public double RatePerSecond(double elapsed)
   {
-    if (!project.Demand.RepeatDaily && startTime + elapsed >= SecondsPerDay)
+    if (!demand.RepeatDaily && startTime + elapsed >= SecondsPerDay)
     {
       return 0;
     }
 
-    if (dailyMean == 0 || project.Demand.Generation.MeanDeparturesPerHour == 0)
+    if (dailyMean == 0 || demand.Generation.MeanDeparturesPerHour == 0)
     {
       return 0;
     }
 
     double cityTime = CityTime(elapsed);
     double total = 0;
-    foreach (EdgeTrafficProfile profile in project.Demand.Profiles)
+    foreach (EdgeTrafficProfile profile in demand.Profiles)
     {
       total += Weight(profile, cityTime);
     }
 
-    double rate = project.Demand.Generation.MeanDeparturesPerHour / SecondsPerHour * (total / dailyMean);
+    double rate = demand.Generation.MeanDeparturesPerHour / SecondsPerHour * (total / dailyMean);
     if (!double.IsFinite(rate))
     {
       throw new ApiException(400, "generation_error", "Traffic rate exceeds finite numeric limits");
@@ -102,14 +104,14 @@ public sealed class CityDemandGenerator
   private RouteCandidate ChooseRoute(double elapsed)
   {
     double typeTotal = 0;
-    foreach (ProjectVehicleType type in project.Demand.VehicleTypes)
+    foreach (ProjectVehicleType type in demand.VehicleTypes)
     {
       typeTotal += type.Weight;
     }
 
     double typeChoice = choices.NextDouble() * typeTotal;
-    ProjectVehicleType selected = project.Demand.VehicleTypes[^1];
-    foreach (ProjectVehicleType type in project.Demand.VehicleTypes)
+    ProjectVehicleType selected = demand.VehicleTypes[^1];
+    foreach (ProjectVehicleType type in demand.VehicleTypes)
     {
       typeChoice -= type.Weight;
       if (typeChoice < 0)
@@ -161,7 +163,7 @@ public sealed class CityDemandGenerator
 
   private double NextTime(double elapsed)
   {
-    if (dailyMean == 0 || project.Demand.Generation.MeanDeparturesPerHour == 0)
+    if (dailyMean == 0 || demand.Generation.MeanDeparturesPerHour == 0)
     {
       return double.PositiveInfinity;
     }
@@ -172,7 +174,7 @@ public sealed class CityDemandGenerator
     while (true)
     {
       double absolute = startTime + elapsed;
-      if (!project.Demand.RepeatDaily && absolute >= SecondsPerDay)
+      if (!demand.RepeatDaily && absolute >= SecondsPerDay)
       {
         return double.PositiveInfinity;
       }

@@ -7,4 +7,10 @@
     <Project Path="components/simulator/Streetflow.Simulator.Tests/Streetflow.Simulator.Tests.csproj" />
     <Project Path="components/simulator/Streetflow.Simulator/Streetflow.Simulator.csproj" />
   </Folder>
+  <Folder Name="/components/streetflow/">
+    <Project Path="components/streetflow/Streetflow.Logistics/Streetflow.Logistics.csproj" />
+  </Folder>
+  <Folder Name="/components/frontend/">
+    <Project Path="components/frontend/Streetflow.Frontend/Streetflow.Frontend.csproj" />
+  </Folder>
 </Solution>

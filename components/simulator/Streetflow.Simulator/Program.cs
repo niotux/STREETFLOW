@@ -21,7 +21,11 @@ SimulatorOptions options = new()
   MaximumLiveVehicles = 5000,
   MaximumPendingEntries = 512,
   GenerationBatchSize = 64,
-  MaximumBacklogSeconds = 300
+  MaximumBacklogSeconds = 300,
+  MaximumTransformerStates = 512,
+  MaximumTransformerRouteMovements = 10000,
+  MaximumTransformerCachedContexts = 128,
+  MaximumDynamicRoutes = 4096
 };
 builder.Configuration.GetSection("Simulator").Bind(options);
 string workspace = FindWorkspace(builder.Environment.ContentRootPath);
@@ -148,6 +152,7 @@ static void ConfigurePipeline(WebApplication app)
   app.MapSimulatorApi();
   app.MapProjectApi();
   app.MapCityRunApi();
+  app.MapTlcApi();
 }
 
 public partial class Program;

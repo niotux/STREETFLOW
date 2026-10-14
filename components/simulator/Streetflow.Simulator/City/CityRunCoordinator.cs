@@ -6,19 +6,20 @@ using Streetflow.Simulator.Sumo;
 
 namespace Streetflow.Simulator.City;
 
-public sealed class CityRunCoordinator(ProjectCatalog catalog, SimulatorOptions options, CityRunStorage storage, EngineOwnership ownership, ILogger<CityRunCoordinator> logger) : BackgroundService
+public sealed partial class CityRunCoordinator(ProjectCatalog catalog, SimulatorOptions options, CityRunStorage storage, EngineOwnership ownership, ILogger<CityRunCoordinator> logger) : BackgroundService
 {
   private const int MaximumStepCount = 1000;
   private const double MinimumStepSeconds = 0.05;
   private const double MaximumStepSeconds = 5;
   private const int IdleDelayMilliseconds = 20;
   private const int MillisecondsPerSecond = 1000;
+  private const string ExternalSignalControlMode = "external-v1";
   private readonly SemaphoreSlim gate = new(1, 1);
   private readonly Dictionary<string, CityRunStatus> archive = new(StringComparer.Ordinal);
   private readonly Dictionary<string, PendingVehicleEntry> pendingEntries = new(StringComparer.Ordinal);
   private CityRunStatus? current;
   private CityProject? project;
-  private CityDemandGenerator? generator;
+  private ICityTrafficGenerator? generator;
   private SumoEngine? engine;
   private Snapshot? snapshot;
   private long sequence;
@@ -76,7 +77,13 @@ public sealed class CityRunCoordinator(ProjectCatalog catalog, SimulatorOptions 
       ScenarioCatalog.ValidatePacing(request.Pacing);
     }
 
-    return new CityRunConfiguration(selected.Manifest.Id, selected.Revision, CityDemandGenerator.Version, request.Seed, start, step, options.MaximumLiveVehicles, options.MaximumPendingEntries, options.GenerationBatchSize, options.MaximumBacklogSeconds);
+    TransformerGenerationLimits? limits = null;
+    if (selected.Manifest.FormatVersion == 2)
+    {
+      limits = new TransformerGenerationLimits(options.MaximumTransformerStates, options.MaximumTransformerRouteMovements, options.MaximumTransformerCachedContexts, options.MaximumDynamicRoutes);
+    }
+
+    return new CityRunConfiguration(selected.Manifest.Id, selected.Revision, GeneratorVersion(selected), request.Seed, start, step, options.MaximumLiveVehicles, options.MaximumPendingEntries, options.GenerationBatchSize, options.MaximumBacklogSeconds, ExternalSignalControlMode, limits);
   }
 
   private async Task<CityRunStatus> StartAsync(CityProject selected, CityRunConfiguration configuration, bool paused, Pacing pacing)
@@ -86,7 +93,14 @@ public sealed class CityRunCoordinator(ProjectCatalog catalog, SimulatorOptions 
     try
     {
       project = storage.CopyProject(selected, id);
-      generator = new CityDemandGenerator(project, configuration.Seed, configuration.StartTimeSeconds);
+      if (project.Manifest.FormatVersion == 2)
+      {
+        generator = new TransformerDemandGenerator(project, configuration.Seed, configuration.StartTimeSeconds, configuration.TransformerLimits!);
+      }
+      else
+      {
+        generator = new CityDemandGenerator(project, configuration.Seed, configuration.StartTimeSeconds);
+      }
       storage.WriteRoutes(id, project, generator.Candidates);
       pendingEntries.Clear();
       sequence = 0;
@@ -97,6 +111,14 @@ public sealed class CityRunCoordinator(ProjectCatalog catalog, SimulatorOptions 
       await SaveAsync();
       engine = new SumoEngine();
       string version = await engine.StartCityAsync(project, configuration, storage.DirectoryFor(id), options, CancellationToken.None);
+      SignalState[] signals = await engine.GetSignalsAsync(CancellationToken.None);
+      prioritySignalStates.Clear();
+      foreach (SignalState signal in signals)
+      {
+        prioritySignalStates.Add(signal.Id, signal.State);
+      }
+
+      snapshot = snapshot with { Signals = signals, DeviceStates = TrafficDeviceStates.Read(project, signals) };
       current = current with { State = paused ? "paused" : "running", EngineVersion = version };
       await SaveAsync();
       return current;
@@ -177,7 +199,7 @@ public sealed class CityRunCoordinator(ProjectCatalog catalog, SimulatorOptions 
         selected = CityProjectLoader.Load(Path.Combine(storage.DirectoryFor(id), "package"));
       }
 
-      return new CityRunMap(selected.Manifest.Id, selected.Revision, selected.Manifest.Network.Attribution, selected.Lanes, selected.Junctions, selected.TerminalPoints);
+      return new CityRunMap(selected.Manifest.Id, selected.Revision, selected.Manifest.Network.Attribution, selected.Lanes, selected.Junctions, selected.TerminalPoints, selected.SignalPoints) { TrafficDevices = selected.TrafficDevices };
     }
     finally
     {
@@ -250,7 +272,12 @@ public sealed class CityRunCoordinator(ProjectCatalog catalog, SimulatorOptions 
 
   private async Task<CityRunStatus> RestartAsync(CityRunStatus status)
   {
-    if (status.Configuration.GeneratorVersion != CityDemandGenerator.Version)
+    if (status.Configuration.SignalControlMode != ExternalSignalControlMode)
+    {
+      throw new ApiException(409, "incompatible_signal_control", "This saved run used automatic signals. Create a new run for external signal control");
+    }
+
+    if (status.Configuration.GeneratorVersion != CityDemandGenerator.Version && status.Configuration.GeneratorVersion != TransformerDemandGenerator.Version)
     {
       throw new ApiException(409, "incompatible_generator", "This run requires a different generator version");
     }
@@ -278,6 +305,11 @@ public sealed class CityRunCoordinator(ProjectCatalog catalog, SimulatorOptions 
     if (saved.Revision != status.Configuration.ProjectRevision)
     {
       throw new ApiException(409, "changed_project", "Saved project inputs changed; exact replay is unavailable");
+    }
+
+    if (status.Configuration.GeneratorVersion != GeneratorVersion(saved))
+    {
+      throw new ApiException(409, "incompatible_generator", "Saved project format does not match its generator version");
     }
 
     return await StartAsync(saved, status.Configuration, true, status.Pacing);
@@ -311,7 +343,7 @@ public sealed class CityRunCoordinator(ProjectCatalog catalog, SimulatorOptions 
 
       EngineSnapshot next = await engine.StepAsync(CancellationToken.None);
       liveVehicles = next.ExpectedVehicles;
-      current = current with { GridlockRecoveries = current.GridlockRecoveries + next.Teleports.Length };
+      current = current with { GridlockRecoveries = current.GridlockRecoveries + next.Teleports.Length, ArrivedVehicles = current.ArrivedVehicles + next.Arrived.Length };
       foreach (string departed in next.Departed)
       {
         pendingEntries.Remove(departed);
@@ -323,7 +355,7 @@ public sealed class CityRunCoordinator(ProjectCatalog catalog, SimulatorOptions 
       double backlog = Math.Max(departureBacklog, entryDelay);
       double absolute = configuration.StartTimeSeconds + next.Time;
       current = current with { SimulationTime = next.Time, CityTimeSeconds = absolute % CityDemandGenerator.SecondsPerDay, Day = (int)(absolute / CityDemandGenerator.SecondsPerDay), ActiveVehicles = next.Vehicles.Length, PendingEntries = pendingEntries.Count, BacklogSeconds = backlog, GenerationEnded = generator.Ended };
-      snapshot = new Snapshot(current.Id, ++sequence, next.Time, next.Vehicles.Length, next.Vehicles, next.Signals);
+      snapshot = new Snapshot(current.Id, ++sequence, next.Time, next.Vehicles.Length, next.Vehicles, next.Signals) { DeviceStates = TrafficDeviceStates.Read(project!, next.Signals) };
       current = current with { Warning = null };
       if (backlog > configuration.MaximumBacklogSeconds)
       {
@@ -413,6 +445,8 @@ public sealed class CityRunCoordinator(ProjectCatalog catalog, SimulatorOptions 
   }
 
   private CityRunStatus Find(string id) => current?.Id == id ? current : archive.GetValueOrDefault(id) ?? throw new ApiException(404, "unknown_run", "Unknown city run");
+  private static string GeneratorVersion(CityProject selected) => selected.Manifest.FormatVersion == 2 ? TransformerDemandGenerator.Version : CityDemandGenerator.Version;
+
   private static bool IsActive(string state) => state == "starting" || state == "running" || state == "paused";
 
   private static void ValidateCommand(string command, CityRunCommand request)
@@ -443,6 +477,8 @@ public sealed class CityRunCoordinator(ProjectCatalog catalog, SimulatorOptions 
     bool valid = options.MaximumLiveVehicles > 0 && options.MaximumPendingEntries > 0 && options.GenerationBatchSize > 0;
     valid = valid && options.MaximumPendingEntries <= options.MaximumLiveVehicles;
     valid = valid && double.IsFinite(options.MaximumBacklogSeconds) && options.MaximumBacklogSeconds > 0;
+    valid = valid && options.MaximumTransformerStates > 0 && options.MaximumTransformerRouteMovements > 0;
+    valid = valid && options.MaximumTransformerCachedContexts > 0 && options.MaximumDynamicRoutes > 0;
     if (!valid)
     {
       throw new InvalidOperationException("City simulation limits must be positive; pending capacity must not exceed live capacity");

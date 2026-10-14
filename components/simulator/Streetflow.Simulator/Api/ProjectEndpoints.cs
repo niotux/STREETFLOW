@@ -13,7 +13,9 @@ public static class ProjectEndpoints
     RouteGroupBuilder api = app.MapGroup("/api/v1/projects");
     api.MapGet("/", (ProjectCatalog catalog) => catalog.List());
     api.MapGet("/{id}", (string id, ProjectCatalog catalog) => catalog.Get(id).Info);
-    api.MapGet("/{id}/demand", (string id, ProjectCatalog catalog) => catalog.Get(id).Demand);
+    api.MapGet("/{id}/demand", (string id, ProjectCatalog catalog) => ReadDemand(catalog.Get(id)));
+    api.MapGet("/{id}/model", (string id, ProjectCatalog catalog) => Results.Ok(ReadModel(catalog.Get(id))));
+    api.MapGet("/{id}/weights", (string id, ProjectCatalog catalog) => Results.Ok(ReadWeights(catalog.Get(id))));
     api.MapGet("/{id}/map", (string id, int? offset, int? limit, ProjectCatalog catalog) => Results.Ok(ReadMap(catalog, id, offset, limit)));
     api.MapPost("/import/folder", async (FolderImportRequest request, ProjectCatalog catalog, CancellationToken token) =>
     {
@@ -22,6 +24,20 @@ public static class ProjectEndpoints
     });
     api.MapPost("/import/zip", ImportZipAsync).Accepts<Stream>("application/zip", "application/octet-stream");
   }
+
+  private static IResult ReadDemand(CityProject project)
+  {
+    if (project.Demand is not null)
+    {
+      return Results.Ok(project.Demand);
+    }
+
+    return Results.Ok(ReadModel(project));
+  }
+
+  private static TransformerModel ReadModel(CityProject project) => project.TransformerModel ?? throw new ApiException(409, "wrong_project_format", "This project uses Edge Population; read its demand profiles");
+
+  private static TransformerWeights ReadWeights(CityProject project) => project.TransformerWeights ?? throw new ApiException(409, "wrong_project_format", "This project uses Edge Population and has no Transformer Routes weights");
 
   private static ProjectMapResponse ReadMap(ProjectCatalog catalog, string id, int? offset, int? limit)
   {
@@ -51,7 +67,7 @@ public static class ProjectEndpoints
       totalEdges++;
     }
 
-    return new ProjectMapResponse(project.Manifest.Id, project.Revision, project.Manifest.Network.Attribution, "SUMO local meters", lanes.Length, project.Junctions.Length, totalEdges, start, Endpoints.Page(lanes, start, size), Endpoints.Page(project.Junctions, start, size), edges.ToArray(), project.SignalIds, project.TerminalPoints);
+    return new ProjectMapResponse(project.Manifest.Id, project.Revision, project.Manifest.Network.Attribution, "SUMO local meters", lanes.Length, project.Junctions.Length, totalEdges, start, Endpoints.Page(lanes, start, size), Endpoints.Page(project.Junctions, start, size), edges.ToArray(), project.SignalIds, project.TerminalPoints, project.SignalPoints) { TrafficDevices = project.TrafficDevices };
   }
 
   private static async Task<IResult> ImportZipAsync(HttpRequest request, ProjectCatalog catalog, SimulatorOptions options, CancellationToken token)

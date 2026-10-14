@@ -1,0 +1,16 @@
+{
+  "format_version": 2,
+  "id": "tiny-journey-model-v2",
+  "name": "Traffic model weights example",
+  "description": "Synthetic checkpoint-style weights for format review; runtime version 2 support is not implemented.",
+  "network": {
+    "file": "network.net.xml",
+    "attribution": "Synthetic network"
+  },
+  "terminals_file": "terminals.json",
+  "journey_model_file": "journey-model.json",
+  "defaults": {
+    "start_time_seconds": 27000,
+    "step_seconds": 0.5
+  }
+}

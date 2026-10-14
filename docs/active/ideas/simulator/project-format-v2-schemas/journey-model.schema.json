@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "format_version": {
+      "type": "integer",
+      "const": 2
+    },
+    "architecture": {
+      "const": "contextual_journey_v1"
+    },
+    "arrival_model": {
+      "const": "nonhomogeneous_poisson"
+    },
+    "repeat_daily": {
+      "type": "boolean"
+    },
+    "route_time": {
+      "const": "planned_departure"
+    },
+    "weights_file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "axes": {
+      "type": "object",
+      "properties": {
+        "period": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "start_seconds": {
+                "type": "number",
+                "minimum": 0,
+                "exclusiveMaximum": 86400
+              },
+              "end_seconds": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 86400
+              }
+            },
+            "required": [
+              "start_seconds",
+              "end_seconds"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        },
+        "origin": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^\\S+$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "destination": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^\\S+$"
+              },
+              "terminal_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^\\S+$"
+                },
+                "minItems": 1,
+                "uniqueItems": true
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "terminal_ids"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        },
+        "category": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^\\S+$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "vehicle_type": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^\\S+$"
+              },
+              "vehicle_class": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^\\S+$"
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "vehicle_class"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        },
+        "movement": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "incoming_edge_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^\\S+$"
+              },
+              "outgoing_edge_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^\\S+$"
+              }
+            },
+            "required": [
+              "incoming_edge_id",
+              "outgoing_edge_id"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "period",
+        "origin",
+        "destination",
+        "category",
+        "vehicle_type",
+        "movement"
+      ],
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tensor_names": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "arrival_rates",
+                "journey_logits",
+                "movement_logits"
+              ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "kind": {
+            "enum": [
+              "measurement",
+              "derived_estimate",
+              "user_observation",
+              "authored_assumption"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "tensor_names",
+          "kind",
+          "note"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "format_version",
+    "architecture",
+    "arrival_model",
+    "repeat_daily",
+    "route_time",
+    "weights_file",
+    "axes",
+    "evidence"
+  ],
+  "additionalProperties": false
+}

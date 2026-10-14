@@ -18,7 +18,9 @@ public sealed class ApiIntegrationTests
     HttpResponseMessage page = await client.GetAsync("/");
     Assert.Equal(HttpStatusCode.OK, page.StatusCode);
     Assert.Equal("text/html", page.Content.Headers.ContentType?.MediaType);
-    Assert.Contains("Start traffic", await page.Content.ReadAsStringAsync());
+    string markup = await page.Content.ReadAsStringAsync();
+    Assert.Contains("id=\"loader-applet\"", markup);
+    Assert.Contains("id=\"runner-applet\"", markup);
     Assert.Contains("Traffic playground", await client.GetStringAsync("/legacy-inspector.html"));
     Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/app.js")).StatusCode);
     Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/styles.css")).StatusCode);

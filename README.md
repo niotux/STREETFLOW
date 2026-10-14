@@ -1,27 +1,27 @@
 # STREETFLOW
 
-STREETFLOW contains two planned products and a simulator used to test the decision-making product:
+STREETFLOW contains the three MAGI components and a shared web frontend:
 
-- **Streetflow app:** consumes traffic observations and makes decisions. Navigation, signal control, or a combination remain open product choices.
-- **Detector:** turns camera footage into traffic observations using vehicle detection, tracking, and lane/camera calibration.
-- **Simulator:** wraps SUMO to run road traffic, expose camera-like observations, and provide a browser inspector and experiment controls.
+- **Melchior / Streetflow logistics:** controls traffic lights through tlcapi. The current server provides manual access; automatic management remains future work.
+- **Casper / Detector:** will turn camera footage into traffic observations using detection, tracking, and lane/camera calibration.
+- **Balthasar / Simulator:** wraps SUMO to run traffic, expose observations, and provide a browser inspector and experiment controls.
+
+The separate **MAGI frontend** starts on a component selector with pages for Melchior and Balthasar. Casper is disabled for now.
 
 The simulator on `better-simulation` uses **C# / .NET 10, SUMO 1.28, PostgreSQL, and Docker Compose**, with a plain HTML/JavaScript browser inspector. It also runs headless. Windows, Linux, and macOS are target platforms; Linux native execution and Linux containers have been exercised. Dataset capacity depends on available resources. Existing legacy tools are retained.
 
-Start with the [component architecture](docs/architecture.md), then the [simulator design](docs/simulator/README.md).
+Start with the [documentation workflow](docs/README.md), then the [component architecture](docs/components/architecture.md) and [simulator guide](docs/components/simulator/README.md).
 
 ## Repository layout
 
 | Path | Contents |
 | --- | --- |
-| `docs/simulator/` | Simulator scope, architecture, APIs, demand strategy, and implementation plan |
-| `docs/streetflow/` | Decision-making product boundaries and open product questions |
-| `docs/detector/` | Camera/AI detector boundaries and requirements |
-| `docs/contracts/` | Shared traffic-observation contract |
+| `docs/active/` | Current ideas and plans, grouped by component |
+| `docs/components/` | Settled product, contract, and implementation documentation |
 | `docs/research/` | Traffic-model literature and Iași infrastructure studies |
-| `docs/archive/` | Superseded design proposals, kept for context |
+| `docs/archive/` | Superseded proposals and completed plans kept for context |
 | `assets/images/` | Screenshots and other image assets |
-| `components/` | .NET simulator backend, observation contracts, and product implementation locations |
+| `components/` | .NET simulator and logistics servers, MAGI frontend, shared contracts, and detector implementation location |
 | `scenarios/` | Ready-to-run tiny intersection and central Iași SUMO packages |
 | `legacy/simulator/` | Preserved C++ simulator, browser viewer, tools, tests, and map examples |
 
@@ -33,11 +33,13 @@ curl http://localhost:8080/health
 curl http://localhost:8080/api/v1/projects
 ```
 
-Open **http://localhost:8080**, import a project ZIP or a bundled server folder such as `/app/projects/podu-ros`, then click **Start traffic**. The city view shows roads, moving cars, the city clock, and run controls. Drag to pan and scroll to zoom. The existing scenario inspector remains at `/legacy-inspector.html`.
+Open **http://localhost:8090** and choose **Balthasar**. Import a project ZIP or a bundled folder such as `/app/projects/podu-ros`, then load and start traffic. Choose **Melchior** from the landing page to select a running or paused city run and manually control its lights. In Compose, Melchior's tlcapi address is `http://simulator`, port `8080`. Drag the map to pan and scroll to zoom. The legacy inspector is at `/balthasar/legacy-inspector.html`; the simulator retains its standalone UI on port 8080.
 
-Only Docker with Compose and a browser are required to run it; .NET, SUMO, and PostgreSQL are inside the containers. See the [city run guide](components/simulator/README.md) for project import, replay, limits, and troubleshooting; the [legacy backend guide](docs/simulator/backend.md) describes observations and recording. The API is at `http://localhost:8080/api/v1`; OpenAPI is at `/openapi/v1.json`. Docker stores results and PostgreSQL data in named volumes.
+See the [Melchior guide](components/streetflow/README.md), [frontend guide](components/frontend/README.md), and [tlcapi contract](docs/components/contracts/tlcapi.md). Melchior's API is on port 8081 and the frontend on port 8090. Set `SIMULATOR_PORT`, `LOGISTICS_PORT`, and `FRONTEND_PORT` to change host ports.
 
-On this development machine, the system Docker daemon works under the `default` context. If Docker Desktop is stopped and the selected context points to its missing socket, use `docker --context default compose ...`.
+Only Docker with Compose and a browser are required to run it; .NET, SUMO, and PostgreSQL are inside the containers. See the [city run guide](components/simulator/README.md) for project import, replay, limits, and troubleshooting; the [legacy backend guide](docs/components/simulator/backend.md) describes observations and recording. The API is at `http://localhost:8080/api/v1`; OpenAPI is at `/openapi/v1.json`. Docker stores results and PostgreSQL data in named volumes.
+
+On this development machine, Docker Desktop uses the `desktop-linux` context. Use `docker --context desktop-linux compose ...` to keep the services visible in Docker Desktop. The system daemon (`default`) is separate, with its own containers, images, and volumes; use it only when intentionally running outside Docker Desktop.
 
 ## Run the preserved simulator
 
@@ -60,6 +62,6 @@ The existing executable requires a C++20 compiler, CMake, and Linux/POSIX facili
 
 ## Current design decisions
 
-Use SUMO for vehicle and junction behavior. Build one simulator service around one SUMO process, with a web inspector and two logical API surfaces: experiment management and product-facing traffic observations. Make the simulated observations interchangeable with the detector's output. Decide the product's traffic-control actions separately.
+Use SUMO for vehicle and junction behavior. Keep Balthasar around one SUMO process, Melchior in a separate service for traffic light control, and the MAGI frontend in its own server. Simulated observations remain interchangeable with detector output. Manual tlcapi commands are implemented; automatic management remains future work.
 
-The backend implements run management, ideal simulated detector observations, inspection APIs, trip and checkpoint records, and persistent experiment history. Scenario calibration, detector error profiles, and product actions remain later work. See [the implementation plan](docs/simulator/implementation-plan.md).
+The backend implements run management, ideal simulated detector observations, inspection APIs, trip and checkpoint records, persistent history, and manual traffic light control through Melchior. Scenario calibration, detector error profiles, and automatic management remain later work. Plans are under [`docs/active/plans/`](docs/active/plans/); settled details are under [`docs/components/`](docs/components/).
