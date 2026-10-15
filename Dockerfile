@@ -24,7 +24,6 @@ WORKDIR /app
 COPY --from=build /out/ ./
 COPY scenarios/ scenarios/
 RUN mkdir -p /app/data && chown -R app:app /app/data
-COPY experiments/drafts/ projects/
 USER app
 ENV ASPNETCORE_URLS=http://+:8080 Simulator__ScenarioRoot=/app/scenarios Simulator__DataRoot=/app/data
 EXPOSE 8080

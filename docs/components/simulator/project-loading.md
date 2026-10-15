@@ -1,61 +1,63 @@
-# City project loading
+# Project folder loading
 
-Task 3 adds backend import, storage, validation, and map inspection for the [accepted format](experiment-project-format.md). Importing does not create a run or start SUMO. Project selection and continuous traffic generation are now available in [the city UI](README.md). Import itself continues to create no run.
+Projects in all supported formats (Edge Population v1, Transformer Routes v2, and Neural Routes v3) live in ordinary folders. The simulator keeps a persistent list of absolute folder paths and reads inputs from those folders. Registering a folder does not copy it, create a run, or start SUMO. No database is involved.
 
-## Manual review
+## UI
 
-Run these commands from the repository root with .NET 10 installed. Import/map inspection does not require a local SUMO executable.
+In Balthasar's Loader, enter the folder containing `experiment.json` and click **Add folder**. Select its project to preview the map, then **Load simulation** to create a paused run. Edit the same files using any external tools and click **Refresh from disk** to update the preview. New runs read the latest validated files.
+
+**Manage project folders** shows every saved path and any validation/read error. **Remove from list** removes only that reference. Files and saved runs remain intact. Missing or temporarily invalid folders stay registered, do not prevent service startup, and become usable again after their files are repaired and refreshed.
+
+A path must be absolute and visible to the simulator process. Compose mounts the host `experiments/drafts/` directory at `/app/projects/`; add other bind mounts for folders elsewhere. Experiments are not bundled into the runtime image. With native execution, use the folder's normal local path.
+
+## API
 
 ```sh
-dotnet run --project components/simulator/Streetflow.Simulator --no-launch-profile --urls http://localhost:8080
-```
-
-In another terminal, import Podu Roș using an absolute path visible to the service:
-
-```sh
-curl -i http://localhost:8080/api/v1/projects/import/folder \
+curl http://localhost:8080/api/v1/projects/folders \
   -H 'Content-Type: application/json' \
-  --data '{"path":"/Space/CodeDev/projects/hackaton/STREETFLOW/experiments/drafts/podu-ros"}'
+  --data '{"path":"/app/projects/tiny-graph"}'
 curl http://localhost:8080/api/v1/projects
-curl http://localhost:8080/api/v1/projects/podu-ros/map?limit=2
-curl http://localhost:8080/api/v1/projects/podu-ros/demand
-curl http://localhost:8080/api/v1/runs
+curl 'http://localhost:8080/api/v1/projects/tiny-graph/map?limit=2'
+curl -X DELETE http://localhost:8080/api/v1/projects/folders \
+  -H 'Content-Type: application/json' \
+  --data '{"path":"/app/projects/tiny-graph"}'
 ```
-
-The import returns HTTP 201 with 106 usable edges and a SHA-256 input revision. The map returns lane shapes, ordinary edge identifiers, junctions, signal identifiers, and attribution in SUMO local metres. Demand returns the explicit profiles and generation settings. Importing adds no run. Restart the service and list projects again to confirm persistence. Import the same ID again to see HTTP 409 `duplicate_project`.
-
-ZIP import takes a raw ZIP body, rather than a multipart form. Create a ZIP from the contents of either other project, then upload it:
-
-```sh
-(cd experiments/drafts/tiny-graph && zip -r /tmp/streetflow-tiny-project.zip .)
-curl -i http://localhost:8080/api/v1/projects/import/zip \
-  -H 'Content-Type: application/zip' \
-  --data-binary @/tmp/streetflow-tiny-project.zip
-```
-
-Archives may contain project files at the root or inside a project folder. They must contain exactly one `experiment.json`. Folder import reads a server-side path; ZIP upload works when project files are on the client machine.
-
-## Endpoints and validation
 
 | Request | Result |
 | --- | --- |
-| `POST /api/v1/projects/import/folder` | JSON `{ "path": "absolute/server/path" }`; validated import, HTTP 201 |
-| `POST /api/v1/projects/import/zip` | Raw ZIP body; validated import, HTTP 201 |
-| `GET /api/v1/projects` | Project manifests, counts, and revisions, sorted by ID |
-| `GET /api/v1/projects/{id}` | One project's manifest, counts, and revision |
-| `GET /api/v1/projects/{id}/map?offset=0&limit=1000` | Geometry; offset/limit independently apply to lane, junction, and ordinary-edge arrays; totals allow pagination |
-| `GET /api/v1/projects/{id}/demand` | Full validated demand specification |
+| `POST /api/v1/projects/folders` | Register `{ "path": "absolute/folder/path" }`; return project info and its `path` |
+| `GET /api/v1/projects/folders` | All registered entries: `{path, project, error}`; unavailable folders have null `project` and an explanation |
+| `DELETE /api/v1/projects/folders` | Remove the path supplied in the JSON body; HTTP 204; files are preserved |
+| `GET /api/v1/projects` | Currently readable, validated projects, sorted by ID |
+| `GET /api/v1/projects/{id}` | Read current project manifest, counts, revision, and folder path |
+| `GET /api/v1/projects/{id}/map?offset=0&limit=1000` | Current geometry and physical devices; limits 1–10000 |
+| `GET /api/v1/projects/{id}/demand` | Current demand/model specification |
+| `POST /api/v1/projects/import/folder` | Compatibility alias for folder registration; it no longer copies the folder |
+| `POST /api/v1/projects/import/zip` | Compatibility upload: extract a ZIP into an ordinary persistent folder, validate and register its path |
 
-Validation rejects unknown/duplicate JSON fields, missing required fields/files, unsafe paths, symlinks, archive path collisions, malformed XML, XML external entities, invalid lane permissions/connections, authored traffic, and nonempty detector data. Every ordinary edge usable by a positive-weight vehicle class must have exactly one profile. Intervals must cover `[0, 86400)` without gaps or overlaps, and all weights/settings must be finite and valid. Additional XML accepts signal programs only. Errors name the relevant file and, where applicable, edge.
+Re-registering the same normalized path is harmless. Different registered folders with the same manifest ID return HTTP 409 `duplicate_project`. If an external edit creates a duplicate ID, the later entry is reported unavailable. Unknown projects/folders return 404. Validation errors return `{code, message}` with HTTP 400. Removing an unreadable folder works using its path.
 
-Errors return `{ "code": "invalid_project", "message": "..." }` with HTTP 400; unknown projects return 404; duplicate IDs return 409; import limits return 413 `project_too_large`. Invalid pagination returns 400 `invalid_pagination`. Existing IDs are never overwritten.
+## Disk persistence and edits
 
-## Persistence and limits
+`Simulator__DataRoot/project-folders.json` contains the registry:
 
-Imports copy inputs into `Simulator__DataRoot/projects/<storage-id>/package/`, with catalog metadata stored outside the package. Validation finishes before the directory is committed. Failed imports remove temporary files. Changing or deleting the source folder does not affect the stored copy. On restart, stored inputs are validated and checked against their recorded revision; changed inputs fail startup with an explicit error. The revision covers referenced simulation inputs, excluding unrelated notes.
+```json
+[
+  {"path": "/app/projects/tiny-graph"},
+  {"path": "/app/projects/four-way-neural-routes"}
+]
+```
 
-`Simulator__MaximumProjectBytes` defaults to 268435456 (256 MiB), applied to the ZIP upload and total copied/expanded file bytes. `Simulator__MaximumProjectFiles` defaults to 4096; directory/archive entry counts are bounded too. The map accepts limits from 1 through 10000. Projects and their full demand specifications remain in memory after validation.
+Registry updates replace this file atomically. API changes take effect immediately; manual registry-file edits take effect after a service restart. Project-file edits are read on each project request; no folder watcher or database synchronization is needed. Save a complete valid project before refreshing or loading a new run. The revision is recalculated from current referenced inputs.
 
-The automated project-loading checks exercise tiny graph (8 usable edges), central Iași (713), and Podu Roș (106), folder/ZIP imports, map inspection without an engine, restart persistence, invalid profiles/files, unsafe archives, duplicate imports, and resource limits.
+Existing private imports under `DataRoot/projects/*/package/` are added as folder references the first time the registry is created. Their inputs and old metadata are preserved. They can be removed from the list and replaced with paths to the original source folders. Once the registry exists, removed legacy entries are not rediscovered automatically.
 
-Task 3 verification: 47 project-loading cases passed; the complete SUMO regression suite passed 69 tests, with one PostgreSQL integration test skipped because no test database was configured. A live HTTP smoke check imported all three projects and confirmed zero runs after import.
+New runs still save their own input snapshots under `DataRoot/city-runs/{id}/package/`. Editing or unregistering the source does not change an already loaded run. Restart replays the saved snapshot; loading a new simulation uses the current folder. Run snapshots are separate from the editable project registry.
+
+## Validation and uploads
+
+The existing format-specific validation remains in place: required files, JSON/XML structure, contained relative references, lane/controller bindings, traffic settings, and neural model checks are validated before use. Relative manifest references may not escape the project folder. Unsupported symbolic links remain rejected.
+
+ZIP compatibility uploads accept flat or single-folder archives containing exactly one `experiment.json`. `Simulator__MaximumProjectBytes` (default 256 MiB) and `Simulator__MaximumProjectFiles` (default 4096) bound uploads and expansion. Folder references do not copy or enumerate unrelated project files, so these upload limits do not restrict folder registration. The returned path identifies the extracted folder for later edits or removal from the list.
+
+Tests cover all formats, disk edits and revisions, restart persistence, invalid/missing folders, non-destructive removal, old-import migration, duplicate identities, input validation, and archive limits.

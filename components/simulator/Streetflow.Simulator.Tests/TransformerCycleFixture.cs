@@ -9,6 +9,7 @@ internal sealed class TransformerCycleFixture : IDisposable
 
   public TransformerCycleFixture()
   {
+    fixture.Change("experiment.json", manifest => manifest["traffic_lights_file"] = null);
     File.WriteAllText(System.IO.Path.Combine(Path, "network.net.xml"), """
       <net>
         <edge id="a" from="one" to="two"><lane id="a_0" index="0" speed="10" length="100" shape="0,0 100,0"/></edge>

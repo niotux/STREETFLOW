@@ -19,5 +19,6 @@ public sealed class SimulatorOptions
   public int MaximumTransformerRouteMovements { get; set; }
   public int MaximumTransformerCachedContexts { get; set; }
   public int MaximumDynamicRoutes { get; set; }
+  public int MaximumNeuralRouteMovements { get; set; }
   public double MaximumBacklogSeconds { get; set; }
 }

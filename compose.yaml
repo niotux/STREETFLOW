@@ -43,12 +43,10 @@ services:
     ports:
       - "127.0.0.1:${SIMULATOR_PORT:-8080}:8080"
     environment:
-      Simulator__ConnectionString: "Host=postgres;Database=streetflow_simulator;Username=streetflow;Password=${POSTGRES_PASSWORD:-streetflow-local}"
+      Simulator__ConnectionString: "${SIMULATOR_CONNECTION_STRING:-}"
     volumes:
       - simulator-data:/app/data
-    depends_on:
-      postgres:
-        condition: service_healthy
+      - ./experiments/drafts:/app/projects
     stop_grace_period: 30s
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/health"]
@@ -56,6 +54,7 @@ services:
       timeout: 3s
       retries: 20
   postgres:
+    profiles: [recording]
     image: postgres:18.3
     environment:
       POSTGRES_DB: streetflow_simulator

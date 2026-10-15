@@ -75,7 +75,7 @@ public sealed class SumoEngine : IAsyncDisposable
     signalIds = project.SignalIds;
     countingLines = [];
     string version = await LaunchAsync(info, directory, port, options.EngineTimeoutSeconds, token);
-    connection!.MaximumDynamicRoutes = configuration.TransformerLimits?.MaximumDynamicRoutes ?? options.MaximumDynamicRoutes;
+    connection!.MaximumDynamicRoutes = configuration.NeuralLimits?.MaximumDynamicRoutes ?? configuration.TransformerLimits?.MaximumDynamicRoutes ?? options.MaximumDynamicRoutes;
     return version;
   }
 

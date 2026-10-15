@@ -11,10 +11,21 @@ public static class ProjectEndpoints
   public static void MapProjectApi(this WebApplication app)
   {
     RouteGroupBuilder api = app.MapGroup("/api/v1/projects");
+    api.MapGet("/folders", (ProjectCatalog catalog) => catalog.ListFolders());
+    api.MapPost("/folders", async (FolderImportRequest request, ProjectCatalog catalog, CancellationToken token) =>
+    {
+      ProjectInfo project = await catalog.ImportFolderAsync(request.Path, token);
+      return Results.Created(ProjectLocation(project), project);
+    });
+    api.MapDelete("/folders", async ([Microsoft.AspNetCore.Mvc.FromBody] FolderImportRequest request, ProjectCatalog catalog, CancellationToken token) =>
+    {
+      await catalog.RemoveFolderAsync(request.Path, token);
+      return Results.NoContent();
+    });
     api.MapGet("/", (ProjectCatalog catalog) => catalog.List());
     api.MapGet("/{id}", (string id, ProjectCatalog catalog) => catalog.Get(id).Info);
     api.MapGet("/{id}/demand", (string id, ProjectCatalog catalog) => ReadDemand(catalog.Get(id)));
-    api.MapGet("/{id}/model", (string id, ProjectCatalog catalog) => Results.Ok(ReadModel(catalog.Get(id))));
+    api.MapGet("/{id}/model", (string id, ProjectCatalog catalog) => ReadModel(catalog.Get(id)));
     api.MapGet("/{id}/weights", (string id, ProjectCatalog catalog) => Results.Ok(ReadWeights(catalog.Get(id))));
     api.MapGet("/{id}/map", (string id, int? offset, int? limit, ProjectCatalog catalog) => Results.Ok(ReadMap(catalog, id, offset, limit)));
     api.MapPost("/import/folder", async (FolderImportRequest request, ProjectCatalog catalog, CancellationToken token) =>
@@ -32,12 +43,20 @@ public static class ProjectEndpoints
       return Results.Ok(project.Demand);
     }
 
-    return Results.Ok(ReadModel(project));
+    return ReadModel(project);
   }
 
-  private static TransformerModel ReadModel(CityProject project) => project.TransformerModel ?? throw new ApiException(409, "wrong_project_format", "This project uses Edge Population; read its demand profiles");
+  private static IResult ReadModel(CityProject project)
+  {
+    if (project.NeuralModel is not null)
+    {
+      return Results.Ok(project.NeuralModel);
+    }
 
-  private static TransformerWeights ReadWeights(CityProject project) => project.TransformerWeights ?? throw new ApiException(409, "wrong_project_format", "This project uses Edge Population and has no Transformer Routes weights");
+    return Results.Ok(project.TransformerModel ?? throw new ApiException(409, "wrong_project_format", "This project uses Edge Population; read its demand profiles"));
+  }
+
+  private static TransformerWeights ReadWeights(CityProject project) => project.TransformerWeights ?? throw new ApiException(409, "wrong_project_format", "This project has no version 2 Transformer Routes weights");
 
   private static ProjectMapResponse ReadMap(ProjectCatalog catalog, string id, int? offset, int? limit)
   {

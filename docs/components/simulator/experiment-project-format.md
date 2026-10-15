@@ -1,6 +1,6 @@
 # City project format
 
-This document defines version 1, now named **Edge Population**. The simulator also loads version 2 **Transformer Routes**; see [its guide](transformer-routes.md). Existing version 1 files and generation semantics remain supported.
+This document defines version 1, now named **Edge Population**. The simulator also loads version 2 [**Transformer Routes**](transformer-routes.md) and version 3 [**Neural Routes**](neural-routes.md). Existing version 1 files and generation semantics remain supported.
 
 Status: format and generation rules accepted by the user on 2026-10-11 (task 1). All three projects were accepted in task 2. Loading, generation, controls, UI, and Docker integration are implemented; manual review is deferred under the user’s 2026-10-12 authorization.
 

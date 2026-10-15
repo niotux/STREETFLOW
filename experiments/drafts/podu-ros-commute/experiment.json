@@ -1,11 +1,11 @@
 {
   "format_version": 1,
   "id": "podu-ros-commute",
-  "name": "Podu Roș · commute estimate",
-  "description": "Estimated commute: toward Palas 07:00–09:00, toward southern approaches 16:00–19:00. Direction and peak strengths are assumptions; camera trajectories and the citywide daily curve are not measured road densities.",
+  "name": "Podu Ros - Commute [estimate]",
+  "description": "Estimated commute: toward Palas 07:00\u201309:00, toward southern approaches 16:00\u201319:00. Direction and peak strengths are assumptions; camera trajectories and the citywide daily curve are not measured road densities.",
   "network": {
     "file": "network.net.xml",
-    "attribution": "© OpenStreetMap contributors; https://www.openstreetmap.org/copyright. Converted with SUMO 1.28.0; generated signal timing is estimated."
+    "attribution": "\u00a9 OpenStreetMap contributors; https://www.openstreetmap.org/copyright. Converted with SUMO 1.28.0; generated signal timing is estimated."
   },
   "demand_file": "demand.json",
   "detectors_file": "detectors.json",

@@ -83,7 +83,13 @@ public sealed partial class CityRunCoordinator(ProjectCatalog catalog, Simulator
       limits = new TransformerGenerationLimits(options.MaximumTransformerStates, options.MaximumTransformerRouteMovements, options.MaximumTransformerCachedContexts, options.MaximumDynamicRoutes);
     }
 
-    return new CityRunConfiguration(selected.Manifest.Id, selected.Revision, GeneratorVersion(selected), request.Seed, start, step, options.MaximumLiveVehicles, options.MaximumPendingEntries, options.GenerationBatchSize, options.MaximumBacklogSeconds, ExternalSignalControlMode, limits);
+    NeuralGenerationLimits? neuralLimits = null;
+    if (selected.Manifest.FormatVersion == 3)
+    {
+      neuralLimits = new NeuralGenerationLimits(options.MaximumNeuralRouteMovements, options.MaximumDynamicRoutes);
+    }
+
+    return new CityRunConfiguration(selected.Manifest.Id, selected.Revision, GeneratorVersion(selected), request.Seed, start, step, options.MaximumLiveVehicles, options.MaximumPendingEntries, options.GenerationBatchSize, options.MaximumBacklogSeconds, ExternalSignalControlMode, limits, neuralLimits);
   }
 
   private async Task<CityRunStatus> StartAsync(CityProject selected, CityRunConfiguration configuration, bool paused, Pacing pacing)
@@ -93,7 +99,11 @@ public sealed partial class CityRunCoordinator(ProjectCatalog catalog, Simulator
     try
     {
       project = storage.CopyProject(selected, id);
-      if (project.Manifest.FormatVersion == 2)
+      if (project.Manifest.FormatVersion == 3)
+      {
+        generator = new NeuralDemandGenerator(project, configuration.Seed, configuration.StartTimeSeconds, configuration.NeuralLimits!);
+      }
+      else if (project.Manifest.FormatVersion == 2)
       {
         generator = new TransformerDemandGenerator(project, configuration.Seed, configuration.StartTimeSeconds, configuration.TransformerLimits!);
       }
@@ -132,6 +142,7 @@ public sealed partial class CityRunCoordinator(ProjectCatalog catalog, Simulator
       }
 
       ownership.Release(id);
+      DisposeGenerator();
       throw;
     }
   }
@@ -277,7 +288,7 @@ public sealed partial class CityRunCoordinator(ProjectCatalog catalog, Simulator
       throw new ApiException(409, "incompatible_signal_control", "This saved run used automatic signals. Create a new run for external signal control");
     }
 
-    if (status.Configuration.GeneratorVersion != CityDemandGenerator.Version && status.Configuration.GeneratorVersion != TransformerDemandGenerator.Version)
+    if (status.Configuration.GeneratorVersion != CityDemandGenerator.Version && status.Configuration.GeneratorVersion != TransformerDemandGenerator.Version && status.Configuration.GeneratorVersion != NeuralDemandGenerator.Version)
     {
       throw new ApiException(409, "incompatible_generator", "This run requires a different generator version");
     }
@@ -425,7 +436,7 @@ public sealed partial class CityRunCoordinator(ProjectCatalog catalog, Simulator
 
     current = current! with { State = state, Failure = failure, FinishedAt = DateTimeOffset.UtcNow };
     pendingEntries.Clear();
-    generator = null;
+    DisposeGenerator();
     if (state == "failed" && snapshot is not null)
     {
       snapshot = snapshot with { Available = false };
@@ -445,7 +456,17 @@ public sealed partial class CityRunCoordinator(ProjectCatalog catalog, Simulator
   }
 
   private CityRunStatus Find(string id) => current?.Id == id ? current : archive.GetValueOrDefault(id) ?? throw new ApiException(404, "unknown_run", "Unknown city run");
-  private static string GeneratorVersion(CityProject selected) => selected.Manifest.FormatVersion == 2 ? TransformerDemandGenerator.Version : CityDemandGenerator.Version;
+  private void DisposeGenerator()
+  {
+    if (generator is IDisposable disposable)
+    {
+      disposable.Dispose();
+    }
+
+    generator = null;
+  }
+
+  private static string GeneratorVersion(CityProject selected) => selected.Manifest.FormatVersion switch { 3 => NeuralDemandGenerator.Version, 2 => TransformerDemandGenerator.Version, _ => CityDemandGenerator.Version };
 
   private static bool IsActive(string state) => state == "starting" || state == "running" || state == "paused";
 
@@ -479,6 +500,7 @@ public sealed partial class CityRunCoordinator(ProjectCatalog catalog, Simulator
     valid = valid && double.IsFinite(options.MaximumBacklogSeconds) && options.MaximumBacklogSeconds > 0;
     valid = valid && options.MaximumTransformerStates > 0 && options.MaximumTransformerRouteMovements > 0;
     valid = valid && options.MaximumTransformerCachedContexts > 0 && options.MaximumDynamicRoutes > 0;
+    valid = valid && options.MaximumNeuralRouteMovements > 0;
     if (!valid)
     {
       throw new InvalidOperationException("City simulation limits must be positive; pending capacity must not exceed live capacity");

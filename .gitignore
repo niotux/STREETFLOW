@@ -3,6 +3,7 @@ build*/
 !experiments/**/*.csv
 !docs/research/data/**/*.csv
 __pycache__/
+.venv/
 **/bin/
 **/obj/
 TestResults/

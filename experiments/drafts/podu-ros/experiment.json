@@ -1,11 +1,11 @@
 {
   "format_version": 1,
   "id": "podu-ros",
-  "name": "Podu Roș intersection",
-  "description": "Bounded OSM-derived Podu Roș roundabout and approach roads with explicit per-edge traffic preferences.",
+  "name": "Podu Ros - Evening [camera proxy]",
+  "description": "Bounded OSM-derived Podu Ro\u0219 roundabout and approach roads with explicit per-edge traffic preferences.",
   "network": {
     "file": "network.net.xml",
-    "attribution": "© OpenStreetMap contributors; https://www.openstreetmap.org/copyright. Converted with SUMO 1.28.0; generated signal timing is estimated."
+    "attribution": "\u00a9 OpenStreetMap contributors; https://www.openstreetmap.org/copyright. Converted with SUMO 1.28.0; generated signal timing is estimated."
   },
   "demand_file": "demand.json",
   "detectors_file": "detectors.json",

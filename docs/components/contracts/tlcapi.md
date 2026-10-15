@@ -52,4 +52,4 @@ Logistics browser requests use `/melchior-api/session` and `/melchior-api/sessio
 
 The former tlcapi integration used simulator `/city-runs/.../signals` endpoints and raw signal indices. Logistics now uses `/tlc/.../devices` exclusively. Technical city-run signal endpoints remain for existing simulator diagnostics and tests; they are not the physical-device tlcapi surface.
 
-Both project formats accept [physical-device mappings](../simulator/traffic-light-devices.md). Legacy projects without mappings still provide their roads but publish no inferred hardware. Old imported projects and run archives are preserved.
+Both project formats accept [physical-device mappings](../simulator/traffic-light-devices.md). Projects without mappings still provide their roads but publish no inferred hardware. Edit the registered project folder, refresh from disk, and load a new simulation to apply a mapping. Saved run snapshots are preserved.

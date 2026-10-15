@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.FileProviders;
 using Streetflow.Simulator.Api;
 using Streetflow.Simulator.Persistence;
 using Streetflow.Simulator.Runtime;
@@ -25,7 +26,8 @@ SimulatorOptions options = new()
   MaximumTransformerStates = 512,
   MaximumTransformerRouteMovements = 10000,
   MaximumTransformerCachedContexts = 128,
-  MaximumDynamicRoutes = 4096
+  MaximumDynamicRoutes = 4096,
+  MaximumNeuralRouteMovements = 10000
 };
 builder.Configuration.GetSection("Simulator").Bind(options);
 string workspace = FindWorkspace(builder.Environment.ContentRootPath);
@@ -49,7 +51,12 @@ if (HasArgument(args, "import-osm"))
 
 RegisterServices(builder, options);
 WebApplication app = builder.Build();
-ConfigurePipeline(app);
+string sharedUiRoot = Path.Combine(workspace, "components", "ui", "web");
+if (!Directory.Exists(sharedUiRoot))
+{
+  sharedUiRoot = Path.Combine(AppContext.BaseDirectory, "wwwroot", "ui");
+}
+ConfigurePipeline(app, sharedUiRoot);
 await app.Services.GetRequiredService<RunCoordinator>().InitializeAsync(CancellationToken.None);
 _ = app.Services.GetRequiredService<ProjectCatalog>();
 await app.Services.GetRequiredService<CityRunCoordinator>().InitializeAsync();
@@ -121,7 +128,7 @@ static void RegisterServices(WebApplicationBuilder builder, SimulatorOptions opt
   });
 }
 
-static void ConfigurePipeline(WebApplication app)
+static void ConfigurePipeline(WebApplication app, string sharedUiRoot)
 {
   app.Use(async (context, next) =>
   {
@@ -147,6 +154,9 @@ static void ConfigurePipeline(WebApplication app)
     }
   });
   app.UseDefaultFiles();
+  PhysicalFileProvider sharedUiFiles = new(sharedUiRoot);
+  app.Lifetime.ApplicationStopped.Register(sharedUiFiles.Dispose);
+  app.UseStaticFiles(new StaticFileOptions { FileProvider = sharedUiFiles, RequestPath = "/ui" });
   app.UseStaticFiles();
   app.MapOpenApi();
   app.MapSimulatorApi();

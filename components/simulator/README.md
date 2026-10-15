@@ -2,6 +2,8 @@
 
 Load a city project, run continuously generated traffic in SUMO, and watch roads and moving cars. The C#/.NET 10 backend serves plain HTML/JavaScript. No Python or Rust is needed to run it.
 
+The simulator supports version 1 **Edge Population**, version 2 **Transformer Routes**, and version 3 [**Neural Routes**](../../docs/components/simulator/neural-routes.md). The [route trainer](../route-trainer/README.md) is a separate utility and Compose project for manually authoring/importing route datasets, training on CPU, and exporting v3 packages.
+
 ## Start with Docker
 
 Install Docker Engine with Compose, or Docker Desktop. From the repository root:
@@ -11,26 +13,25 @@ docker compose up --build -d
 docker compose ps
 ```
 
-Open [localhost:8080](http://localhost:8080). The first start downloads/builds .NET, SUMO, and PostgreSQL images; later starts reuse them. Allow a few GB for images and persistent data. Set `SIMULATOR_PORT` if port 8080 is occupied.
+Open [localhost:8080](http://localhost:8080). The first start downloads/builds .NET and SUMO images; later starts reuse them. PostgreSQL is optional and is not started by the default Compose workflow. Allow a few GB for images and persistent data. Set `SIMULATOR_PORT` if port 8080 is occupied.
 
-In the sidebar, expand **Import a server folder** and import one of these bundled examples:
+In Loader, enter a **Project folder path** and click **Add folder**. Compose mounts the host `experiments/drafts/` directory at `/app/projects/`; experiments are not bundled into the runtime image. For example:
 
 - `/app/projects/tiny-graph-devices` — Edge Population with four configured physical devices.
 - `/app/projects/four-way-north-east-devices` — north-to-east Transformer Routes experiment with those same four devices.
 - `/app/projects/tiny-graph` — small synthetic map using Edge Population (version 1).
 - `/app/projects/four-way-transformer-routes` — the same four-way map using Transformer Routes (version 2); compare 07:30 and 17:00.
+- `/app/projects/four-way-neural-routes` — synthetic version 3 neural model; compare 07:30 and 17:00.
 - `/app/projects/iasi-central-day` — central Iași, aggregate daily curve and estimated road weights.
 - `/app/projects/podu-ros` — local intersection map, evening camera sample and documented estimates.
 
 The map opens before traffic starts. Choose a seed, starting time, and speed, then click **Start traffic**. Pause freezes the city clock and vehicles; Step advances one engine step; Resume continues. Stop closes the engine and cancels remaining traffic. Restart creates a new paused run from the saved inputs, seed, generator version, and operational settings. Closing the browser leaves the run active. Reopening attaches to the active city run.
 
-You can also import a ZIP containing a project's files or its enclosing folder. To prepare one locally:
+The folder is the source of truth. Edit it with your other tools, then click **Refresh from disk** to reload its map and settings. **Manage project folders** lists the saved paths, including missing/invalid folders; **Remove from list** unregisters a path without deleting its files. Re-adding the same path refreshes it. Different registered folders must have unique project IDs.
 
-```sh
-(cd experiments/drafts/podu-ros && zip -r /tmp/podu-ros-project.zip .)
-```
+The registry is plain JSON at `Simulator__DataRoot/project-folders.json`, with entries such as `{ "path": "/app/projects/tiny-graph" }`. It needs no database. Native execution accepts absolute local paths; Docker accepts paths mounted into its container. Add further bind mounts in Compose for project folders elsewhere on disk. The old folder-import API is a compatibility alias for registration. ZIP API uploads still extract to a persistent folder and return that folder's path; the UI uses folder references.
 
-Imported IDs must be unique; duplicate imports report an error rather than replacing the original. The existing fixed-scenario inspector remains at [legacy-inspector.html](http://localhost:8080/legacy-inspector.html).
+The existing fixed-scenario inspector remains at [legacy-inspector.html](http://localhost:8080/legacy-inspector.html).
 
 ## Stop and restart
 
@@ -39,7 +40,7 @@ docker compose stop
 docker compose up -d
 ```
 
-Imported projects and technical run packages live on the `simulator-data` volume; PostgreSQL uses `postgres-data`. `docker compose down` removes containers but retains these volumes. Active runs stop during a clean shutdown; restarting a saved run replays from the beginning, rather than resuming its previous in-memory state. Avoid `down -v` unless you intend to delete stored projects and records.
+Project source folders remain on the host. The folder registry, earlier imported folders, ZIP extractions, and saved run snapshots live on the `simulator-data` volume. Earlier imported folders are registered automatically on first startup with the new registry; they are not copied again. Optional PostgreSQL recording uses `postgres-data`. `docker compose down` removes containers but retains these volumes. Active runs stop during a clean shutdown; restarting a saved run replays from the beginning, rather than resuming its previous in-memory state. Avoid `down -v` unless you intend to delete stored projects and records.
 
 ## Generation and limits
 
@@ -62,7 +63,7 @@ Repeating profiles wrap at midnight. Nonrepeating profiles stop generating at th
 
 Configure these through the simulator environment in Compose or a local override. Pending capacity must not exceed live capacity; all limits must be positive. Resolved limits are recorded in each run's status. When entry/live capacity is reached, generation waits without consuming further choices or losing arrivals. Simulation continues so existing cars can clear. A pending entry or ungenerated arrival more than the configured backlog limit behind the clock produces a visible congestion warning. While an entry exceeds that limit, new generation waits and existing traffic continues to advance. Generation resumes when blocked entries clear; requested arrivals and random choices are preserved. Congestion does not terminate the run. City runs also enable SUMO gridlock recovery after the same configured waiting limit: stuck vehicles move past the blocked section and rejoin downstream. The status and map note report the cumulative recovery count. Live capacity includes vehicles temporarily off-map during recovery. This keeps the city view progressing but is an artificial recovery, not a calibrated solution to junction capacity. Pause freezes those timers. Persistent blockage remains bounded and explicit.
 
-The city workflow retains live positions, bounded candidate routes and pending IDs, aggregate technical status, and saved input files. It does not record completed vehicle history, observations, detectors, trip tables, or passage reports. Imported projects and run metadata accumulate on disk until deliberately removed while the service is stopped. Map size and active traffic determine memory use and speed; playback speed is a target, not a guarantee on every device.
+The city workflow retains live positions, bounded candidate routes and pending IDs, aggregate technical status, and saved input files. It does not record completed vehicle history, observations, detectors, trip tables, or passage reports. Registered paths can be removed in Loader without deleting source files or saved runs. Saved run metadata and optional ZIP extractions remain on disk until deliberately removed. Map size and active traffic determine memory use and speed; playback speed is a target, not a guarantee on every device.
 
 ## Native development and API
 
@@ -74,9 +75,9 @@ dotnet run --project components/simulator/Streetflow.Simulator --no-launch-profi
 dotnet test Streetflow.slnx
 ```
 
-Import/map inspection alone works without SUMO. Native storage defaults to `.data/simulator`; set `Simulator__DataRoot` or `Simulator__SumoBinary` as needed. PostgreSQL is optional for native use and remains the legacy recording store.
+Import/map inspection alone works without SUMO. Native storage defaults to `.data/simulator`; set `Simulator__DataRoot` or `Simulator__SumoBinary` as needed. PostgreSQL is optional and remains the legacy recording index. Default Compose runs without it. To enable it, start the `recording` profile and set `SIMULATOR_CONNECTION_STRING` to the desired connection string (with host `postgres` inside Compose).
 
-[Import API](../../docs/components/simulator/project-loading.md): list/import projects and inspect maps. Continuous runs use:
+[Project folder API](../../docs/components/simulator/project-loading.md): register/remove folder paths and inspect projects and maps. Continuous runs use:
 
 ```sh
 curl -H 'Content-Type: application/json' \
@@ -121,7 +122,7 @@ Tests cover generation repeatability, weights, legal paths, midnight, controls, 
 
 ## Intersection terminals
 
-The [Podu Roș commute estimate](../../experiments/drafts/podu-ros-commute/README.md) is a separate prepared variant with morning traffic toward the city/Palas and evening traffic toward the southern approaches. Its direction, peak hours and strengths are estimates based on the user's observation. It combines a citywide daily shape with the existing evening camera proxies; it is not measured full-day directional density. Compare 08:00 and 17:00 with the same seed. Original imported projects and saved runs keep their original data.
+The [Podu Roș commute estimate](../../experiments/drafts/podu-ros-commute/README.md) is a separate prepared variant with morning traffic toward the city/Palas and evening traffic toward the southern approaches. Its direction, peak hours and strengths are estimates based on the user's observation. It combines a citywide daily shape with the existing evening camera proxies; it is not measured full-day directional density. Compare 08:00 and 17:00 with the same seed. Registered folders reflect disk edits; saved runs keep their original input snapshots.
 
 The Podu Roș example includes `terminals.json`: 22 entrance and 27 exit lane points at the exterior approaches, displayed as entry circles and exit diamonds. Nearby lanes are grouped at map scale; click a numbered group to zoom or choose a terminal and click Show lane. Three interior cul-de-sacs and roundabout fragments have no terminal markers.
 
@@ -129,6 +130,6 @@ The city map also draws live traffic lights per controlled lane-to-lane movement
 
 Its explicit `endpoint_selection: terminals` generates entrance-to-exit journeys, including lane/position constraints and continuous lane paths. The minimum trip distance is 40 m so short clipped boundary journeys can participate. Edge weights and the 1943.855422/hour camera-track proxy are unchanged. That rate is not calibrated capacity; prolonged runs can still expose congestion in inferred junction/signal geometry. The 2000-second automated flow check uses an explicitly reduced 600/hour test fixture; it does not claim the original rate is congestion-free.
 
-Old imported packages remain immutable. Reimport the updated folder under a distinct ID (the review instance uses `podu-ros-terminals`) to compare it without losing old runs. Generator version `city-weights-v3-through` records the current through-routing behavior; prior-version runs remain inspectable but cannot be restarted as exact replays with this generator. Overload errors now identify blocked entries separately from departure backlog and preserve the last live positions for inspection.
+Refresh a registered folder after editing its inputs, then load a new run. Saved runs retain their original input snapshots; use a separate folder and project ID only when keeping several variants in the registered list. Generator version `city-weights-v3-through` records the current through-routing behavior; prior-version runs remain inspectable but cannot be restarted as exact replays with this generator. Overload errors now identify blocked entries separately from departure backlog and preserve the last live positions for inspection.
 
 Generated city journeys use `city-weights-v3-through`, which excludes immediate SUMO U-turn connections from both edge and lane route searches. This prevents the Nicolina → Aleea Rozelor → U-turn → Nicolina shortcuts that blocked the main approach. Existing network links and the external traffic-light API are retained. Vehicle symbols now have a pale windshield marking their forward direction. See the [Nicolina correction](../../experiments/drafts/podu-ros-commute/README.md#nicolina-gridlock-correction-2026-10-14).

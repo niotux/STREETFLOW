@@ -7,7 +7,7 @@
   <title>Streetflow · Melchior logistics</title>
   <link rel="stylesheet" href="/balthasar/styles.css">
   <link rel="stylesheet" href="/magi.css">
-  <script type="module" src="/melchior/app.js?v=physical-devices-1"></script>
+  <script type="module" src="/melchior/app.js?v=physical-devices-3"></script>
 </head>
 <body class="magi-page">
   <header class="title-bar">
@@ -32,7 +32,7 @@
         <p id="run-note" class="status-note">The active world appears automatically when the provider loads it.</p>
         <div class="section-divider"></div>
         <span class="eyebrow">MANUAL CONTROL</span><p class="status-note">Each change is sent immediately. Lights hold their state until another command or a run restart. On enables at red; off restores road priority.</p>
-        <p class="applet-note">Commands affect the selected physical device and all the lights mapped to it.</p>
+        <p class="applet-note">Commands affect the selected physical device and all its mapped movements. Highlighted roads show its controlled incoming lanes.</p>
       </div>
     </section>
     <section class="network-panel" aria-label="Traffic light network">
@@ -46,7 +46,7 @@
       <div class="applet-body">
         <label for="signal-filter">Find a device</label><input id="signal-filter" class="signal-filter" type="search" placeholder="Device name or lane ID">
         <label for="controller">Physical device</label><select id="controller" disabled><option value="">No physical devices configured</option></select>
-        <p id="signal-summary" class="status-note">Select a run to begin.</p>
+        <p id="signal-summary" class="status-note" role="status">Select a run to begin.</p>
         <div id="switchboard" hidden>
           <div class="controller-toolbar"><input id="controller-enabled" type="checkbox" role="switch"><label for="controller-enabled">Device enabled</label></div>
           <div id="controller-state" class="signal-state"></div>

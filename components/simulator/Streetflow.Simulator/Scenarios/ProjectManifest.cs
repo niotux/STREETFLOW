@@ -9,6 +9,7 @@ public sealed record ProjectManifest
   public required ProjectNetwork Network { get; init; }
   public string? DemandFile { get; init; }
   public string? JourneyModelFile { get; init; }
+  public string? NeuralModelFile { get; init; }
   public string? DetectorsFile { get; init; }
   public string? TrafficLightsFile { get; init; }
   public string? TerminalsFile { get; init; }

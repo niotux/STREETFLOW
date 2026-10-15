@@ -12,10 +12,11 @@ public sealed class CityProject
   public ProjectDemand? Demand { get; init; }
   public TransformerModel? TransformerModel { get; init; }
   public TransformerWeights? TransformerWeights { get; init; }
+  public NeuralModel? NeuralModel { get; init; }
   [JsonIgnore]
-  public ProjectVehicleType[] TransformerVehicleTypes { get; init; } = [];
-  public ProjectVehicleType[] VehicleTypes => Demand is not null ? Demand.VehicleTypes : TransformerVehicleTypes;
-  public string ModelKind => Manifest.FormatVersion == 2 ? "Transformer Routes" : "Edge Population";
+  public ProjectVehicleType[] ModelVehicleTypes { get; init; } = [];
+  public ProjectVehicleType[] VehicleTypes => Demand is not null ? Demand.VehicleTypes : ModelVehicleTypes;
+  public string ModelKind => Manifest.FormatVersion switch { 3 => "Neural Routes", 2 => "Transformer Routes", _ => "Edge Population" };
   public required ProjectEdge[] Edges { get; init; }
   public required JunctionMap[] Junctions { get; init; }
   public required ProjectConnection[] Connections { get; init; }
@@ -69,7 +70,7 @@ public sealed class CityProject
         }
       }
 
-      return new ProjectInfo(Manifest, edgeCount, usableEdgeCount, laneCount, Junctions.Length, SignalIds.Length, Revision);
+      return new ProjectInfo(Manifest, edgeCount, usableEdgeCount, laneCount, Junctions.Length, SignalIds.Length, Revision) { Path = Directory };
     }
   }
 

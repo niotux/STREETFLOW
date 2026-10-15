@@ -1,7 +1,7 @@
 {
   "format_version": 1,
   "id": "tiny-graph",
-  "name": "Tiny graph with probabilistic arrivals",
+  "name": "Four Way - Edge Population",
   "description": "Small graph with synthetic traffic weights for each directed road edge.",
   "network": {
     "file": "network.net.xml",
@@ -13,5 +13,6 @@
   "defaults": {
     "start_time_seconds": 25200,
     "step_seconds": 0.5
-  }
+  },
+  "traffic_lights_file": "traffic-lights.json"
 }

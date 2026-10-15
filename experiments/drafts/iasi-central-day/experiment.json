@@ -1,11 +1,11 @@
 {
   "format_version": 1,
   "id": "iasi-central-day",
-  "name": "Central Iași with an approximate PMUD daily profile",
-  "description": "Central Iași graph with estimated daily traffic weights for each directed road edge.",
+  "name": "Central Iasi - Daily [estimate]",
+  "description": "Central Ia\u0219i graph with estimated daily traffic weights for each directed road edge.",
   "network": {
     "file": "network.net.xml",
-    "attribution": "© OpenStreetMap contributors; https://www.openstreetmap.org/copyright. Generated signal programs are synthetic."
+    "attribution": "\u00a9 OpenStreetMap contributors; https://www.openstreetmap.org/copyright. Generated signal programs are synthetic."
   },
   "demand_file": "demand.json",
   "detectors_file": "detectors.json",

@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {signalAppearance, movementState, layoutSignalMarkers, deviceState, deviceDescription} from '../Streetflow.Simulator/wwwroot/signals.js';
+import {signalAppearance, movementState, layoutSignalMarkers, deviceState, deviceDescription, controlledLanes, deviceMapStatus} from '../Streetflow.Simulator/wwwroot/signals.js';
 
 test('joined controller states are indexed by movement, preserving mixed colors', () => {
   const signals = [{id: 'cluster_a_b', state: 'Gruy'}];
@@ -49,4 +49,22 @@ test('one physical device covering several lanes renders once and uses its own s
   assert.equal(deviceState(device, []), undefined);
   assert.match(deviceDescription(device), /North approach/);
   assert.doesNotMatch(deviceDescription(device), /link|center/);
+});
+
+
+test('device lane highlighting follows explicit lane associations and keeps original geometry', () => {
+  const lanes = [{id: 'north_0', shape: [{x: 1, y: 2}]}, {id: 'north_1', shape: []}, {id: 'south_0', shape: []}];
+  const device = {id: 'north', lane_ids: ['north_0', 'north_1', 'north_0', 'missing']};
+  const selected = controlledLanes(device, lanes);
+  assert.deepEqual(selected, [lanes[0], lanes[1]]);
+  assert.equal(selected[0], lanes[0]);
+  assert.deepEqual(controlledLanes(null, lanes), []);
+  assert.deepEqual(controlledLanes({lane_ids: []}, lanes), []);
+});
+
+test('empty physical maps explain migration and saved-run behavior', () => {
+  assert.match(deviceMapStatus([]), /mapping/);
+  assert.match(deviceMapStatus([]), /refresh/);
+  assert.match(deviceMapStatus([]), /saved run keeps its original mapping/);
+  assert.match(deviceMapStatus([{id: 'north'}]), /1 physical traffic light configured/);
 });

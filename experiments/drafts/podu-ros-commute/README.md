@@ -14,7 +14,7 @@ Inputs and assumptions:
 
 With generator `city-weights-v3-through`, same-seed half-hour checks (seed 42) generated 325 journeys using the city-bound Nicolina road versus 123 using the opposite road at 08:00, and 107 versus 420 at 17:00. These figures count actual corridor use, rather than just displacement between journey endpoints. They verify the prepared model's change of direction, not observed traffic counts.
 
-Traffic-light symbols remain visible when off or stopped. Lights start off and can be changed only through the API; there is no UI control panel. See [external signal control](../../../components/simulator/README.md#external-signal-control). Vehicles leave SUMO at their configured exit terminals; boundary tests exercise every exit with teleporting disabled.
+This package has no physical-device mapping, so the current simulator and Logistics maps show roads without traffic-light markers or device controls. Signals start off; technical movement commands remain available through the simulator API. Mapped projects also have physical-device controls in Logistics. Restoring markers for this package requires an authored inventory and a new import/run; see [mapping and migration](../../../docs/components/simulator/traffic-light-devices.md#project-readiness-and-migration) and [external signal control](../../../components/simulator/README.md#external-signal-control). Vehicles leave SUMO at their configured exit terminals; boundary tests exercise every exit with teleporting disabled.
 
 ## Nicolina gridlock correction (2026-10-14)
 

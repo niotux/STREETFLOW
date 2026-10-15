@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en" data-ui-theme="purple">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Streetflow · Route trainer</title>
+  <link rel="stylesheet" href="/ui/streetflow-ui.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="workspace.css">
+</head>
+<body>
+  <header class="app-header ui-app-header">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">SF</span><div><span class="eyebrow">STREETFLOW / ROUTE STUDIO</span><h1>Route trainer</h1></div></div>
+    <div class="project-context"><span class="section-label">Current project</span><strong id="project-name">No project open</strong></div>
+    <label class="button primary project-open">Open project or map<input id="project-file" type="file" accept=".zip,.xml" hidden></label>
+  </header>
+  <nav class="workspace-toolbar" aria-label="Workspace windows">
+    <div class="window-launchers ui-launchers"><span class="section-label">Workspace</span><button data-open-applet="route" aria-pressed="true">01 <span>Route editor</span></button><button data-open-applet="dataset" aria-pressed="true">02 <span>Dataset</span></button><button data-open-applet="training" aria-pressed="true">03 <span>Train & export</span></button></div>
+    <div class="workspace-actions"><button id="focus-map" aria-pressed="false">Focus map</button><button id="reset-layout">Reset layout</button></div>
+  </nav>
+  <div id="message" role="status">Open a project ZIP or SUMO map to begin. The simulator does not need to be running.</div>
+  <main id="studio" aria-label="Route authoring workspace">
+    <section class="map-panel" aria-label="Map workspace"><div class="map-toolbar"><div><span class="section-label">Network canvas</span><strong id="map-title">No map loaded</strong></div><button id="fit">Fit map</button></div><canvas id="map" aria-label="Road map. Click a starting road, then legal next roads to build a route."></canvas><div class="map-key"><span class="current">● Current road</span><span class="next">● Available next road</span><span class="path">● Selected path</span><span class="map-gestures">Scroll to zoom · drag to pan</span></div></section>
+    <div id="window-layer">
+      <section id="route-applet" class="window-content" data-applet="route" data-title="Route editor" data-category="AUTHOR">
+          <div class="section-intro"><p id="editor-status">Create a route</p><button id="clear-path">New route</button></div>
+          <div class="field-group"><h3 class="section-label">Route identity</h3><label>Route ID<input id="route-id" value="morning-route-1"></label></div>
+          <div class="field-group"><div class="section-intro"><h3 class="section-label">Path</h3><button id="undo">Undo turn</button></div><p class="hint">Click roads on the map or choose a next road below. Turn indices start at zero.</p><label>Starting road<input id="start-edge" list="roads" placeholder="Click a road or enter its ID"><datalist id="roads"></datalist></label><label>Turn indices<input id="turns" placeholder="0, 1, 3, 2"></label><div id="route-path" class="path-text">No path selected</div><p id="path-status" class="hint">Choose a starting road to see the available turns.</p><div id="next-roads" class="next-roads"></div></div>
+          <div class="field-group"><h3 class="section-label">Schedule & volume</h3><div class="columns"><label>From (HH:MM)<input id="start-time" value="07:00"></label><label>Until (HH:MM)<input id="end-time" value="09:00"></label></div><label>Vehicles per hour<input id="rate" type="number" min="0.001" step="any" value="100"></label><p class="hint">Split spans that cross midnight into two records.</p></div>
+        </section>
+        <div class="window-footer panel-footer" data-applet-footer="route"><button id="save-route" class="primary wide">Finish and add route</button><p class="hint">Last road becomes the trip endpoint.</p></div>
+      <section id="dataset-applet" class="window-content" data-applet="dataset" data-title="Dataset" data-category="REVIEW">
+          <div class="section-intro"><p id="dataset-summary">No authored routes yet</p><label class="checkbox-label"><input id="repeat" type="checkbox" checked> Repeat daily</label></div>
+          <details><summary>Edit complete dataset JSON</summary><p class="hint">Edit all routes together, then apply to validate and save.</p><textarea id="dataset-json" spellcheck="false" aria-label="Dataset JSON"></textarea><p id="json-status" class="hint">JSON mirrors the saved dataset.</p><div class="actions"><button id="apply-json">Apply and validate JSON</button><button id="revert-json">Discard JSON changes</button></div></details>
+          <div id="route-list" class="route-list">No authored routes yet</div>
+        </section>
+        <div class="window-footer panel-footer" data-applet-footer="dataset"><div class="actions"><label class="button">Import JSON<input id="dataset-file" type="file" accept=".json" hidden></label><button id="export-dataset">Export JSON</button></div></div>
+      <section id="training-applet" class="window-content" data-applet="training" data-title="Train & export" data-category="BUILD">
+          <div class="field-group"><h3 class="section-label">Output project</h3><label>New project ID<input id="export-id" placeholder="my-map-neural-v1"></label><label>Project name<input id="export-name" placeholder="My neural traffic project"></label></div>
+          <details class="training-settings"><summary>Training settings</summary><div class="columns"><label>Maximum epochs<input id="epochs" type="number" min="1" max="5000" value="200"></label><label>Seed<input id="seed" type="number" min="0" value="42"></label></div></details>
+          <details id="report-panel" hidden><summary>Training report and CPU benchmark</summary><pre id="report"></pre></details>
+        </section>
+        <div class="window-footer panel-footer" data-applet-footer="training"><span id="job-state" class="section-label">Ready to train</span><a id="download" class="button primary wide" hidden>Download v3 project ZIP</a><button id="train" class="primary wide">Train on CPU</button><p id="training-status" role="status">Train using saved routes and their traffic volumes.</p></div>
+    </div>
+  </main>
+  <div id="workspace-announcement" class="ui-visually-hidden" aria-live="polite"></div>
+  <script type="module" src="workspace.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

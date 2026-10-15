@@ -13,6 +13,7 @@ public sealed class PhysicalDevicesTests
   [Theory]
   [InlineData("tiny-graph-devices")]
   [InlineData("four-way-transformer-routes-devices")]
+  [InlineData("four-way-north-east-devices")]
   public async Task TlcPublishesOnlyPhysicalDevicesAndTheirMap(string projectId)
   {
     using PhysicalDevicesFixture fixture = new(projectId);
@@ -41,6 +42,7 @@ public sealed class PhysicalDevicesTests
   [Theory]
   [InlineData("tiny-graph-devices")]
   [InlineData("four-way-transformer-routes-devices")]
+  [InlineData("four-way-north-east-devices")]
   public async Task DeviceCommandsChangeAllMappedMovementsAndPreserveOtherDevices(string projectId)
   {
     using PhysicalDevicesFixture fixture = new(projectId);
@@ -98,6 +100,85 @@ public sealed class PhysicalDevicesTests
     Assert.Equal(HttpStatusCode.Conflict, (await client.PutAsJsonAsync(path + "north", new TlcDeviceCommand("green", session.WorldId!, session.Revision!), JsonDefaults.Options)).StatusCode);
   }
 
+  [Theory]
+  [InlineData("tiny-graph-devices")]
+  [InlineData("four-way-transformer-routes-devices")]
+  public async Task PhysicalDeviceControlsItsMappedLaneAndHoldsAcrossSteps(string projectId)
+  {
+    using PhysicalDevicesFixture fixture = new(projectId);
+    await using BackendFactory factory = new();
+    using HttpClient client = factory.CreateClient();
+    CityRunStatus run = await Start(client, fixture);
+    TlcSession session = (await client.GetFromJsonAsync<TlcSession>("/api/v1/tlc/session", JsonDefaults.Options))!;
+    TlcMap map = (await client.GetFromJsonAsync<TlcMap>($"/api/v1/tlc/sessions/{run.Id}/map", JsonDefaults.Options))!;
+    foreach (TlcDevice device in map.Devices)
+    {
+      await SetDevice(client, session, device.Id, "red");
+    }
+
+    Snapshot red = await Step(client, run.Id, 200);
+    TlcDevice north = Assert.Single(map.Devices, device => device.Id == "north");
+    string laneId = Assert.Single(north.LaneIds);
+    HashSet<string> queued = new(StringComparer.Ordinal);
+    foreach (VehicleState vehicle in red.Vehicles)
+    {
+      if (vehicle.LaneId == laneId && vehicle.SpeedMps < 0.1)
+      {
+        queued.Add(vehicle.Id);
+      }
+    }
+
+    Assert.NotEmpty(queued);
+    Assert.All(red.DeviceStates, device => Assert.Equal("red", device.State));
+    await SetDevice(client, session, north.Id, "green");
+    Snapshot green = await Step(client, run.Id, 40);
+    foreach (VehicleState vehicle in green.Vehicles)
+    {
+      if (vehicle.LaneId == laneId)
+      {
+        queued.Remove(vehicle.Id);
+      }
+    }
+
+    // At least one vehicle that was queued on this device's mapped lane has crossed its stop line.
+    Assert.NotEmpty(queued);
+    foreach (TlcDeviceState device in green.DeviceStates)
+    {
+      Assert.Equal(device.Id == north.Id ? "green" : "red", device.State);
+    }
+
+    await Stop(client, run.Id);
+  }
+
+  [Theory]
+  [InlineData("tiny-graph-devices")]
+  [InlineData("four-way-transformer-routes-devices")]
+  public async Task RestartResetsPhysicalDevicesAndRejectsThePreviousSession(string projectId)
+  {
+    using PhysicalDevicesFixture fixture = new(projectId);
+    await using BackendFactory factory = new();
+    using HttpClient client = factory.CreateClient();
+    CityRunStatus run = await Start(client, fixture);
+    TlcSession session = (await client.GetFromJsonAsync<TlcSession>("/api/v1/tlc/session", JsonDefaults.Options))!;
+    await SetDevice(client, session, "north", "green");
+    HttpResponseMessage response = await client.PostAsJsonAsync($"/api/v1/city-runs/{run.Id}/restart", new CityRunCommand(), JsonDefaults.Options);
+    response.EnsureSuccessStatusCode();
+    CityRunStatus restarted = (await response.Content.ReadFromJsonAsync<CityRunStatus>(JsonDefaults.Options))!;
+    TlcSession active = (await client.GetFromJsonAsync<TlcSession>("/api/v1/tlc/session", JsonDefaults.Options))!;
+    Assert.NotEqual(session.Id, active.Id);
+    Assert.Equal(restarted.Id, active.Id);
+    Assert.Equal(session.WorldId, active.WorldId);
+    Assert.Equal(session.Revision, active.Revision);
+    TlcDeviceState[] devices = (await client.GetFromJsonAsync<TlcDeviceState[]>($"/api/v1/tlc/sessions/{active.Id}/devices", JsonDefaults.Options))!;
+    Assert.Equal(4, devices.Length);
+    Assert.All(devices, device => Assert.Equal("off", device.State));
+    TlcDeviceCommand command = new("red", session.WorldId!, session.Revision!);
+    response = await client.PutAsJsonAsync($"/api/v1/tlc/sessions/{session.Id}/devices/north", command, JsonDefaults.Options);
+    Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    Assert.Equal(HttpStatusCode.Conflict, (await client.GetAsync($"/api/v1/tlc/sessions/{session.Id}/map")).StatusCode);
+    await Stop(client, restarted.Id);
+  }
+
   [Fact]
   public void ChangingTrafficWeightsDoesNotInvalidateTheWorldButChangingDevicesDoes()
   {
@@ -129,8 +210,9 @@ public sealed class PhysicalDevicesTests
   {
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    string source = Path.Combine(ProjectLoadingTests.Workspace, "experiments", "drafts", "tiny-graph");
-    await client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(source), JsonDefaults.Options);
+    using ProjectFixture source = new();
+    source.ChangeManifest(manifest => manifest["traffic_lights_file"] = null);
+    await client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(source.Path), JsonDefaults.Options);
     HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/projects/tiny-graph/runs", new CreateCityRunRequest(42), JsonDefaults.Options);
     CityRunStatus run = (await response.Content.ReadFromJsonAsync<CityRunStatus>(JsonDefaults.Options))!;
     TlcMap map = (await client.GetFromJsonAsync<TlcMap>($"/api/v1/tlc/sessions/{run.Id}/map", JsonDefaults.Options))!;
@@ -198,12 +280,28 @@ public sealed class PhysicalDevicesTests
     HttpResponseMessage created = await client.PostAsJsonAsync($"/api/v1/projects/{fixture.Id}/runs", new CreateCityRunRequest(42), JsonDefaults.Options);
     created.EnsureSuccessStatusCode();
     CityRunStatus run = (await created.Content.ReadFromJsonAsync<CityRunStatus>(JsonDefaults.Options))!;
-    Assert.Equal("paused", run.State);
+    Assert.True(run.State == "paused", run.Failure);
     return run;
   }
 
   private static async Task Stop(HttpClient client, string id)
   {
     (await client.PostAsJsonAsync($"/api/v1/city-runs/{id}/stop", new CityRunCommand(), JsonDefaults.Options)).EnsureSuccessStatusCode();
+  }
+
+  private static async Task SetDevice(HttpClient client, TlcSession session, string deviceId, string action)
+  {
+    TlcDeviceCommand command = new(action, session.WorldId!, session.Revision!);
+    HttpResponseMessage response = await client.PutAsJsonAsync($"/api/v1/tlc/sessions/{session.Id}/devices/{deviceId}", command, JsonDefaults.Options);
+    response.EnsureSuccessStatusCode();
+  }
+
+  private static async Task<Snapshot> Step(HttpClient client, string id, int steps)
+  {
+    HttpResponseMessage response = await client.PostAsJsonAsync($"/api/v1/city-runs/{id}/step", new CityRunCommand(steps), JsonDefaults.Options);
+    response.EnsureSuccessStatusCode();
+    CityRunStatus status = (await response.Content.ReadFromJsonAsync<CityRunStatus>(JsonDefaults.Options))!;
+    Assert.Equal("paused", status.State);
+    return (await client.GetFromJsonAsync<Snapshot>($"/api/v1/city-runs/{id}/snapshot", JsonDefaults.Options))!;
   }
 }

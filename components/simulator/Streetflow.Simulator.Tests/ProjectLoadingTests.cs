@@ -83,11 +83,9 @@ public sealed class ProjectLoadingTests
   }
 
   [Fact]
-  public async Task ImportsAreIndependentCopiesAndSurviveServiceRestart()
+  public async Task FolderReferencesReadExternalEditsAndSurviveServiceRestart()
   {
     using ProjectFixture source = new();
-    // A package can contain unrelated notes named like a legacy run record.
-    File.WriteAllText(Path.Combine(source.Path, "status.json"), "this is not a simulator run");
     string dataRoot;
     string revision;
     await using (BackendFactory factory = new())
@@ -95,19 +93,22 @@ public sealed class ProjectLoadingTests
       dataRoot = factory.DataRoot;
       using HttpClient client = factory.CreateClient();
       JsonElement imported = await Body(await ImportFolder(client, source.Path));
-      revision = imported.GetProperty("revision").GetString()!;
-      source.ChangeDemand(d => d["profiles"]!.AsArray().RemoveAt(0));
+      Assert.Equal(source.Path, imported.GetProperty("path").GetString());
+      source.ChangeDemand(d => d["profiles"]![0]!["intervals"]![0]!["weight"] = 10);
       JsonElement stored = await Body(await client.GetAsync("/api/v1/projects/tiny-graph/demand"));
-      Assert.Equal(8, stored.GetProperty("profiles").GetArrayLength());
-      source.Dispose();
+      Assert.Equal(10, stored.GetProperty("profiles")[0].GetProperty("intervals")[0].GetProperty("weight").GetInt32());
+      JsonElement changed = await Body(await client.GetAsync("/api/v1/projects/tiny-graph"));
+      revision = changed.GetProperty("revision").GetString()!;
+      Assert.NotEqual(imported.GetProperty("revision").GetString(), revision);
+      Assert.Empty(Directory.EnumerateDirectories(Path.Combine(dataRoot, "projects")));
     }
 
     await using BackendFactory restarted = new(dataRoot);
     using HttpClient reopened = restarted.CreateClient();
     JsonElement project = await Body(await reopened.GetAsync("/api/v1/projects/tiny-graph"));
     Assert.Equal(revision, project.GetProperty("revision").GetString());
+    Assert.Equal(source.Path, project.GetProperty("path").GetString());
     Assert.Equal(0, (await Body(await reopened.GetAsync("/api/v1/runs"))).GetArrayLength());
-    Assert.True((await Body(await reopened.GetAsync("/api/v1/projects/tiny-graph/map"))).GetProperty("total_lanes").GetInt32() > 0);
   }
 
   [Theory]
@@ -412,7 +413,7 @@ public sealed class ProjectLoadingTests
   }
 
   [Fact]
-  public async Task ExpansionAndFileCountLimitsRejectBeforeCommitting()
+  public async Task ZipExpansionAndFileCountLimitsRejectBeforeRegistering()
   {
     string root = Path.Combine(Path.GetTempPath(), "streetflow-project-limit", Guid.NewGuid().ToString("N"));
     ProjectCatalog catalog = new(new SimulatorOptions { DataRoot = root, MaximumProjectBytes = 10000, MaximumProjectFiles = 4096 });
@@ -423,7 +424,8 @@ public sealed class ProjectLoadingTests
     Assert.Empty(catalog.List());
     Assert.Empty(Directory.EnumerateDirectories(Path.Combine(root, ".project-imports")));
     ProjectCatalog fileLimited = new(new SimulatorOptions { DataRoot = root, MaximumProjectFiles = 1, MaximumProjectBytes = 256L * 1024 * 1024 });
-    ex = await Assert.ThrowsAsync<ApiException>(() => fileLimited.ImportFolderAsync(Draft("tiny-graph"), CancellationToken.None));
+    using MemoryStream secondZip = PackageZip(Draft("tiny-graph"));
+    ex = await Assert.ThrowsAsync<ApiException>(() => fileLimited.ImportZipAsync(secondZip, CancellationToken.None));
     Assert.Equal(413, ex.StatusCode);
     Directory.Delete(root, true);
   }

@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {snap, fitRectangle, dockRectangle, snapRectangle, restoreAppletState, resizeFromEdge} from '../Streetflow.Simulator/wwwroot/workspace.js';
+import {snap, fitRectangle, dockRectangle, snapRectangle, restoreWindowState, resizeFromEdge} from '../../ui/web/window-geometry.js';
 import {vehicleSettingsXml} from '../Streetflow.Simulator/wwwroot/sumo-settings.js';
 
 test('drag and resize coordinates snap to a 16 pixel grid within the viewport', () => {
@@ -67,7 +67,12 @@ test('resizing snaps the changing edge to a neighbor and keeps the top-left fixe
 
 test('old expanded dock layouts restore the original manual window size', () => {
   const stored = {rectangle: {x: 0, y: 0, width: 320, height: 640}, floating: {x: 96, y: 64, width: 320, height: 256}, dock: 'left', open: true};
-  assert.deepEqual(restoreAppletState(stored, {}, {width: 1024, height: 640}), {rectangle: {x: 0, y: 64, width: 320, height: 256}, open: true});
+  assert.deepEqual(restoreWindowState(stored, {}, {width: 1024, height: 640}), {rectangle: {x: 0, y: 64, width: 320, height: 256}, open: true});
+});
+
+test('trainer layouts migrate to the shared window state without losing visibility or size', () => {
+  const stored = {rect: {x: 32, y: 48, width: 320, height: 256}, open: false};
+  assert.deepEqual(restoreWindowState(stored, {}, {width: 1024, height: 640}), {rectangle: stored.rect, open: false});
 });
 
 test('SUMO export maps driver settings to real vehicle attributes and escapes imported IDs', () => {

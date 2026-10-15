@@ -1,7 +1,7 @@
 {
   "format_version": 1,
   "id": "tiny-graph-devices",
-  "name": "Tiny graph with probabilistic arrivals · physical devices",
+  "name": "Four Way - Edge Population [devices]",
   "description": "Small graph with synthetic traffic weights for each directed road edge.",
   "network": {
     "file": "network.net.xml",

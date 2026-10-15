@@ -1,0 +1,12 @@
+name: streetflow-route-trainer
+services:
+  trainer:
+    build:
+      context: ../..
+      dockerfile: components/route-trainer/Dockerfile
+    ports:
+      - "127.0.0.1:${TRAINER_PORT:-8092}:8092"
+    volumes:
+      - trainer-data:/data
+volumes:
+  trainer-data:

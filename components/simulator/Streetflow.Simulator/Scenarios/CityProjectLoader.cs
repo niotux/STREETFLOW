@@ -67,6 +67,7 @@ public static partial class CityProjectLoader
     ProjectDemand? demand = null;
     TransformerModel? transformerModel = null;
     TransformerWeights? transformerWeights = null;
+    NeuralModel? neuralModel = null;
     ProjectVehicleType[] vehicleTypes;
     if (manifest.FormatVersion == 1)
     {
@@ -74,7 +75,7 @@ public static partial class CityProjectLoader
       ValidateSettings(demand, manifest.DemandFile!);
       vehicleTypes = demand.VehicleTypes;
     }
-    else
+    else if (manifest.FormatVersion == 2)
     {
       ValidateTransformerManifestFields(directory);
       transformerModel = ReadJson<TransformerModel>(directory, manifest.JourneyModelFile!);
@@ -82,6 +83,12 @@ public static partial class CityProjectLoader
       transformerWeights = ReadJson<TransformerWeights>(directory, transformerModel.WeightsFile);
       ValidateTransformerWeights(transformerModel, transformerWeights);
       vehicleTypes = ReadTransformerVehicleTypes(transformerModel);
+    }
+    else
+    {
+      neuralModel = ReadJson<NeuralModel>(directory, manifest.NeuralModelFile!);
+      ValidateNeuralSettings(neuralModel, manifest.NeuralModelFile!);
+      vehicleTypes = [neuralModel.VehicleType];
     }
     XElement net = ReadXml(directory, manifest.Network!.File, "net");
     foreach (XElement element in net.Descendants())
@@ -143,9 +150,14 @@ public static partial class CityProjectLoader
       ValidateTransformerNetwork(transformerModel, transformerWeights, edges, connections, terminals, manifest.JourneyModelFile!);
     }
 
+    if (neuralModel is not null)
+    {
+      ValidateNeuralNetwork(directory, manifest, neuralModel, edges, connections);
+    }
+
     ProjectTrafficLights? trafficLights = ReadTrafficLights(directory, manifest, edges, connections);
     string worldRevision = CalculateWorldRevision(directory, manifest);
-    string revision = CalculateRevision(directory, manifest, transformerModel);
+    string revision = CalculateRevision(directory, manifest, transformerModel, neuralModel);
     List<string> signalIds = new(signals);
     signalIds.Sort(StringComparer.Ordinal);
     return new CityProject
@@ -155,7 +167,8 @@ public static partial class CityProjectLoader
       Demand = demand,
       TransformerModel = transformerModel,
       TransformerWeights = transformerWeights,
-      TransformerVehicleTypes = transformerModel is null ? [] : vehicleTypes,
+      NeuralModel = neuralModel,
+      ModelVehicleTypes = demand is null ? vehicleTypes : [],
       Edges = edges,
       Junctions = junctions,
       Connections = connections,
@@ -169,17 +182,23 @@ public static partial class CityProjectLoader
 
   private static void ValidateManifest(ProjectManifest manifest)
   {
-    Require(manifest.FormatVersion == 1 || manifest.FormatVersion == 2, "experiment.json: unsupported format_version; expected 1 or 2");
+    Require(manifest.FormatVersion >= 1 && manifest.FormatVersion <= 3, "experiment.json: unsupported format_version; expected 1, 2 or 3");
+    Require(manifest.FormatVersion == 3 || manifest.NeuralModelFile is null, "experiment.json: neural_model_file requires format_version 3");
     if (manifest.FormatVersion == 1)
     {
       Require(!string.IsNullOrWhiteSpace(manifest.DemandFile), "experiment.json: Edge Population requires demand_file");
       Require(manifest.JourneyModelFile is null, "experiment.json: Edge Population cannot use journey_model_file");
     }
-    else
+    else if (manifest.FormatVersion == 2)
     {
       Require(manifest.DemandFile is null, "experiment.json: Transformer Routes cannot use demand_file");
       Require(!string.IsNullOrWhiteSpace(manifest.JourneyModelFile), "experiment.json: Transformer Routes requires journey_model_file");
       Require(!string.IsNullOrWhiteSpace(manifest.TerminalsFile), "experiment.json: Transformer Routes requires terminals_file");
+    }
+    else
+    {
+      Require(manifest.DemandFile is null && manifest.JourneyModelFile is null, "experiment.json: Neural Routes cannot use demand_file or journey_model_file");
+      Require(!string.IsNullOrWhiteSpace(manifest.NeuralModelFile), "experiment.json: Neural Routes requires neural_model_file");
     }
     Require(ValidId(manifest.Id), "experiment.json: id must contain 1–128 non-whitespace characters");
     Require(manifest.Id.Length <= MaximumProjectIdLength, "experiment.json: id must contain 1–128 non-whitespace characters");
@@ -208,7 +227,7 @@ public static partial class CityProjectLoader
     }
   }
 
-  private static string CalculateRevision(string directory, ProjectManifest manifest, TransformerModel? model)
+  private static string CalculateRevision(string directory, ProjectManifest manifest, TransformerModel? model, NeuralModel? neuralModel)
   {
     List<string> references = ["experiment.json", manifest.Network.File];
     if (manifest.DemandFile is not null)
@@ -220,6 +239,11 @@ public static partial class CityProjectLoader
     {
       references.Add(manifest.JourneyModelFile!);
       references.Add(model.WeightsFile);
+    }
+    if (neuralModel is not null)
+    {
+      references.Add(manifest.NeuralModelFile!);
+      references.Add(neuralModel.ModelFile);
     }
     references.AddRange(manifest.AdditionalFiles);
     if (manifest.DetectorsFile is not null)

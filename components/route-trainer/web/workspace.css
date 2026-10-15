@@ -1,0 +1,24 @@
+/* Application layout. Window rendering and interaction styles live in /ui/. */
+body { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+.app-header, .workspace-toolbar, #message { flex: none; }
+#studio { position: relative; display: block; flex: 1; min-height: 0; padding: 0; overflow: hidden; isolation: isolate; }
+#studio .map-panel { position: absolute; inset: 0; border: 0; overflow: hidden; }
+#studio canvas { width: 100%; height: 100%; min-height: 0; display: block; touch-action: none; }
+.map-toolbar { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 1; display: flex; align-items: center; gap: 20px; max-width: calc(100% - 32px); }
+.map-toolbar > div { min-width: 0; }
+.map-toolbar strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 340px; }
+.map-key { position: absolute; bottom: 0; left: 0; right: 0; pointer-events: none; z-index: 1; }
+#window-layer { position: absolute; inset: 0; }
+#studio[data-arranging="true"] canvas { pointer-events: none; }
+@media (max-width: 800px) {
+  body { height: auto; min-height: 100dvh; overflow: auto; }
+  #studio { display: flex; flex-direction: column; overflow: visible; flex: none; }
+  #studio .map-panel { position: relative; inset: auto; height: 420px; flex: none; }
+  #studio canvas { height: 100%; }
+  .map-toolbar { top: 12px; left: 12px; right: 12px; transform: none; max-width: none; justify-content: space-between; }
+  .map-toolbar strong { max-width: 240px; }
+  #window-layer { position: relative; }
+  .ui-window-category { display: none; }
+  .map-key { gap: 8px 14px; }
+  .map-gestures { width: 100%; }
+}

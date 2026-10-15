@@ -1,7 +1,7 @@
 {
   "format_version": 2,
   "id": "four-way-north-east-devices",
-  "name": "Four-way intersection — North to east experiment · physical devices",
+  "name": "Four Way - NE [experiment, devices]",
   "description": "Synthetic Transformer Routes experiment: 900 north-entry departures/hour with 96% selecting the east exit, all day; other entries request 30/hour each.",
   "network": {
     "file": "network.net.xml",

@@ -28,6 +28,11 @@ public sealed class CityRunStorage(SimulatorOptions options)
       CopyFile(project.Directory, package, project.Manifest.JourneyModelFile);
       CopyFile(project.Directory, package, project.TransformerModel!.WeightsFile);
     }
+    if (project.NeuralModel is not null)
+    {
+      CopyFile(project.Directory, package, project.Manifest.NeuralModelFile!);
+      CopyFile(project.Directory, package, project.NeuralModel.ModelFile);
+    }
     if (project.Manifest.TrafficLightsFile is not null)
     {
       CopyFile(project.Directory, package, project.Manifest.TrafficLightsFile);

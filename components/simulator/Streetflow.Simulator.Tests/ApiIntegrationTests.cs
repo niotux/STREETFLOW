@@ -24,6 +24,8 @@ public sealed class ApiIntegrationTests
     Assert.Contains("Traffic playground", await client.GetStringAsync("/legacy-inspector.html"));
     Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/app.js")).StatusCode);
     Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/styles.css")).StatusCode);
+    Assert.Contains("createWorkspace", await client.GetStringAsync("/ui/windows.js"));
+    Assert.Contains(".ui-window", await client.GetStringAsync("/ui/streetflow-ui.css"));
     Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/v1/scenarios")).StatusCode);
   }
 

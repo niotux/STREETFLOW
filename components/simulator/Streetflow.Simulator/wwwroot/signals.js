@@ -58,3 +58,19 @@ export function deviceState(device, states) {
 export function deviceDescription(device) {
   return `${device.label} · ${device.lane_ids.join(', ')}`;
 }
+
+// Lane IDs are explicit device associations; never derive devices from SUMO movements.
+export function controlledLanes(device, lanes) {
+  const result = [];
+  if (!device) return result;
+  const ids = new Set(device.lane_ids);
+  for (const lane of lanes) {
+    if (ids.has(lane.id)) result.push(lane);
+  }
+  return result;
+}
+
+export function deviceMapStatus(devices) {
+  if (!devices.length) return 'No physical traffic lights are configured for this map. Add a physical-device mapping to the project folder, refresh it from disk, and load a new simulation. Resetting a saved run keeps its original mapping.';
+  return `${devices.length} physical traffic ${devices.length === 1 ? 'light' : 'lights'} configured. Select or hover a light to highlight its controlled incoming lanes.`;
+}

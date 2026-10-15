@@ -1,7 +1,7 @@
 {
   "format_version": 2,
   "id": "four-way-north-east",
-  "name": "Four-way intersection \u2014 North to east experiment",
+  "name": "Four Way - NE [experiment]",
   "description": "Synthetic Transformer Routes experiment: 900 north-entry departures/hour with 96% selecting the east exit, all day; other entries request 30/hour each.",
   "network": {
     "file": "network.net.xml",
@@ -12,5 +12,6 @@
   "defaults": {
     "start_time_seconds": 27000,
     "step_seconds": 0.5
-  }
+  },
+  "traffic_lights_file": "traffic-lights.json"
 }

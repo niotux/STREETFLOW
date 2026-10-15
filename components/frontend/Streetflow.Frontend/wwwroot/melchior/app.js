@@ -1,4 +1,4 @@
-import {signalAppearance, deviceState, deviceDescription, layoutSignalMarkers} from '/balthasar/signals.js?v=physical-devices-1';
+import {signalAppearance, deviceState, deviceDescription, layoutSignalMarkers, controlledLanes, deviceMapStatus} from '/balthasar/signals.js?v=physical-devices-3';
 
 const $ = id => document.getElementById(id);
 const canvas = $('map');
@@ -7,7 +7,7 @@ const actions = [['off', 'Off'], ['red', 'Red'], ['red-yellow', 'Red + yellow'],
 let session = null, network = null, states = [], provider = '';
 let cachedMap = null, cachedProvider = '';
 let busy = false, polling = false, available = false, epoch = 0;
-let width = 1, height = 1, view = {x: 0, y: 0, scale: 1}, markers = [], drag = null;
+let width = 1, height = 1, view = {x: 0, y: 0, scale: 1}, markers = [], drag = null, hoveredDevice = null;
 
 async function api(path, method = 'GET', body) {
   const response = await fetch(`/melchior-api${path}`, {
@@ -79,7 +79,8 @@ function clearSession() {
   $('map-empty').hidden = false;
   $('command-status').textContent = '';
   $('run').replaceChildren(new Option('No active session', ''));
-  $('run-note').textContent = 'The active session appears automatically when the provider loads it.';
+  hoveredDevice = null;
+  $('run-note').textContent = 'No active session. In Balthasar, load a simulation in Loader. Selecting a project preview does not create a session.';
   fillDevices();
   draw();
 }
@@ -140,7 +141,7 @@ async function refreshSession(version) {
   }
   if (version !== epoch) return;
   $('error').hidden = true;
-  connected(true, 'tlcapi connected');
+  connected(true, network.devices.length ? 'tlcapi connected · devices mapped' : 'tlcapi connected · no mapped lights');
   updateControls();
 }
 
@@ -158,7 +159,10 @@ function renderController() {
   const device = selectedDevice();
   const state = selectedState();
   $('switchboard').hidden = !device;
-  $('signal-summary').textContent = network ? `${network.devices.length} configured physical devices` : 'Waiting for an active world.';
+  $('signal-summary').textContent = network ? deviceMapStatus(network.devices) : 'Waiting for an active world. Load a simulation in Balthasar’s Loader.';
+  if (network && !available) $('signal-summary').textContent += ' Live states are unavailable; controls are disabled.';
+  else if (device && state === 'unknown') $('signal-summary').textContent += ' The provider has not supplied a live state for this device; controls are disabled.';
+  renderMapDetail();
   $('movements').replaceChildren();
   $('controller-actions').replaceChildren();
   if (device) {
@@ -180,6 +184,17 @@ function renderController() {
     }
   }
   updateControls();
+}
+
+function renderMapDetail() {
+  let detail = 'Waiting for an active simulation.';
+  if (network) {
+    detail = 'Select or hover a physical light to highlight its controlled incoming lanes.';
+    if (!network.devices.length) detail = 'Roads loaded. Physical traffic lights need a project mapping before they can appear here.';
+    const device = hoveredDevice || selectedDevice();
+    if (device) detail = `${signalAppearance(available ? deviceState(device, states) : undefined).label} · ${deviceDescription(device)} · highlighted incoming lanes`;
+  }
+  $('map-detail').textContent = detail;
 }
 
 async function command(deviceId, action) {
@@ -204,7 +219,7 @@ async function poll() {
       available = false;
       connected(false, 'tlcapi unavailable');
       showError(error);
-      updateControls();
+      renderController();
       draw();
     }
   } finally {
@@ -227,7 +242,7 @@ $('connection-form').onsubmit = event => {
 };
 $('refresh-runs').onclick = () => perform(() => refreshSession(epoch));
 $('controller').onchange = () => { $('command-status').textContent = ''; renderController(); draw(); };
-$('signal-filter').oninput = () => fillDevices();
+$('signal-filter').oninput = () => { fillDevices(); draw(); };
 $('controller-enabled').onchange = event => {
   const device = selectedDevice();
   if (device) perform(() => command(device.id, event.target.checked ? 'on' : 'off'));
@@ -267,10 +282,21 @@ function draw() {
     });
     context.stroke();
   }
+  context.strokeStyle = '#a8e76a';
+  context.lineWidth = Math.max(4, Math.min(10, view.scale * 4));
+  for (const lane of controlledLanes(hoveredDevice || selectedDevice(), network.lanes)) {
+    context.beginPath();
+    lane.shape.forEach((point, index) => {
+      const position = screen(point);
+      if (index) context.lineTo(position.x, position.y);
+      else context.moveTo(position.x, position.y);
+    });
+    context.stroke();
+  }
   markers = layoutSignalMarkers(network.devices, screen, width, height, .85);
   for (const marker of markers) {
     const code = available ? deviceState(marker.point, states) : undefined;
-    context.strokeStyle = marker.point.id === $('controller').value ? '#a8e76a' : '#7f9ba9';
+    context.strokeStyle = marker.point.id === $('controller').value || marker.point.id === hoveredDevice?.id ? '#a8e76a' : '#7f9ba9';
     context.lineWidth = 1;
     context.beginPath();
     context.moveTo(marker.anchor.x, marker.anchor.y);
@@ -309,7 +335,9 @@ canvas.onpointerdown = event => { drag = {x: event.clientX, y: event.clientY, mo
 canvas.onpointermove = event => {
   if (!drag) {
     const marker = markerAt(event);
-    $('map-detail').textContent = marker ? `${signalAppearance(available ? deviceState(marker.point, states) : undefined).label} · ${deviceDescription(marker.point)}` : 'Select a physical device to control it.';
+    const nextHover = marker?.point || null;
+    if (hoveredDevice !== nextHover) { hoveredDevice = nextHover; draw(); }
+    renderMapDetail();
     return;
   }
   const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
@@ -326,6 +354,7 @@ canvas.onpointerup = event => {
   if (marker) { $('signal-filter').value = ''; fillDevices(marker.point.id); draw(); }
 };
 canvas.onpointercancel = () => { drag = null; };
+canvas.onpointerleave = () => { hoveredDevice = null; renderMapDetail(); draw(); };
 canvas.addEventListener('wheel', event => {
   event.preventDefault();
   const rectangle = canvas.getBoundingClientRect();
