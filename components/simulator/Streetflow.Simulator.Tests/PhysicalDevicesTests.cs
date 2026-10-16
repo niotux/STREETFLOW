@@ -14,18 +14,18 @@ public sealed class PhysicalDevicesTests
   [InlineData("tiny-graph-devices")]
   [InlineData("four-way-transformer-routes-devices")]
   [InlineData("four-way-north-east-devices")]
-  public async Task TlcPublishesOnlyPhysicalDevicesAndTheirMap(string projectId)
+  public async Task TacoPublishesOnlyPhysicalDevicesAndTheirMap(string projectId)
   {
     using PhysicalDevicesFixture fixture = new(projectId);
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    Assert.Null((await client.GetFromJsonAsync<TlcSession>("/api/v1/tlc/session", JsonDefaults.Options))!.Id);
+    Assert.Null((await client.GetFromJsonAsync<TacoSession>("/api/v1/taco/session", JsonDefaults.Options))!.Id);
     CityRunStatus run = await Start(factory, client, fixture);
-    TlcSession session = (await client.GetFromJsonAsync<TlcSession>("/api/v1/tlc/session", JsonDefaults.Options))!;
+    TacoSession session = (await client.GetFromJsonAsync<TacoSession>("/api/v1/taco/session", JsonDefaults.Options))!;
     Assert.Equal(run.Id, session.Id);
     Assert.Equal("four-way", session.WorldId);
-    string mapText = await client.GetStringAsync($"/api/v1/tlc/sessions/{run.Id}/map");
-    TlcMap map = JsonSerializer.Deserialize<TlcMap>(mapText, JsonDefaults.Options)!;
+    string mapText = await client.GetStringAsync($"/api/v1/taco/sessions/{run.Id}/map");
+    TacoMap map = JsonSerializer.Deserialize<TacoMap>(mapText, JsonDefaults.Options)!;
     Assert.Equal(4, map.Devices.Length);
     Assert.NotEmpty(map.Lanes);
     Assert.Equal(session.Revision, map.Revision);
@@ -33,7 +33,7 @@ public sealed class PhysicalDevicesTests
     Assert.DoesNotContain("link_index", mapText);
     Assert.DoesNotContain("signal_id", mapText);
     Assert.DoesNotContain("center", JsonSerializer.Serialize(map.Devices, JsonDefaults.Options));
-    TlcDeviceState[] devices = (await client.GetFromJsonAsync<TlcDeviceState[]>($"/api/v1/tlc/sessions/{run.Id}/devices", JsonDefaults.Options))!;
+    TacoDeviceState[] devices = (await client.GetFromJsonAsync<TacoDeviceState[]>($"/api/v1/taco/sessions/{run.Id}/devices", JsonDefaults.Options))!;
     Assert.Equal(4, devices.Length);
     Assert.All(devices, device => Assert.Equal("off", device.State));
     await Stop(client, run.Id);
@@ -49,15 +49,15 @@ public sealed class PhysicalDevicesTests
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
     CityRunStatus run = await Start(factory, client, fixture);
-    TlcSession session = (await client.GetFromJsonAsync<TlcSession>("/api/v1/tlc/session", JsonDefaults.Options))!;
-    string path = $"/api/v1/tlc/sessions/{run.Id}/devices/north";
+    TacoSession session = (await client.GetFromJsonAsync<TacoSession>("/api/v1/taco/session", JsonDefaults.Options))!;
+    string path = $"/api/v1/taco/sessions/{run.Id}/devices/north";
     Snapshot initial = (await client.GetFromJsonAsync<Snapshot>($"/api/v1/city-runs/{run.Id}/snapshot", JsonDefaults.Options))!;
     string off = Assert.Single(initial.Signals).State;
     foreach (string action in new[] { "on", "green", "yellow", "red-yellow", "red", "off" })
     {
-      HttpResponseMessage response = await client.PutAsJsonAsync(path, new TlcDeviceCommand(action, session.WorldId!, session.Revision!), JsonDefaults.Options);
+      HttpResponseMessage response = await client.PutAsJsonAsync(path, new TacoDeviceCommand(action, session.WorldId!, session.Revision!), JsonDefaults.Options);
       response.EnsureSuccessStatusCode();
-      TlcDeviceState applied = (await response.Content.ReadFromJsonAsync<TlcDeviceState>(JsonDefaults.Options))!;
+      TacoDeviceState applied = (await response.Content.ReadFromJsonAsync<TacoDeviceState>(JsonDefaults.Options))!;
       Assert.Equal(action == "on" ? "red" : action, applied.State);
       Snapshot snapshot = (await client.GetFromJsonAsync<Snapshot>($"/api/v1/city-runs/{run.Id}/snapshot", JsonDefaults.Options))!;
       Assert.Equal(0, snapshot.SimulationTime);
@@ -88,16 +88,16 @@ public sealed class PhysicalDevicesTests
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
     CityRunStatus run = await Start(factory, client, fixture);
-    TlcSession session = (await client.GetFromJsonAsync<TlcSession>("/api/v1/tlc/session", JsonDefaults.Options))!;
-    string path = $"/api/v1/tlc/sessions/{run.Id}/devices/";
-    Assert.Equal(HttpStatusCode.Conflict, (await client.PutAsJsonAsync(path + "north", new TlcDeviceCommand("green", "other-world", session.Revision!), JsonDefaults.Options)).StatusCode);
-    Assert.Equal(HttpStatusCode.Conflict, (await client.PutAsJsonAsync(path + "north", new TlcDeviceCommand("green", session.WorldId!, "outdated"), JsonDefaults.Options)).StatusCode);
-    Assert.Equal(HttpStatusCode.NotFound, (await client.PutAsJsonAsync(path + "center", new TlcDeviceCommand("green", session.WorldId!, session.Revision!), JsonDefaults.Options)).StatusCode);
+    TacoSession session = (await client.GetFromJsonAsync<TacoSession>("/api/v1/taco/session", JsonDefaults.Options))!;
+    string path = $"/api/v1/taco/sessions/{run.Id}/devices/";
+    Assert.Equal(HttpStatusCode.Conflict, (await client.PutAsJsonAsync(path + "north", new TacoDeviceCommand("green", "other-world", session.Revision!), JsonDefaults.Options)).StatusCode);
+    Assert.Equal(HttpStatusCode.Conflict, (await client.PutAsJsonAsync(path + "north", new TacoDeviceCommand("green", session.WorldId!, "outdated"), JsonDefaults.Options)).StatusCode);
+    Assert.Equal(HttpStatusCode.NotFound, (await client.PutAsJsonAsync(path + "center", new TacoDeviceCommand("green", session.WorldId!, session.Revision!), JsonDefaults.Options)).StatusCode);
     HttpResponseMessage raw = await client.PutAsync(path + "north", new StringContent("{\"action\":\"green\",\"world_id\":\"four-way\",\"revision\":\"x\",\"link_index\":0}", System.Text.Encoding.UTF8, "application/json"));
     Assert.Equal(HttpStatusCode.BadRequest, raw.StatusCode);
     await Stop(client, run.Id);
-    Assert.Null((await client.GetFromJsonAsync<TlcSession>("/api/v1/tlc/session", JsonDefaults.Options))!.Id);
-    Assert.Equal(HttpStatusCode.Conflict, (await client.PutAsJsonAsync(path + "north", new TlcDeviceCommand("green", session.WorldId!, session.Revision!), JsonDefaults.Options)).StatusCode);
+    Assert.Null((await client.GetFromJsonAsync<TacoSession>("/api/v1/taco/session", JsonDefaults.Options))!.Id);
+    Assert.Equal(HttpStatusCode.Conflict, (await client.PutAsJsonAsync(path + "north", new TacoDeviceCommand("green", session.WorldId!, session.Revision!), JsonDefaults.Options)).StatusCode);
   }
 
   [Theory]
@@ -109,15 +109,15 @@ public sealed class PhysicalDevicesTests
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
     CityRunStatus run = await Start(factory, client, fixture);
-    TlcSession session = (await client.GetFromJsonAsync<TlcSession>("/api/v1/tlc/session", JsonDefaults.Options))!;
-    TlcMap map = (await client.GetFromJsonAsync<TlcMap>($"/api/v1/tlc/sessions/{run.Id}/map", JsonDefaults.Options))!;
-    foreach (TlcDevice device in map.Devices)
+    TacoSession session = (await client.GetFromJsonAsync<TacoSession>("/api/v1/taco/session", JsonDefaults.Options))!;
+    TacoMap map = (await client.GetFromJsonAsync<TacoMap>($"/api/v1/taco/sessions/{run.Id}/map", JsonDefaults.Options))!;
+    foreach (TacoDevice device in map.Devices)
     {
       await SetDevice(client, session, device.Id, "red");
     }
 
     Snapshot red = await Step(client, run.Id, 200);
-    TlcDevice north = Assert.Single(map.Devices, device => device.Id == "north");
+    TacoDevice north = Assert.Single(map.Devices, device => device.Id == "north");
     string laneId = Assert.Single(north.LaneIds);
     HashSet<string> queued = new(StringComparer.Ordinal);
     foreach (VehicleState vehicle in red.Vehicles)
@@ -142,7 +142,7 @@ public sealed class PhysicalDevicesTests
 
     // At least one vehicle that was queued on this device's mapped lane has crossed its stop line.
     Assert.NotEmpty(queued);
-    foreach (TlcDeviceState device in green.DeviceStates)
+    foreach (TacoDeviceState device in green.DeviceStates)
     {
       Assert.Equal(device.Id == north.Id ? "green" : "red", device.State);
     }
@@ -159,23 +159,23 @@ public sealed class PhysicalDevicesTests
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
     CityRunStatus run = await Start(factory, client, fixture);
-    TlcSession session = (await client.GetFromJsonAsync<TlcSession>("/api/v1/tlc/session", JsonDefaults.Options))!;
+    TacoSession session = (await client.GetFromJsonAsync<TacoSession>("/api/v1/taco/session", JsonDefaults.Options))!;
     await SetDevice(client, session, "north", "green");
     HttpResponseMessage response = await client.PostAsJsonAsync($"/api/v1/city-runs/{run.Id}/restart", new CityRunCommand(), JsonDefaults.Options);
     response.EnsureSuccessStatusCode();
     CityRunStatus restarted = (await response.Content.ReadFromJsonAsync<CityRunStatus>(JsonDefaults.Options))!;
-    TlcSession active = (await client.GetFromJsonAsync<TlcSession>("/api/v1/tlc/session", JsonDefaults.Options))!;
+    TacoSession active = (await client.GetFromJsonAsync<TacoSession>("/api/v1/taco/session", JsonDefaults.Options))!;
     Assert.NotEqual(session.Id, active.Id);
     Assert.Equal(restarted.Id, active.Id);
     Assert.Equal(session.WorldId, active.WorldId);
     Assert.Equal(session.Revision, active.Revision);
-    TlcDeviceState[] devices = (await client.GetFromJsonAsync<TlcDeviceState[]>($"/api/v1/tlc/sessions/{active.Id}/devices", JsonDefaults.Options))!;
+    TacoDeviceState[] devices = (await client.GetFromJsonAsync<TacoDeviceState[]>($"/api/v1/taco/sessions/{active.Id}/devices", JsonDefaults.Options))!;
     Assert.Equal(4, devices.Length);
     Assert.All(devices, device => Assert.Equal("off", device.State));
-    TlcDeviceCommand command = new("red", session.WorldId!, session.Revision!);
-    response = await client.PutAsJsonAsync($"/api/v1/tlc/sessions/{session.Id}/devices/north", command, JsonDefaults.Options);
+    TacoDeviceCommand command = new("red", session.WorldId!, session.Revision!);
+    response = await client.PutAsJsonAsync($"/api/v1/taco/sessions/{session.Id}/devices/north", command, JsonDefaults.Options);
     Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-    Assert.Equal(HttpStatusCode.Conflict, (await client.GetAsync($"/api/v1/tlc/sessions/{session.Id}/map")).StatusCode);
+    Assert.Equal(HttpStatusCode.Conflict, (await client.GetAsync($"/api/v1/taco/sessions/{session.Id}/map")).StatusCode);
     await Stop(client, restarted.Id);
   }
 
@@ -215,7 +215,7 @@ public sealed class PhysicalDevicesTests
     await factory.AddProjectAsync(client, source.Path);
     HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/projects/tiny-graph/runs", new CreateCityRunRequest(42), JsonDefaults.Options);
     CityRunStatus run = (await response.Content.ReadFromJsonAsync<CityRunStatus>(JsonDefaults.Options))!;
-    TlcMap map = (await client.GetFromJsonAsync<TlcMap>($"/api/v1/tlc/sessions/{run.Id}/map", JsonDefaults.Options))!;
+    TacoMap map = (await client.GetFromJsonAsync<TacoMap>($"/api/v1/taco/sessions/{run.Id}/map", JsonDefaults.Options))!;
     Assert.NotEmpty(map.Lanes);
     Assert.Empty(map.Devices);
     await Stop(client, run.Id);
@@ -268,7 +268,7 @@ public sealed class PhysicalDevicesTests
     HttpResponseMessage restarted = await client.PostAsJsonAsync($"/api/v1/city-runs/{run.Id}/restart", new CityRunCommand(), JsonDefaults.Options);
     restarted.EnsureSuccessStatusCode();
     CityRunStatus replay = (await restarted.Content.ReadFromJsonAsync<CityRunStatus>(JsonDefaults.Options))!;
-    TlcMap map = (await client.GetFromJsonAsync<TlcMap>($"/api/v1/tlc/sessions/{replay.Id}/map", JsonDefaults.Options))!;
+    TacoMap map = (await client.GetFromJsonAsync<TacoMap>($"/api/v1/taco/sessions/{replay.Id}/map", JsonDefaults.Options))!;
     Assert.Equal("North approach", Assert.Single(map.Devices, device => device.Id == "north").Label);
     await Stop(client, replay.Id);
   }
@@ -288,10 +288,10 @@ public sealed class PhysicalDevicesTests
     (await client.PostAsJsonAsync($"/api/v1/city-runs/{id}/stop", new CityRunCommand(), JsonDefaults.Options)).EnsureSuccessStatusCode();
   }
 
-  private static async Task SetDevice(HttpClient client, TlcSession session, string deviceId, string action)
+  private static async Task SetDevice(HttpClient client, TacoSession session, string deviceId, string action)
   {
-    TlcDeviceCommand command = new(action, session.WorldId!, session.Revision!);
-    HttpResponseMessage response = await client.PutAsJsonAsync($"/api/v1/tlc/sessions/{session.Id}/devices/{deviceId}", command, JsonDefaults.Options);
+    TacoDeviceCommand command = new(action, session.WorldId!, session.Revision!);
+    HttpResponseMessage response = await client.PutAsJsonAsync($"/api/v1/taco/sessions/{session.Id}/devices/{deviceId}", command, JsonDefaults.Options);
     response.EnsureSuccessStatusCode();
   }
 

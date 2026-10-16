@@ -23,6 +23,10 @@ Each producer session has a monotonic sequence across its emitted frames, includ
 
 Simulation frames carry simulation seconds and a run identity. Real detector frames carry UTC observation timestamps and a detector-session identity. `time_basis` makes the distinction explicit. Optional scenario epoch mapping may aid real-time integration but does not replace simulation time. Receipt time is separate from observation time; delayed delivery must not shift a measurement window.
 
+## Implemented camera ingestion
+
+Pi workers POST CameraObservation to Casper at /api/v1/cameras/{id}/observations with a camera bearer token. It uses the UTC variant described below, plus optional synthetic_demo=true for explicitly labelled demos. The [Casper guide](../../../components/detector/README.md) defines the current image-motion queue estimate, local tracking limits, authoritative camera mapping, and freshness handling. Physical speed remains null. The original simulator stopped-speed definition and the Pi image-motion estimate are distinct measurement methods, exposed by TACO.
+
 ## Example simulated frame
 
 ```json

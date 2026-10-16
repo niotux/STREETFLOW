@@ -6,29 +6,29 @@ public sealed class ConnectionStore
 {
   private readonly string file;
   private readonly SemaphoreSlim gate = new(1, 1);
-  private TlcConnection connection;
+  private TacoConnection connection;
 
   public ConnectionStore(LogisticsOptions options)
   {
     file = options.ConnectionFile;
-    connection = Normalize(new TlcConnection(options.TlcApiBaseUrl));
+    connection = Normalize(new TacoConnection(options.TacoApiBaseUrl));
     if (File.Exists(file))
     {
-      TlcConnection? saved = JsonSerializer.Deserialize<TlcConnection>(File.ReadAllText(file), JsonDefaults.Options);
+      TacoConnection? saved = JsonSerializer.Deserialize<TacoConnection>(File.ReadAllText(file), JsonDefaults.Options);
       if (saved is null)
       {
-        throw new InvalidOperationException("The saved tlcapi connection is empty");
+        throw new InvalidOperationException("The saved taco connection is empty");
       }
 
       connection = Normalize(saved);
     }
   }
 
-  public TlcConnection Get() => Volatile.Read(ref connection);
+  public TacoConnection Get() => Volatile.Read(ref connection);
 
-  public async Task<TlcConnection> SaveAsync(TlcConnection request, CancellationToken token)
+  public async Task<TacoConnection> SaveAsync(TacoConnection request, CancellationToken token)
   {
-    TlcConnection next = Normalize(request);
+    TacoConnection next = Normalize(request);
     await gate.WaitAsync(token);
     try
     {
@@ -45,7 +45,7 @@ public sealed class ConnectionStore
     }
   }
 
-  private static TlcConnection Normalize(TlcConnection request)
+  private static TacoConnection Normalize(TacoConnection request)
   {
     bool valid = Uri.TryCreate(request.BaseUrl, UriKind.Absolute, out Uri? uri);
     if (!valid || uri is null)
@@ -60,6 +60,6 @@ public sealed class ConnectionStore
       throw new ApiException(400, "invalid_connection", "Use a server URL such as http://localhost:8080, without an API path, query or credentials");
     }
 
-    return new TlcConnection(uri.GetLeftPart(UriPartial.Authority));
+    return new TacoConnection(uri.GetLeftPart(UriPartial.Authority));
   }
 }

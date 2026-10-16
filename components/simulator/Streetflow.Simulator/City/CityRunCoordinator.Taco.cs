@@ -6,17 +6,36 @@ namespace Streetflow.Simulator.City;
 
 public sealed partial class CityRunCoordinator
 {
-  public async Task<TlcSession> TlcSessionAsync(CancellationToken token)
+  public async Task<TacoTraffic> TacoTrafficAsync(string id, CancellationToken token)
+  {
+    await gate.WaitAsync(token);
+    try
+    {
+      RequireSignalRun(id);
+      // Inspector snapshots have no camera regions or counting lines.
+      // Sampled snapshots cannot establish complete lane counts.
+      bool available = snapshot!.Available && !snapshot.Sampled;
+      TacoLaneTraffic[] lanes = project!.Lanes.Select(lane => new TacoLaneTraffic(
+        lane.Id, lane.Id, "unmapped", project.TrafficDevices.Where(d => d.LaneIds.Contains(lane.Id)).Select(d => d.Id).ToArray(),
+        null, null, null, available ? snapshot.Vehicles.Count(v => v.LaneId == lane.Id) : null,
+        null, null, null, available ? "partial" : "unavailable", "simulation_lane_snapshot")).ToArray();
+      return new TacoTraffic(id, project.WorldId, project.WorldRevision, "simulation", "simulation_seconds",
+        snapshot.Sequence, null, snapshot.SimulationTime, available ? "partial" : "unavailable", lanes);
+    }
+    finally { gate.Release(); }
+  }
+
+  public async Task<TacoSession> TacoSessionAsync(CancellationToken token)
   {
     await gate.WaitAsync(token);
     try
     {
       if (current is null || project is null || engine is null || !IsActive(current.State))
       {
-        return new TlcSession(null, null, null, null, "none");
+        return new TacoSession(null, null, null, null, "none");
       }
 
-      return new TlcSession(current.Id, project.WorldId, project.WorldRevision, project.Manifest.Id, current.State);
+      return new TacoSession(current.Id, project.WorldId, project.WorldRevision, project.Manifest.Id, current.State);
     }
     finally
     {
@@ -24,27 +43,27 @@ public sealed partial class CityRunCoordinator
     }
   }
 
-  public async Task<TlcMap> TlcMapAsync(string id, CancellationToken token)
+  public async Task<TacoMap> TacoMapAsync(string id, CancellationToken token)
   {
     await gate.WaitAsync(token);
     try
     {
       RequireSignalRun(id);
       LaneMap[] source = project!.Lanes;
-      TlcLane[] lanes = new TlcLane[source.Length];
+      TacoLane[] lanes = new TacoLane[source.Length];
       for (int index = 0; index < source.Length; index++)
       {
-        TlcPoint[] points = new TlcPoint[source[index].Shape.Count];
+        TacoPoint[] points = new TacoPoint[source[index].Shape.Count];
         for (int point = 0; point < points.Length; point++)
         {
           Point position = source[index].Shape[point];
-          points[point] = new TlcPoint(position.X, position.Y);
+          points[point] = new TacoPoint(position.X, position.Y);
         }
 
-        lanes[index] = new TlcLane(source[index].Id, points);
+        lanes[index] = new TacoLane(source[index].Id, points);
       }
 
-      return new TlcMap(project.WorldId, project.WorldRevision, project.Manifest.Network.Attribution, "local_meters", lanes, project.TrafficDevices);
+      return new TacoMap(project.WorldId, project.WorldRevision, project.Manifest.Network.Attribution, "local_meters", lanes, project.TrafficDevices);
     }
     finally
     {
@@ -52,7 +71,7 @@ public sealed partial class CityRunCoordinator
     }
   }
 
-  public async Task<TlcDeviceState[]> DevicesAsync(string id, CancellationToken token)
+  public async Task<TacoDeviceState[]> DevicesAsync(string id, CancellationToken token)
   {
     await gate.WaitAsync(token);
     try
@@ -66,7 +85,7 @@ public sealed partial class CityRunCoordinator
     }
   }
 
-  public async Task<TlcDeviceState> ControlDeviceAsync(string id, string deviceId, TlcDeviceCommand request, CancellationToken token)
+  public async Task<TacoDeviceState> ControlDeviceAsync(string id, string deviceId, TacoDeviceCommand request, CancellationToken token)
   {
     ValidateSignalAction(request.Action);
     if (string.IsNullOrWhiteSpace(request.WorldId) || string.IsNullOrWhiteSpace(request.Revision))
@@ -106,9 +125,9 @@ public sealed partial class CityRunCoordinator
       // One controller write changes every mapped movement together; engine steps share this gate.
       await engine!.SetSignalStateAsync(device.SignalId, new string(state), CancellationToken.None);
       SignalState[] signals = await engine.GetSignalsAsync(CancellationToken.None);
-      TlcDeviceState[] devices = TrafficDeviceStates.Read(project, signals);
+      TacoDeviceState[] devices = TrafficDeviceStates.Read(project, signals);
       snapshot = snapshot! with { Sequence = ++sequence, Signals = signals, DeviceStates = devices };
-      foreach (TlcDeviceState applied in devices)
+      foreach (TacoDeviceState applied in devices)
       {
         if (applied.Id == deviceId)
         {

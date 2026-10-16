@@ -5,6 +5,7 @@ const canvas = $('map');
 const context = canvas.getContext('2d');
 const actions = [['off', 'Off'], ['red', 'Red'], ['red-yellow', 'Red + yellow'], ['green', 'Green'], ['yellow', 'Yellow']];
 let session = null, network = null, states = [], provider = '';
+let traffic = null;
 let cachedMap = null, cachedProvider = '';
 let busy = false, polling = false, available = false, epoch = 0;
 let width = 1, height = 1, view = {x: 0, y: 0, scale: 1}, markers = [], drag = null, hoveredDevice = null;
@@ -12,6 +13,7 @@ let width = 1, height = 1, view = {x: 0, y: 0, scale: 1}, markers = [], drag = n
 async function api(path, method = 'GET', body) {
   const response = await fetch(`/melchior-api${path}`, {
     method,
+    signal: method === 'GET' ? AbortSignal.timeout(5000) : undefined,
     headers: body === undefined ? {} : {'Content-Type': 'application/json'},
     body: body === undefined ? undefined : JSON.stringify(body)
   });
@@ -71,6 +73,8 @@ async function perform(work) {
 }
 
 function clearSession() {
+  traffic = null;
+  $('traffic-summary').textContent = 'Waiting for traffic measurements.';
   session = null;
   network = null;
   states = [];
@@ -141,7 +145,14 @@ async function refreshSession(version) {
   }
   if (version !== epoch) return;
   $('error').hidden = true;
-  connected(true, network.devices.length ? 'tlcapi connected · devices mapped' : 'tlcapi connected · no mapped lights');
+  try {
+    const measured = await api(`/sessions/${encodeURIComponent(next.id)}/traffic`);
+    if (version !== epoch) return;
+    traffic = measured.session_id === next.id && measured.revision === next.revision ? measured : null;
+  } catch { traffic = null; }
+  if (version !== epoch) return;
+  renderTraffic();
+  connected(true, network.devices.length ? 'taco connected · devices mapped' : 'taco connected · no mapped lights');
   updateControls();
 }
 
@@ -156,6 +167,7 @@ function fillDevices(preferred = $('controller').value) {
 }
 
 function renderController() {
+  renderTraffic();
   const device = selectedDevice();
   const state = selectedState();
   $('switchboard').hidden = !device;
@@ -216,8 +228,9 @@ async function poll() {
     await refreshSession(version);
   } catch (error) {
     if (version === epoch) {
+      traffic = null;
       available = false;
-      connected(false, 'tlcapi unavailable');
+      connected(false, 'taco unavailable');
       showError(error);
       renderController();
       draw();
@@ -225,6 +238,15 @@ async function poll() {
   } finally {
     polling = false;
   }
+}
+
+function renderTraffic() {
+  const device = selectedDevice();
+  const lanes = traffic?.lanes.filter(lane => !device || lane.device_ids.includes(device.id));
+  if (!lanes?.length) { $('traffic-summary').textContent = 'Traffic measurements unavailable.'; return; }
+  const total = field => lanes.every(lane => lane[field] !== null) ? lanes.reduce((sum, lane) => sum + lane[field], 0) : 'Unavailable';
+  const demo = lanes.some(lane => lane.measurement_method === 'synthetic_demo');
+  $('traffic-summary').textContent = `${demo ? 'SYNTHETIC DEMO · ' : ''}Visible: ${total('visible_vehicle_count')} · Estimated queue: ${total('queued_vehicle_count')} · ${traffic.status}`;
 }
 
 $('connection-form').onsubmit = event => {

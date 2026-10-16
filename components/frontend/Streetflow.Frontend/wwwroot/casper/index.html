@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#090e13"><title>Streetflow · Casper</title>
+  <link rel="stylesheet" href="/ui/streetflow-ui.css?v=shared-ui-1">
+  <link rel="stylesheet" href="/balthasar/styles.css"><link rel="stylesheet" href="/magi.css?v=shared-ui-1">
+  <link rel="stylesheet" href="/casper/style.css"><script type="module" src="/casper/app.js"></script>
+</head>
+<body class="magi-page">
+  <header class="title-bar ui-app-header">
+    <a class="brand" href="/"><span class="brand-mark">≋</span><span>STREETFLOW<small>CASPER / CAMERA OBSERVATIONS</small></span></a>
+    <nav class="component-nav" aria-label="MAGI components"><a href="/">MAGI</a><a href="/melchior/">Melchior ↗</a><a href="/balthasar/">Balthasar ↗</a></nav>
+    <span id="connection" role="status">Connecting…</span>
+  </header>
+  <main class="casper-layout">
+    <section class="casper-intro"><div><span class="eyebrow">THE EYES ON THE STREET</span><h1>Every queue has a place.</h1><p>Measurements from camera workers, organized by street and stoplight. Counts cover the configured camera region.</p></div><a href="/casper/calibration.html">Calibrate a camera ↗</a></section>
+    <div id="error" role="alert" hidden></div>
+    <section class="casper-summary" aria-label="Network summary"><div><span>WORLD</span><strong id="world">—</strong></div><div><span>VISIBLE VEHICLES</span><strong id="visible">—</strong></div><div><span>ESTIMATED QUEUE</span><strong id="queued">—</strong></div><div><span>AVAILABLE LANES</span><strong id="coverage">—</strong></div></section>
+    <section class="casper-panel">
+      <div class="ui-window-titlebar"><span class="ui-window-number">01</span><h2>Street observations</h2><span class="ui-window-category">TACO</span></div>
+      <div class="table-scroll"><table><thead><tr><th>Street / lane</th><th>Intersection</th><th>Stoplight</th><th>Camera</th><th>Visible</th><th>Queued</th><th>Crossings / window</th><th>Age</th><th>Status</th></tr></thead><tbody id="lanes"></tbody></table></div>
+      <p class="casper-note" id="note">Waiting for camera measurements.</p>
+    </section>
+    <p class="casper-note">Queued vehicles are estimated from image motion and dwell time. Physical speed is unavailable until calibrated. Casper supplies measurements; physical light control requires a controller adapter.</p>
+  </main>
+</body>
+</html>

@@ -4,26 +4,27 @@ using Streetflow.Traffic.Contracts;
 
 namespace Streetflow.Logistics;
 
-public sealed class TlcApiClient
+public sealed class TacoApiClient
 {
   private readonly HttpClient client;
   private readonly ConnectionStore connections;
-  private readonly TlcMapCache maps;
+  private readonly TacoMapCache maps;
 
-  public TlcApiClient(HttpClient client, ConnectionStore connections, TlcMapCache maps)
+  public TacoApiClient(HttpClient client, ConnectionStore connections, TacoMapCache maps)
   {
     this.client = client;
     this.connections = connections;
     this.maps = maps;
   }
 
-  public Task<TlcSession> SessionAsync(CancellationToken token) => GetAsync<TlcSession>("/api/v1/tlc/session", token);
-  public Task<TlcDeviceState[]> DevicesAsync(string id, CancellationToken token) => GetAsync<TlcDeviceState[]>(SessionPath(id) + "/devices", token);
+  public Task<TacoSession> SessionAsync(CancellationToken token) => GetAsync<TacoSession>("/api/v1/taco/session", token);
+  public Task<TacoDeviceState[]> DevicesAsync(string id, CancellationToken token) => GetAsync<TacoDeviceState[]>(SessionPath(id) + "/devices", token);
+  public Task<TacoTraffic> TrafficAsync(string id, CancellationToken token) => GetAsync<TacoTraffic>(SessionPath(id) + "/traffic", token);
 
-  public async Task<TlcMap> MapAsync(string id, CancellationToken token)
+  public async Task<TacoMap> MapAsync(string id, CancellationToken token)
   {
     string provider = connections.Get().BaseUrl;
-    TlcSession session = await SessionAsync(token);
+    TacoSession session = await SessionAsync(token);
     if (connections.Get().BaseUrl != provider || session.Id != id || session.WorldId is null || session.Revision is null)
     {
       throw new ApiException(409, "changed_session", "The provider's active session changed; refresh the connection");
@@ -32,13 +33,13 @@ public sealed class TlcApiClient
     await maps.Gate.WaitAsync(token);
     try
     {
-      TlcMap? cached = maps.Read(provider, session.WorldId, session.Revision);
+      TacoMap? cached = maps.Read(provider, session.WorldId, session.Revision);
       if (cached is not null)
       {
         return cached;
       }
 
-      TlcMap map = await GetAsync<TlcMap>(SessionPath(id) + "/map", token);
+      TacoMap map = await GetAsync<TacoMap>(SessionPath(id) + "/map", token);
       if (connections.Get().BaseUrl != provider || map.WorldId != session.WorldId || map.Revision != session.Revision)
       {
         throw new ApiException(409, "changed_world", "The provider or world changed while loading its map; refresh the connection");
@@ -53,12 +54,12 @@ public sealed class TlcApiClient
     }
   }
 
-  public async Task<TlcDeviceState> ControlAsync(string id, string deviceId, TlcDeviceCommand command, CancellationToken token)
+  public async Task<TacoDeviceState> ControlAsync(string id, string deviceId, TacoDeviceCommand command, CancellationToken token)
   {
     ValidateCommand(command);
     using HttpRequestMessage request = new(HttpMethod.Put, Address(SessionPath(id) + "/devices/" + Uri.EscapeDataString(deviceId)));
     request.Content = JsonContent.Create(command, options: JsonDefaults.Options);
-    return await SendAsync<TlcDeviceState>(request, token);
+    return await SendAsync<TacoDeviceState>(request, token);
   }
 
   private async Task<T> GetAsync<T>(string path, CancellationToken token)
@@ -84,29 +85,29 @@ public sealed class TlcApiClient
           // A provider may return a non-JSON error.
         }
 
-        throw new ApiException((int)response.StatusCode, error?.Code ?? "tlcapi_error", error?.Message ?? $"tlcapi returned HTTP {(int)response.StatusCode}");
+        throw new ApiException((int)response.StatusCode, error?.Code ?? "taco_error", error?.Message ?? $"taco returned HTTP {(int)response.StatusCode}");
       }
 
-      return await response.Content.ReadFromJsonAsync<T>(JsonDefaults.Options, token) ?? throw new ApiException(502, "invalid_tlcapi_response", "tlcapi returned an empty response");
+      return await response.Content.ReadFromJsonAsync<T>(JsonDefaults.Options, token) ?? throw new ApiException(502, "invalid_taco_response", "taco returned an empty response");
     }
     catch (HttpRequestException)
     {
-      throw new ApiException(502, "tlcapi_unavailable", "Cannot reach tlcapi. Check the server address and port in Connection.");
+      throw new ApiException(502, "taco_unavailable", "Cannot reach taco. Check the server address and port in Connection.");
     }
     catch (OperationCanceledException) when (!token.IsCancellationRequested)
     {
-      throw new ApiException(504, "tlcapi_timeout", "tlcapi did not respond before the request timeout");
+      throw new ApiException(504, "taco_timeout", "taco did not respond before the request timeout");
     }
     catch (JsonException)
     {
-      throw new ApiException(502, "invalid_tlcapi_response", "The connected server did not return the expected tlcapi JSON");
+      throw new ApiException(502, "invalid_taco_response", "The connected server did not return the expected taco JSON");
     }
   }
 
   private string Address(string path) => connections.Get().BaseUrl + path;
-  private static string SessionPath(string id) => "/api/v1/tlc/sessions/" + Uri.EscapeDataString(id);
+  private static string SessionPath(string id) => "/api/v1/taco/sessions/" + Uri.EscapeDataString(id);
 
-  private static void ValidateCommand(TlcDeviceCommand command)
+  private static void ValidateCommand(TacoDeviceCommand command)
   {
     bool valid = command.Action == "on" || command.Action == "off" || command.Action == "red" || command.Action == "green" || command.Action == "yellow" || command.Action == "red-yellow";
     if (!valid || string.IsNullOrWhiteSpace(command.WorldId) || string.IsNullOrWhiteSpace(command.Revision))

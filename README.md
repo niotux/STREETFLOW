@@ -2,11 +2,11 @@
 
 STREETFLOW contains the three MAGI components and a shared web frontend:
 
-- **Melchior / Streetflow logistics:** controls traffic lights through tlcapi. The current server provides manual access; automatic management remains future work.
-- **Casper / Detector:** will turn camera footage into traffic observations using detection, tracking, and lane/camera calibration.
+- **Melchior / Streetflow logistics:** controls traffic lights through taco. The current server provides manual access; automatic management remains future work.
+- **Casper / Camera data:** receives measurements from Raspberry Pi camera workers and serves per-street, lane, and stoplight traffic through TACO. Detection and tracking run on the Pis.
 - **Balthasar / Simulator:** wraps SUMO to run traffic, expose observations, and provide a browser inspector and experiment controls.
 
-The separate **MAGI frontend** starts on a component selector with pages for Melchior and Balthasar. Casper is disabled for now.
+The separate **MAGI frontend** opens pages for Melchior, Balthasar, and Casper, including a camera calibration editor. See the [Casper and Pi quick start](components/detector/README.md).
 
 The simulator on `better-simulation` uses **C# / .NET 10, SUMO 1.28, PostgreSQL, and Docker Compose**, with a plain HTML/JavaScript browser inspector. It also runs headless. Windows, Linux, and macOS are target platforms; Linux native execution and Linux containers have been exercised. Dataset capacity depends on available resources. Existing legacy tools are retained.
 
@@ -33,9 +33,9 @@ curl http://localhost:8080/health
 curl http://localhost:8080/api/v1/projects
 ```
 
-Put projects in the `projects/` folder (start with `cp -r experiments/drafts/* projects/`). Open **http://localhost:8090** and choose **Balthasar**, pick a project in Loader, then load and start traffic. Choose **Melchior** from the landing page to select a running or paused city run and manually control its lights. In Compose, Melchior's tlcapi address is `http://simulator`, port `8080`. Drag the map to pan and scroll to zoom. The legacy inspector is at `/balthasar/legacy-inspector.html`; the simulator retains its standalone UI on port 8080.
+Put projects in the `projects/` folder (start with `cp -r experiments/drafts/* projects/`). Open **http://localhost:8090** and choose **Balthasar**, pick a project in Loader, then load and start traffic. Choose **Melchior** from the landing page to select a running or paused city run and manually control its lights. In Compose, Melchior's taco address is `http://simulator`, port `8080`. Drag the map to pan and scroll to zoom. The legacy inspector is at `/balthasar/legacy-inspector.html`; the simulator retains its standalone UI on port 8080.
 
-See the [Melchior guide](components/streetflow/README.md), [frontend guide](components/frontend/README.md), and [tlcapi contract](docs/components/contracts/tlcapi.md). Melchior's API is on port 8081 and the frontend on port 8090. Set `SIMULATOR_PORT`, `LOGISTICS_PORT`, and `FRONTEND_PORT` to change host ports.
+See the [Melchior guide](components/streetflow/README.md), [frontend guide](components/frontend/README.md), and [taco contract](docs/components/contracts/taco.md). Melchior's API is on port 8081 and the frontend on port 8090. Set `SIMULATOR_PORT`, `LOGISTICS_PORT`, and `FRONTEND_PORT` to change host ports.
 
 Only Docker with Compose and a browser are required to run it; .NET and SUMO are inside the containers; PostgreSQL recording is optional. See the [city run guide](components/simulator/README.md) for the projects folder, replay, limits, and troubleshooting; the [legacy backend guide](docs/components/simulator/backend.md) describes observations and recording. The API is at `http://localhost:8080/api/v1`; OpenAPI is at `/openapi/v1.json`. Projects stay in `projects/` on the host (set `STREETFLOW_PROJECTS_DIR` in `.env` to use another folder). Docker stores run snapshots and extracted ZIPs in the simulator volume; no database is needed to use the project files.
 
@@ -62,6 +62,6 @@ The existing executable requires a C++20 compiler, CMake, and Linux/POSIX facili
 
 ## Current design decisions
 
-Use SUMO for vehicle and junction behavior. Keep Balthasar around one SUMO process, Melchior in a separate service for traffic light control, and the MAGI frontend in its own server. Simulated observations remain interchangeable with detector output. Manual tlcapi commands are implemented; automatic management remains future work.
+Use SUMO for vehicle and junction behavior. Keep Balthasar around one SUMO process, Melchior in a separate service for traffic light control, and the MAGI frontend in its own server. Simulated observations remain interchangeable with detector output. Manual taco commands are implemented; automatic management remains future work.
 
 The backend implements run management, ideal simulated detector observations, inspection APIs, trip and checkpoint records, persistent history, and manual traffic light control through Melchior. Scenario calibration, detector error profiles, and automatic management remain later work. Plans are under [`docs/active/plans/`](docs/active/plans/); settled details are under [`docs/components/`](docs/components/).

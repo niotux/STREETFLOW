@@ -1,5 +1,8 @@
 <Solution>
   <Folder Name="/components/" />
+  <Folder Name="/components/detector/">
+    <Project Path="components/detector/Streetflow.Casper/Streetflow.Casper.csproj" />
+  </Folder>
   <Folder Name="/components/contracts/">
     <Project Path="components/contracts/Streetflow.Traffic.Contracts/Streetflow.Traffic.Contracts.csproj" />
   </Folder>

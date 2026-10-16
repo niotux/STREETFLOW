@@ -1,30 +1,13 @@
-# Traffic detector product
+# Casper camera data service
 
-The detector converts real camera video into traffic observations that Streetflow can consume. It is a separate product and process, with the same [output contract](../contracts/traffic-observations.md) that the simulator implements for Streetflow tests.
+Raspberry Pi workers own video capture, inference, local tracking, camera polygons, counting lines, and image-motion queue estimates. They send UTC-window measurements to Casper. Casper owns camera-to-lane, street, intersection, and stoplight mappings and serves the latest state through [TACO](../contracts/taco.md).
 
-## Processing responsibilities
+Melchior connects to Casper or Balthasar using the same discovery/map/device/traffic routes. TACO is a provider interface, not another server. Casper supplies measurements with unknown lamp states and no signal controller adapter.
 
-```text
-Timestamped camera frames
-    -> vehicle detection
-    -> local tracking across frames
-    -> assignment to calibrated lane regions
-    -> crossing events and windowed measurements
-    -> traffic observation output
-```
+CameraObservation uses UTC windows; TrafficObservation retains numeric simulation windows. The common TacoTraffic response identifies its time basis and provides lane-specific timestamps, freshness, and measurement method. Camera queue estimates use image displacement/dwell, not calibrated physical speed. Balthasar's city TACO adapter supplies complete lane snapshot counts when available; queue/crossing/speed remain null because that snapshot has no camera calibration. These methods must not be confused with equivalent detection accuracy.
 
-A model such as YOLO is a candidate for vehicle detection, not a complete traffic-measurement system. Counting distinct crossings needs tracking and a counting line; lane membership needs configured regions; reliable physical speed estimates need geometry calibration and timing. The detector specification must distinguish what each camera can actually observe.
+Each lane has one authoritative camera to avoid blindly summing overlapping feeds. Unavailable and stale measurements are null; measured empty regions are zero. Current state is bounded and not persisted; a Casper restart creates a new consumer session.
 
-Camera configuration includes intersection/approach/lane mappings, visible regions, counting lines, time synchronization, supported classes, and output frequency. Quality fields describe coverage, missing data, and measurement status. Track IDs are local to a camera session and must not become a promise of city-wide vehicle identification.
+The initial worker uses CPU OpenCV DNN with YOLOX Nano, a simple IoU tracker, and metadata-only delivery. It supports USB, RTSP, and recorded video. Physical speed and cross-camera identity are not inferred. Traffic decisions and physical light safety remain outside Casper.
 
-## How the simulator relates to the detector
-
-Initially, the simulator generates measurements from SUMO vehicle state inside configured virtual camera regions. That tests Streetflow's ability to use detector output. It does **not** evaluate detection accuracy, tracking accuracy, occlusion handling, or YOLO performance.
-
-Evaluate the detector separately with real labeled video or a later dedicated synthetic-video system. Recorded detector observations may be replayed to test Streetflow's data handling; aggregate observations alone are insufficient to reconstruct the original road traffic exactly.
-
-## Decisions before a detector specification
-
-Choose camera placement and resolution, required vehicle classes, tracking/counting accuracy, latency, supported hardware, day/night/weather conditions, and what data may be retained. Choose the AI model and stack after establishing those requirements. Existing simulator stack constraints do not select the detector's implementation.
-
-Future code location: [components/detector](README.md).
+See the [implementation, calibration, demo, API, and testing guide](../../../components/detector/README.md).

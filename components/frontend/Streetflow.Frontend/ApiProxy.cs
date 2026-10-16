@@ -12,6 +12,8 @@ public sealed class ApiProxy
   }
 
   public Task SimulatorAsync(HttpContext context) => ForwardAsync(context, options.SimulatorBaseUrl, context.Request.Path.Value!);
+  public Task CasperAsync(HttpContext context) => ForwardAsync(context, options.CasperBaseUrl,
+    "/api/v1/taco" + context.Request.Path.Value!["/casper-api".Length..]);
 
   public Task LogisticsAsync(HttpContext context)
   {

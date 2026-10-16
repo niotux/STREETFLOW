@@ -1,0 +1,11 @@
+{
+  "world_id": "hackathon-intersection",
+  "revision": "network-1",
+  "detector_config_revision": "camera-1",
+  "stale_after_seconds": 10,
+  "maximum_window_seconds": 30,
+  "lanes": [{"id": "north-1", "shape": [{"x": 0, "y": 100}, {"x": 0, "y": 0}]}],
+  "devices": [{"id": "north-light", "label": "North stoplight", "x": 0, "y": 0, "lane_ids": ["north-1"]}],
+  "lane_mappings": [{"lane_id": "north-1", "street_id": "north-street", "intersection_id": "junction-1", "approach_id": "northbound"}],
+  "cameras": [{"id": "pi-01", "intersection_id": "junction-1", "token_environment": "CASPER_DEMO_CAMERA_TOKEN", "lane_ids": ["north-1"]}]
+}

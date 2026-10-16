@@ -91,7 +91,7 @@ Use the returned run ID with `GET /api/v1/city-runs/{id}`, `/map`, or `/snapshot
 
 ## Physical traffic-light control
 
-Logistics now uses the [physical-device tlcapi](../../docs/components/contracts/tlcapi.md), which exposes the map and authored physical controls. Both project formats accept [traffic-lights.json](../../docs/components/simulator/traffic-light-devices.md). The simulator map displays one marker per configured device. The raw signal API below remains a technical interface for compatibility; it is not the Logistics control surface.
+Logistics now uses the [physical-device taco](../../docs/components/contracts/taco.md), which exposes the map and authored physical controls. Both project formats accept [traffic-lights.json](../../docs/components/simulator/traffic-light-devices.md). The simulator map displays one marker per configured device. The raw signal API below remains a technical interface for compatibility; it is not the Logistics control surface.
 
 ## External signal control
 

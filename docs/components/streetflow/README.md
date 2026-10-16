@@ -1,8 +1,8 @@
 # Melchior / Streetflow logistics
 
-Melchior is the component responsible for traffic light control. Its separate .NET 10 server integrates with [tlcapi](../contracts/tlcapi.md) and provides manual web controls. Automatic management remains future work. See the [implementation guide](../../../components/streetflow/README.md) and [MAGI frontend guide](../../../components/frontend/README.md).
+Melchior is the component responsible for traffic light control. Its separate .NET 10 server integrates with [taco](../contracts/taco.md) and provides manual web controls. Automatic management remains future work. See the [implementation guide](../../../components/streetflow/README.md) and [MAGI frontend guide](../../../components/frontend/README.md).
 
-The MAGI frontend opens on a component selector: Melchior for logistics, Balthasar for the existing simulator studio, and Casper as a disabled future detector. Melchior saves a configurable provider URL, automatically discovers its active session and configuration revision, caches the world map, reads physical-device states, and forwards revision-bound commands. The backend discovers world changes even while the page is closed. No SUMO controller IDs or movement indices are exposed through the physical-device tlcapi. Balthasar owns simulation lifecycle, engine serialization, validation, and applied-state readback. Melchior does not depend on simulator implementation classes or SUMO.
+The MAGI frontend opens Melchior, Balthasar, and Casper. Melchior saves a configurable TACO provider URL, discovers its active session/world, caches map geometry, reads traffic and physical-device states, and forwards revision-bound commands. Casper provides camera traffic but unknown lamp states; its controls are disabled. Balthasar provides simulation state and signal control. Melchior does not depend on SUMO implementation classes.
 
 ## Requirements already established
 
@@ -14,9 +14,9 @@ The MAGI frontend opens on a component selector: Melchior for logistics, Balthas
 
 ## Future decisions
 
-A compatible Casper provider can replace the simulator at the same configurable tlcapi connection. A detector and physical controller adapter are outside this milestone. The [traffic-observation contract](../contracts/traffic-observations.md) remains available for future traffic interpretation.
+Casper can replace Balthasar at the configured TACO connection. The selected stoplight displays visible counts and image-motion queue estimates, or unavailable when unsupported/stale. A physical controller adapter and automated traffic decisions remain future work. See [Casper](../detector/README.md).
 
-Before autonomous control, define allowed phases/transitions, observations, decision cadence, conflict protection, clearance timings, stale-data handling, fallback behavior, and physical-controller integration. Manual tlcapi commands currently set lamp colors directly; the operator supplies their sequence.
+Before autonomous control, define allowed phases/transitions, observations, decision cadence, conflict protection, clearance timings, stale-data handling, fallback behavior, and physical-controller integration. Manual taco commands currently set lamp colors directly; the operator supplies their sequence.
 
 Define success metrics and reproducible comparison against a baseline. Navigation and route guidance are outside the current manual-controller milestone.
 

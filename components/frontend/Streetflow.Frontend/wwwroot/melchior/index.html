@@ -19,14 +19,14 @@
   <div id="error" class="logistics-error" role="alert" hidden></div>
   <main class="logistics-layout">
     <section class="control-panel" aria-labelledby="connection-title">
-      <div class="ui-window-titlebar"><span class="ui-window-number">01</span><h2 id="connection-title">Connection</h2><span class="ui-window-category">TLCAPI</span></div>
+      <div class="ui-window-titlebar"><span class="ui-window-number">01</span><h2 id="connection-title">Connection</h2><span class="ui-window-category">TACO</span></div>
       <div class="ui-window-body">
         <form id="connection-form">
           <label for="target-host">Server address</label><input id="target-host" type="url" required placeholder="http://localhost" aria-describedby="connection-help">
           <div class="connection-fields"><div><label for="target-port">Port</label><input id="target-port" type="number" required min="1" max="65535" placeholder="8080"></div></div>
           <button type="submit" class="primary">Save connection ↗</button>
         </form>
-        <p id="connection-help" class="status-note">The address is reached from Melchior's server. In Docker, use <code>http://simulator</code> and port <code>8080</code>. A compatible Casper service can be connected here later.</p>
+        <p id="connection-help" class="status-note">The address is reached from Melchior's server. In Docker, use <code>http://simulator</code> or <code>http://casper</code>, port <code>8080</code>. Native Casper uses port <code>8082</code>.</p>
         <div class="section-divider"></div>
         <label for="run">Active session</label><select id="run" disabled><option value="">Connect to discover runs</option></select>
         <button id="refresh-runs" type="button">Refresh connection ↻</button>
@@ -48,6 +48,7 @@
         <label for="signal-filter">Find a device</label><input id="signal-filter" class="signal-filter" type="search" placeholder="Device name or lane ID">
         <label for="controller">Physical device</label><select id="controller" disabled><option value="">No physical devices configured</option></select>
         <p id="signal-summary" class="status-note" role="status">Select a run to begin.</p>
+        <p id="traffic-summary" class="status-note" role="status">Waiting for traffic measurements.</p>
         <div id="switchboard" hidden>
           <div class="controller-toolbar"><input id="controller-enabled" type="checkbox" role="switch"><label for="controller-enabled">Device enabled</label></div>
           <div id="controller-state" class="signal-state"></div>

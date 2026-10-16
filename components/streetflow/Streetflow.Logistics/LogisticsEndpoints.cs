@@ -9,10 +9,11 @@ public static class LogisticsEndpoints
     app.MapGet("/health", () => new HealthResponse("ok", "Melchior", "manual"));
     RouteGroupBuilder api = app.MapGroup("/api/v1");
     api.MapGet("/connection", (ConnectionStore connections) => connections.Get());
-    api.MapPut("/connection", (TlcConnection request, ConnectionStore connections, CancellationToken token) => connections.SaveAsync(request, token));
-    api.MapGet("/session", (TlcApiClient client, CancellationToken token) => client.SessionAsync(token));
-    api.MapGet("/sessions/{id}/map", (string id, TlcApiClient client, CancellationToken token) => client.MapAsync(id, token));
-    api.MapGet("/sessions/{id}/devices", (string id, TlcApiClient client, CancellationToken token) => client.DevicesAsync(id, token));
-    api.MapPut("/sessions/{id}/devices/{deviceId}", (string id, string deviceId, TlcDeviceCommand request, TlcApiClient client, CancellationToken token) => client.ControlAsync(id, deviceId, request, token));
+    api.MapPut("/connection", (TacoConnection request, ConnectionStore connections, CancellationToken token) => connections.SaveAsync(request, token));
+    api.MapGet("/session", (TacoApiClient client, CancellationToken token) => client.SessionAsync(token));
+    api.MapGet("/sessions/{id}/map", (string id, TacoApiClient client, CancellationToken token) => client.MapAsync(id, token));
+    api.MapGet("/sessions/{id}/devices", (string id, TacoApiClient client, CancellationToken token) => client.DevicesAsync(id, token));
+    api.MapGet("/sessions/{id}/traffic", (string id, TacoApiClient client, CancellationToken token) => client.TrafficAsync(id, token));
+    api.MapPut("/sessions/{id}/devices/{deviceId}", (string id, string deviceId, TacoDeviceCommand request, TacoApiClient client, CancellationToken token) => client.ControlAsync(id, deviceId, request, token));
   }
 }

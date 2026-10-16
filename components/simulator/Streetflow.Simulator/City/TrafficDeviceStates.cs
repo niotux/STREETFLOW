@@ -6,14 +6,14 @@ namespace Streetflow.Simulator.City;
 
 public static class TrafficDeviceStates
 {
-  public static TlcDeviceState[] Read(CityProject project, SignalState[] signals)
+  public static TacoDeviceState[] Read(CityProject project, SignalState[] signals)
   {
     if (project.TrafficLights is null)
     {
       return [];
     }
 
-    TlcDeviceState[] result = new TlcDeviceState[project.TrafficLights.Devices.Length];
+    TacoDeviceState[] result = new TacoDeviceState[project.TrafficLights.Devices.Length];
     for (int index = 0; index < result.Length; index++)
     {
       ProjectTrafficDevice device = project.TrafficLights.Devices[index];
@@ -29,7 +29,7 @@ public static class TrafficDeviceStates
         break;
       }
 
-      result[index] = new TlcDeviceState(device.Id, state);
+      result[index] = new TacoDeviceState(device.Id, state);
     }
 
     return result;

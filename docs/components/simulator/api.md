@@ -75,9 +75,9 @@ The client selects a live or recorded traffic source during configuration. Real 
 
 Return missing measurements as unavailable/null values, not a successful zero-traffic observation. Include supported fields in the catalog so a client does not assume every camera provides speed, vehicle class, or complete turning counts.
 
-## Manual traffic light control (tlcapi)
+## Manual traffic light control (taco)
 
-City runs implement [tlcapi v1](../contracts/tlcapi.md): `GET /api/v1/city-runs/{id}/signals` reads controller states and `PUT /api/v1/city-runs/{id}/signals/{signalId}` sets a lamp action, optionally scoped by `link_index`. Geometry and movement indices are in the run map's `signal_points`. Commands require a running or paused run and return applied state without advancing simulation time.
+City runs implement [taco v1](../contracts/taco.md): `GET /api/v1/city-runs/{id}/signals` reads controller states and `PUT /api/v1/city-runs/{id}/signals/{signalId}` sets a lamp action, optionally scoped by `link_index`. Geometry and movement indices are in the run map's `signal_points`. Commands require a running or paused run and return applied state without advancing simulation time.
 
 New city runs start with lights off. Melchior supplies a separate server and manual UI for these commands. Direct lamp writes do not impose phase conflict checks or clearance intervals; automatic management remains future work. See [Melchior](../streetflow/README.md) and the [running guide](../../../components/streetflow/README.md).
 

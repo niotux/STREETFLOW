@@ -1,0 +1,17 @@
+{
+  "detector_id": "pi-01",
+  "intersection_id": "junction-1",
+  "network_revision": "network-1",
+  "detector_config_revision": "camera-1",
+  "token_environment": "CASPER_DEMO_CAMERA_TOKEN",
+  "window_seconds": 2,
+  "queue_duration_seconds": 2,
+  "stationary_radius": 0.008,
+  "maximum_tracking_gap_seconds": 1.5,
+  "lanes": [{
+    "lane_id": "north-1",
+    "approach_id": "northbound",
+    "polygon": [[0.05, 0.1], [0.95, 0.1], [0.95, 0.95], [0.05, 0.95]],
+    "counting_line": [[0.05, 0.8], [0.95, 0.8]]
+  }]
+}

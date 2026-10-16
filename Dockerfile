@@ -6,6 +6,7 @@ RUN dotnet restore Streetflow.slnx --locked-mode
 RUN dotnet publish components/simulator/Streetflow.Simulator -c Release --no-restore -o /out
 RUN dotnet publish components/streetflow/Streetflow.Logistics -c Release --no-restore -o /out-logistics
 RUN dotnet publish components/frontend/Streetflow.Frontend -c Release --no-restore -o /out-frontend
+RUN dotnet publish components/detector/Streetflow.Casper -c Release --no-restore -o /out-casper
 
 FROM build AS test
 USER root
@@ -46,3 +47,8 @@ FROM web-runtime AS frontend
 COPY --from=build /out-frontend/ ./
 USER app
 ENTRYPOINT ["dotnet", "Streetflow.Frontend.dll"]
+
+FROM web-runtime AS casper
+COPY --from=build /out-casper/ ./
+USER app
+ENTRYPOINT ["dotnet", "Streetflow.Casper.dll"]

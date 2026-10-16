@@ -5,7 +5,7 @@ using Streetflow.Logistics;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 LogisticsOptions options = new()
 {
-  TlcApiBaseUrl = "http://localhost:8080",
+  TacoApiBaseUrl = "http://localhost:8080",
   ConnectionFile = ".data/logistics/connection.json",
   RequestTimeoutSeconds = 15,
   DiscoveryIntervalMilliseconds = 1500
@@ -14,9 +14,9 @@ builder.Configuration.GetSection("Logistics").Bind(options);
 options.ConnectionFile = Path.GetFullPath(options.ConnectionFile, builder.Environment.ContentRootPath);
 builder.Services.AddSingleton(options);
 builder.Services.AddSingleton<ConnectionStore>();
-builder.Services.AddSingleton<TlcMapCache>();
+builder.Services.AddSingleton<TacoMapCache>();
 builder.Services.AddHostedService<WorldDiscoveryService>();
-builder.Services.AddHttpClient<TlcApiClient>(client => client.Timeout = TimeSpan.FromSeconds(options.RequestTimeoutSeconds));
+builder.Services.AddHttpClient<TacoApiClient>(client => client.Timeout = TimeSpan.FromSeconds(options.RequestTimeoutSeconds));
 builder.Services.ConfigureHttpJsonOptions(json =>
 {
   json.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;

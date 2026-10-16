@@ -8,7 +8,7 @@ The new simulator targets **Windows, Linux, and macOS**. Its scenario format acc
 
 | Document | What it defines |
 | --- | --- |
-| [Physical traffic-light devices](traffic-light-devices.md) | Shared infrastructure mapping for both traffic formats, physical-only tlcapi, and map revisions |
+| [Physical traffic-light devices](traffic-light-devices.md) | Shared infrastructure mapping for both traffic formats, physical-only taco, and map revisions |
 | [Experiment project format](experiment-project-format.md) | Accepted city files, continuous seeded traffic generation, and run controls |
 | [Transformer Routes](transformer-routes.md) | Implemented version 2 weights model, four-way test project, inspection, and current limits; version 1 remains Edge Population |
 | [Traffic route model handoff](../../active/ideas/simulator/traffic-route-model-handoff.md) | Context and user requirements for a future route model; mathematics and implementation remain undecided |

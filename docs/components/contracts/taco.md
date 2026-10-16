@@ -1,16 +1,24 @@
-# Traffic Light Control API: physical devices
+# TACO: traffic observations and physical devices
 
-The provider-neutral tlcapi contract publishes the active world, its map, and explicitly configured physical traffic-light devices. The simulator implements it now. A future infrastructure gateway can implement the same interface without SUMO or simulator run APIs. Detection observations remain a separate contract.
+TACO is the provider-neutral interface for an active world, its map, physical stoplights, and traffic measurements. Balthasar and Casper implement it; Melchior selects either provider by URL. TACO is an interface exposed by each provider, not a separate service. Pi-to-Casper ingestion is a separate authenticated contract.
 
-Public routes are relative to the configured provider URL and start with `/api/v1/tlc`. JSON uses `snake_case`. Shared transport types are `TlcSession`, `TlcMap`, `TlcDevice`, `TlcDeviceState`, and `TlcDeviceCommand` in `components/contracts/Streetflow.Traffic.Contracts`.
+Public routes are relative to the configured provider URL and start with `/api/v1/taco`. JSON uses `snake_case`. Shared transport types are `TacoSession`, `TacoMap`, `TacoDevice`, `TacoDeviceState`, and `TacoDeviceCommand` in `components/contracts/Streetflow.Traffic.Contracts`.
 
 ## Discovery and map
 
 | Request | Result |
 | --- | --- |
-| `GET /api/v1/tlc/session` | `{id, world_id, revision, project_id, state}` for the active session |
-| `GET /api/v1/tlc/sessions/{id}/map` | `{world_id, revision, attribution, coordinate_system, lanes, devices}` |
-| `GET /api/v1/tlc/sessions/{id}/devices` | Array of `{id, state}` for configured physical devices |
+| `GET /api/v1/taco/session` | `{id, world_id, revision, project_id, state}` for the active session |
+| `GET /api/v1/taco/sessions/{id}/map` | `{world_id, revision, attribution, coordinate_system, lanes, devices}` |
+| `GET /api/v1/taco/sessions/{id}/devices` | Array of `{id, state}` for configured physical devices |
+| `GET /api/v1/taco/capabilities` | Traffic, signal-control support, and source |
+| `GET /api/v1/taco/sessions/{id}/traffic` | Latest lane counts with street/intersection/stoplight mapping, timestamps, status, and measurement method |
+
+Traffic uses shared TacoTraffic/TacoLaneTraffic types. Each response carries session/world/revision, source, time_basis, and sequence. Camera lanes preserve observed_at and age_seconds independently; stale/offline values are null. Camera queue estimates use image motion and dwell. Balthasar city snapshots expose visible lane counts only when complete, with unsupported queue/crossing/speed null and method simulation_lane_snapshot. Street/intersection mapping for those city snapshots remains explicitly unmapped; no camera geometry is inferred.
+
+Casper advertises signal_control=false and returns unknown device states. Physical commands return 501 until a controller adapter exists. Synthetic camera demo data uses measurement_method=synthetic_demo and is labelled in both frontends.
+
+This rename changes public routes from /api/v1/tlc to /api/v1/taco, .NET Tlc types to Taco, and Logistics__TlcApiBaseUrl to Logistics__TacoApiBaseUrl. Update callers/configuration together; old routes are not aliases. Saved provider addresses retain their format.
 
 With no active session, discovery returns null identity fields and `state: "none"`. The simulator exposes running and paused city sessions. `project_id` is explanatory simulator context; commands and map pairing use session ID, world ID, and infrastructure revision.
 
@@ -20,7 +28,7 @@ The current map inventory is static for a configuration revision. Device state i
 
 ## Commands
 
-`PUT /api/v1/tlc/sessions/{id}/devices/{deviceId}` accepts:
+`PUT /api/v1/taco/sessions/{id}/devices/{deviceId}` accepts:
 
 ```json
 {
@@ -50,6 +58,6 @@ Logistics browser requests use `/melchior-api/session` and `/melchior-api/sessio
 
 ## Migration
 
-The former tlcapi integration used simulator `/city-runs/.../signals` endpoints and raw signal indices. Logistics now uses `/tlc/.../devices` exclusively. Technical city-run signal endpoints remain for existing simulator diagnostics and tests; they are not the physical-device tlcapi surface.
+The former taco integration used simulator `/city-runs/.../signals` endpoints and raw signal indices. Logistics now uses `/taco/.../devices` exclusively. Technical city-run signal endpoints remain for existing simulator diagnostics and tests; they are not the physical-device taco surface.
 
 Both project formats accept [physical-device mappings](../simulator/traffic-light-devices.md). Projects without mappings still provide their roads but publish no inferred hardware. Edit the registered project folder, refresh from disk, and load a new simulation to apply a mapping. Saved run snapshots are preserved.

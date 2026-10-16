@@ -1,0 +1,17 @@
+.casper-layout{max-width:1500px;margin:auto;padding:38px 28px;color:#dce4ec}
+.casper-intro{display:flex;justify-content:space-between;align-items:center;gap:24px;margin-bottom:30px}
+.casper-intro h1{font-size:clamp(28px,4vw,48px);margin:12px 0}.casper-intro p{color:#9aabba;max-width:680px;line-height:1.6}
+.casper-intro a{color:#9adacb;white-space:nowrap}.casper-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
+.casper-summary>div,.casper-panel{background:#101922;border:1px solid #293642;border-radius:8px}
+.casper-summary>div{padding:22px}.casper-summary span{display:block;font-size:11px;letter-spacing:.1em;color:#8ea2b4}
+.casper-summary strong{display:block;margin-top:12px;font-size:clamp(18px,2.4vw,32px);overflow-wrap:anywhere}
+.table-scroll{overflow:auto}table{border-collapse:collapse;width:100%;text-align:left;font-size:13px}
+th,td{padding:18px 15px;border-bottom:1px solid #263440;white-space:nowrap}th{color:#8fa6b9;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+td small{display:block;color:#8fa6b9;margin-top:6px}.casper-note{font-size:13px;line-height:1.6;color:#91a5b7;padding:10px 18px}
+[data-status=ok]{color:#83dbc2}[data-status=partial]{color:#edc483}[data-status=unavailable],#error{color:#ee9d9d}
+#error{padding:18px;background:#281b20;margin-bottom:20px;border-radius:6px}
+.calibration-tools{display:flex;gap:14px;flex-wrap:wrap;align-items:end;margin:20px 0}.calibration-tools label{display:grid;gap:8px}
+.calibration-tools input,.calibration-tools select,.calibration-tools button{padding:10px;background:#172632;color:#dce4ec;border:1px solid #394e5e;border-radius:4px}
+#calibration-canvas{width:100%;max-height:65vh;object-fit:contain;background:#0b1219;border:1px solid #394e5e;cursor:crosshair}
+#config-json{width:100%;min-height:240px;box-sizing:border-box;background:#0b1219;color:#c7e5dd;padding:14px;border:1px solid #394e5e}
+@media(max-width:800px){.casper-summary{grid-template-columns:repeat(2,1fr)}.casper-intro{align-items:start;flex-direction:column}.casper-layout{padding:24px 14px}}

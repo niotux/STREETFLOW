@@ -35,11 +35,11 @@ Device IDs must be unique, nonempty identifiers of at most 128 characters. Label
 
 A device currently binds to one SUMO controller. Its movements change together in one write, serialized with simulation steps. Other devices' movements retain their current states. `off` restores each mapped movement's original priority state; differing `o`/`O` values still represent one physical device being off.
 
-The bindings are simulator-side adapter data. They do not appear in the public tlcapi map or device states. The schema is [traffic-lights.schema.json](../../active/ideas/simulator/project-format-v2-schemas/traffic-lights.schema.json); additional network and reference checks run in the project loader.
+The bindings are simulator-side adapter data. They do not appear in the public taco map or device states. The schema is [traffic-lights.schema.json](../../active/ideas/simulator/project-format-v2-schemas/traffic-lights.schema.json); additional network and reference checks run in the project loader.
 
 ## Physical inventory and compatibility
 
-SUMO movements are not a surveyed physical-device inventory. The loader does not invent physical devices from lane count, movement count, or SUMO controller IDs. A project without this file still loads and runs but exposes zero physical devices through tlcapi. Its road geometry remains available. Technical simulator signal APIs remain for compatibility and diagnostics; Logistics uses the physical-device API.
+SUMO movements are not a surveyed physical-device inventory. The loader does not invent physical devices from lane count, movement count, or SUMO controller IDs. A project without this file still loads and runs but exposes zero physical devices through taco. Its road geometry remains available. Technical simulator signal APIs remain for compatibility and diagnostics; Logistics uses the physical-device API.
 
 The synthetic four-way has four explicitly authored devices, one per approach, each covering three turning movements. The mapping belongs to the map and is shared by all three model formats. Existing `*-devices` packages remain as compatibility copies; the canonical four-way packages now include the same mapping:
 
@@ -69,7 +69,7 @@ For a package that needs a new inventory:
 1. Edit the project folder directly. Use a separate folder and project ID only if you want to keep both variants in the list. Saved runs already preserve their original input snapshots.
 2. Author `traffic-lights.json` using the format above and reference it with `traffic_lights_file`. Keep a world's identity stable when it represents the same infrastructure; the infrastructure revision changes when its mapping changes.
 3. Click **Refresh list** in Loader. Validation includes lane coverage and controller/link ownership. Fix any reported mapping errors in the same folder and refresh again.
-4. Create/load a new simulation from the new project. Check its map's `traffic_devices` array, then the active TLC session map's `devices` array. Each device's `lane_ids` must resolve to the incoming lane geometry in that map.
+4. Create/load a new simulation from the new project. Check its map's `traffic_devices` array, then the active TACO session map's `devices` array. Each device's `lane_ids` must resolve to the incoming lane geometry in that map.
 5. Select a device in Logistics, command a state, and verify readback and the simulator marker. All mapped movements change together. Restarting an earlier run uses its archived package, so it does not pick up this migration.
 
 ### Podu Roș inventory requirements
@@ -84,7 +84,7 @@ The imported network provides ten SUMO controllers and 81 movement markers. Thos
 
 The loader checks that declared incoming lanes exactly match the mapped movements and rejects overlapping controller/link assignments. It does not require every network movement to have a device, so an inventory review must separately account for unmapped movements. Neither valid references nor a successful import establishes a surveyed or conflict-free control plan. Timing plans and automatic phase control are separate from this mapping.
 
-The public TLC map exposes incoming `lane_ids`, enabling one marker to be linked to several controlled lanes. It does not expose outgoing lanes, turn geometry, road names, or the private SUMO bindings. Turn-specific UI highlighting would require an extended public contract.
+The public TACO map exposes incoming `lane_ids`, enabling one marker to be linked to several controlled lanes. It does not expose outgoing lanes, turn geometry, road names, or the private SUMO bindings. Turn-specific UI highlighting would require an extended public contract.
 
 ## World identity and replay
 
@@ -96,4 +96,4 @@ The device file participates in project revisions and is copied into saved run s
 
 Both maps draw one marker per configured physical device. The simulator map remains read-only for light control. Logistics offers one set of controls per device and does not expose per-lane or per-movement commands.
 
-See [tlcapi](../contracts/tlcapi.md) for discovery, readback, commands, and automatic switching.
+See [taco](../contracts/taco.md) for discovery, readback, commands, and automatic switching.

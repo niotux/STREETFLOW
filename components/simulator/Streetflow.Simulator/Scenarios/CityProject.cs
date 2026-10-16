@@ -25,7 +25,7 @@ public sealed class CityProject
   public ProjectTrafficLights? TrafficLights { get; init; }
   public string WorldId => TrafficLights?.WorldId ?? Manifest.Id;
   public string WorldRevision { get; init; } = "";
-  public TlcDevice[] TrafficDevices => TrafficDeviceMapping.Read(this);
+  public TacoDevice[] TrafficDevices => TrafficDeviceMapping.Read(this);
   public ProjectTerminal[] Terminals { get; init; } = [];
 
   public TerminalMapPoint[] TerminalPoints => TerminalMapGeometry.Read(this);

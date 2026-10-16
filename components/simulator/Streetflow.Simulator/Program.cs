@@ -164,7 +164,7 @@ static void ConfigurePipeline(WebApplication app, string sharedUiRoot)
   app.MapSimulatorApi();
   app.MapProjectApi();
   app.MapCityRunApi();
-  app.MapTlcApi();
+  app.MapTacoApi();
 }
 
 public partial class Program;

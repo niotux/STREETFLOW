@@ -11,7 +11,7 @@ public sealed class WorldDiscoveryService(IServiceScopeFactory scopes, Connectio
       throw new InvalidOperationException("World discovery interval must be positive");
     }
 
-    TlcSession? previous = null;
+    TacoSession? previous = null;
     string? previousProvider = null;
     string? lastFailure = null;
     while (!stoppingToken.IsCancellationRequested)
@@ -19,9 +19,9 @@ public sealed class WorldDiscoveryService(IServiceScopeFactory scopes, Connectio
       try
       {
         using IServiceScope scope = scopes.CreateScope();
-        TlcApiClient client = scope.ServiceProvider.GetRequiredService<TlcApiClient>();
+        TacoApiClient client = scope.ServiceProvider.GetRequiredService<TacoApiClient>();
         string provider = connections.Get().BaseUrl;
-        TlcSession current = await client.SessionAsync(stoppingToken);
+        TacoSession current = await client.SessionAsync(stoppingToken);
         bool changed = previousProvider != provider || previous?.WorldId != current.WorldId || previous?.Revision != current.Revision;
         if (current.Id is not null && changed)
         {

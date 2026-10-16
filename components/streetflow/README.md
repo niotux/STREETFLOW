@@ -1,6 +1,6 @@
 # Melchior logistics controller
 
-Melchior connects to a provider's [physical-device tlcapi](../../docs/components/contracts/tlcapi.md), loads its world configuration, and provides manual traffic-light commands. Automatic traffic optimization remains future work.
+Melchior connects to a provider's [physical-device taco](../../docs/components/contracts/taco.md), loads its world configuration, and provides manual traffic-light commands. Automatic traffic optimization remains future work.
 
 ## Run and connect
 
@@ -12,7 +12,7 @@ Open **http://localhost:8090/melchior/**. In Docker, the Connection address is *
 
 The backend discovers active worlds every 1.5 seconds even with the page closed. The page automatically follows newly loaded sessions. Geometry is downloaded on world/configuration changes and reused when a new session uses the same infrastructure. The address, port, world ID, and revision identify the paired configuration.
 
-Saved provider settings survive restarts in `logistics-data` and take precedence over `Logistics__TlcApiBaseUrl`. The map cache is bounded to one world in memory and keyed by provider URL/world/revision. No PostgreSQL storage is involved.
+Saved provider settings survive restarts in `logistics-data` and take precedence over `Logistics__TacoApiBaseUrl`. The map cache is bounded to one world in memory and keyed by provider URL/world/revision. No PostgreSQL storage is involved.
 
 ## Physical devices
 
@@ -36,7 +36,7 @@ Melchior listens on **http://localhost:8081** by default. The frontend proxies i
 | `GET /api/v1/sessions/{id}/devices` | Live device states |
 | `PUT /api/v1/sessions/{id}/devices/{deviceId}` | Explicit action with world ID and revision |
 
-Configure `Logistics__TlcApiBaseUrl`, `Logistics__ConnectionFile`, `Logistics__RequestTimeoutSeconds` (default 15), and `Logistics__DiscoveryIntervalMilliseconds` (default 1500). Native execution defaults to localhost:8080 and stores its connection in `.data/logistics/connection.json`. Use `--urls` or `URLS` to change its listener.
+Configure `Logistics__TacoApiBaseUrl`, `Logistics__ConnectionFile`, `Logistics__RequestTimeoutSeconds` (default 15), and `Logistics__DiscoveryIntervalMilliseconds` (default 1500). Native execution defaults to localhost:8080 and stores its connection in `.data/logistics/connection.json`. Use `--urls` or `URLS` to change its listener.
 
 For native execution:
 
