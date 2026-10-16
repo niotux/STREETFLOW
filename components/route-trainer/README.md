@@ -33,7 +33,7 @@ The default listener is `127.0.0.1:8092`. `TRAINER_DATA_ROOT` controls local sto
 3. Enter a time span and vehicles/hour. Finish the path to add a complete route. Its last road becomes an allowed trip endpoint. Add other routes and periods manually or import dataset JSON.
 4. Export JSON to collaborate with someone editing the dataset. The complete JSON editor can also apply and validate changes. Saved route edits survive a browser reload. Unapplied text edits are drafts; apply or export them before leaving.
 5. Enter a new project ID/name and train. Each job uses a snapshot of the saved dataset. Subsequent edits require another training job.
-6. Inspect the report, then download the v3 project ZIP and import it through the simulator's existing loader.
+6. Inspect the report, then download the v3 project ZIP and put it in the simulator's `projects/` folder; it appears in Loader after **Refresh list**.
 
 The tool validates routes, lane connectivity, time spans, IDs, and values. It does **not** invent sensible traffic or infer that an authored pattern represents reality. The bundled example is explicitly synthetic.
 

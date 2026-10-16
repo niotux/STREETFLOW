@@ -55,9 +55,8 @@ public sealed class TerminalRoutingTests
     string folder = Path.Combine(ProjectLoadingTests.Workspace, "experiments", "drafts", "podu-ros-commute");
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(folder), JsonDefaults.Options);
-    response.EnsureSuccessStatusCode();
-    response = await client.PostAsJsonAsync("/api/v1/projects/podu-ros-commute/runs", new CreateCityRunRequest(42), JsonDefaults.Options);
+    await factory.AddProjectAsync(client, folder);
+    HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/projects/podu-ros-commute/runs", new CreateCityRunRequest(42), JsonDefaults.Options);
     CityRunStatus status = (await response.Content.ReadFromJsonAsync<CityRunStatus>(JsonDefaults.Options))!;
     Assert.True(status.State == "paused", status.Failure);
     for (int batch = 0; batch < 5; batch++)
@@ -139,8 +138,7 @@ public sealed class TerminalRoutingTests
 
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    HttpResponseMessage import = await client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(fixture.Path), JsonDefaults.Options);
-    Assert.Equal(HttpStatusCode.Created, import.StatusCode);
+    await factory.AddProjectAsync(client, fixture.Path);
     HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/projects/podu-ros/runs", new CreateCityRunRequest(42), JsonDefaults.Options);
     CityRunStatus status = (await response.Content.ReadFromJsonAsync<CityRunStatus>(JsonDefaults.Options))!;
     Assert.Equal("paused", status.State);

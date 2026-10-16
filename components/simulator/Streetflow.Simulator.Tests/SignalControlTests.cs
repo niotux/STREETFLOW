@@ -8,11 +8,10 @@ namespace Streetflow.Simulator.Tests;
 
 public sealed class SignalControlTests
 {
-  private static async Task<CityRunStatus> StartAsync(HttpClient client)
+  private static async Task<CityRunStatus> StartAsync(BackendFactory factory, HttpClient client)
   {
     string folder = Path.Combine(ProjectLoadingTests.Workspace, "experiments", "drafts", "tiny-graph");
-    HttpResponseMessage imported = await client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(folder), JsonDefaults.Options);
-    imported.EnsureSuccessStatusCode();
+    await factory.AddProjectAsync(client, folder);
     HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/projects/tiny-graph/runs", new CreateCityRunRequest(42), JsonDefaults.Options);
     CityRunStatus status = (await response.Content.ReadFromJsonAsync<CityRunStatus>(JsonDefaults.Options))!;
     Assert.True(status.State == "paused", status.Failure);
@@ -39,7 +38,7 @@ public sealed class SignalControlTests
   {
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    CityRunStatus run = await StartAsync(client);
+    CityRunStatus run = await StartAsync(factory, client);
     Assert.Equal("external-v1", run.Configuration.SignalControlMode);
     SignalState[] initial = (await client.GetFromJsonAsync<SignalState[]>($"/api/v1/city-runs/{run.Id}/signals", JsonDefaults.Options))!;
     SignalState signal = Assert.Single(initial);
@@ -54,7 +53,7 @@ public sealed class SignalControlTests
   {
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    CityRunStatus run = await StartAsync(client);
+    CityRunStatus run = await StartAsync(factory, client);
     Snapshot initial = (await client.GetFromJsonAsync<Snapshot>($"/api/v1/city-runs/{run.Id}/snapshot", JsonDefaults.Options))!;
     SignalState off = Assert.Single(initial.Signals);
     SignalState green = await SetAsync(client, run.Id, "green", 0);
@@ -80,7 +79,7 @@ public sealed class SignalControlTests
   {
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    CityRunStatus run = await StartAsync(client);
+    CityRunStatus run = await StartAsync(factory, client);
     await SetAsync(client, run.Id, "red");
     Snapshot red = await StepAsync(client, run.Id, 200);
     Dictionary<string, VehicleState> queued = new(StringComparer.Ordinal);
@@ -116,7 +115,7 @@ public sealed class SignalControlTests
   {
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    CityRunStatus run = await StartAsync(client);
+    CityRunStatus run = await StartAsync(factory, client);
     Snapshot before = (await client.GetFromJsonAsync<Snapshot>($"/api/v1/city-runs/{run.Id}/snapshot", JsonDefaults.Options))!;
     HttpResponseMessage response = await client.PutAsJsonAsync($"/api/v1/city-runs/{run.Id}/signals/center", new SignalControlRequest(action!, linkIndex), JsonDefaults.Options);
     Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -132,7 +131,7 @@ public sealed class SignalControlTests
   {
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    CityRunStatus run = await StartAsync(client);
+    CityRunStatus run = await StartAsync(factory, client);
     await SetAsync(client, run.Id, "green");
     HttpResponseMessage response = await client.PostAsJsonAsync($"/api/v1/city-runs/{run.Id}/restart", new CityRunCommand(), JsonDefaults.Options);
     CityRunStatus restarted = (await response.Content.ReadFromJsonAsync<CityRunStatus>(JsonDefaults.Options))!;

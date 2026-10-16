@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http.Features;
 using Streetflow.Simulator.Runtime;
 using Streetflow.Simulator.Scenarios;
 
@@ -11,29 +10,13 @@ public static class ProjectEndpoints
   public static void MapProjectApi(this WebApplication app)
   {
     RouteGroupBuilder api = app.MapGroup("/api/v1/projects");
-    api.MapGet("/folders", (ProjectCatalog catalog) => catalog.ListFolders());
-    api.MapPost("/folders", async (FolderImportRequest request, ProjectCatalog catalog, CancellationToken token) =>
-    {
-      ProjectInfo project = await catalog.ImportFolderAsync(request.Path, token);
-      return Results.Created(ProjectLocation(project), project);
-    });
-    api.MapDelete("/folders", async ([Microsoft.AspNetCore.Mvc.FromBody] FolderImportRequest request, ProjectCatalog catalog, CancellationToken token) =>
-    {
-      await catalog.RemoveFolderAsync(request.Path, token);
-      return Results.NoContent();
-    });
-    api.MapGet("/", (ProjectCatalog catalog) => catalog.List());
-    api.MapGet("/{id}", (string id, ProjectCatalog catalog) => catalog.Get(id).Info);
-    api.MapGet("/{id}/demand", (string id, ProjectCatalog catalog) => ReadDemand(catalog.Get(id)));
-    api.MapGet("/{id}/model", (string id, ProjectCatalog catalog) => ReadModel(catalog.Get(id)));
-    api.MapGet("/{id}/weights", (string id, ProjectCatalog catalog) => Results.Ok(ReadWeights(catalog.Get(id))));
-    api.MapGet("/{id}/map", (string id, int? offset, int? limit, ProjectCatalog catalog) => Results.Ok(ReadMap(catalog, id, offset, limit)));
-    api.MapPost("/import/folder", async (FolderImportRequest request, ProjectCatalog catalog, CancellationToken token) =>
-    {
-      ProjectInfo project = await catalog.ImportFolderAsync(request.Path, token);
-      return Results.Created(ProjectLocation(project), project);
-    });
-    api.MapPost("/import/zip", ImportZipAsync).Accepts<Stream>("application/zip", "application/octet-stream");
+    api.MapGet("/sources", (ProjectCatalog catalog, CancellationToken token) => catalog.ListSourcesAsync(token));
+    api.MapGet("/", (ProjectCatalog catalog, CancellationToken token) => catalog.ListAsync(token));
+    api.MapGet("/{id}", async (string id, ProjectCatalog catalog, CancellationToken token) => (await catalog.GetAsync(id, token)).Info);
+    api.MapGet("/{id}/demand", async (string id, ProjectCatalog catalog, CancellationToken token) => ReadDemand(await catalog.GetAsync(id, token)));
+    api.MapGet("/{id}/model", async (string id, ProjectCatalog catalog, CancellationToken token) => ReadModel(await catalog.GetAsync(id, token)));
+    api.MapGet("/{id}/weights", async (string id, ProjectCatalog catalog, CancellationToken token) => Results.Ok(ReadWeights(await catalog.GetAsync(id, token))));
+    api.MapGet("/{id}/map", async (string id, int? offset, int? limit, ProjectCatalog catalog, CancellationToken token) => Results.Ok(await ReadMapAsync(catalog, id, offset, limit, token)));
   }
 
   private static IResult ReadDemand(CityProject project)
@@ -58,7 +41,7 @@ public static class ProjectEndpoints
 
   private static TransformerWeights ReadWeights(CityProject project) => project.TransformerWeights ?? throw new ApiException(409, "wrong_project_format", "This project has no version 2 Transformer Routes weights");
 
-  private static ProjectMapResponse ReadMap(ProjectCatalog catalog, string id, int? offset, int? limit)
+  private static async Task<ProjectMapResponse> ReadMapAsync(ProjectCatalog catalog, string id, int? offset, int? limit, CancellationToken token)
   {
     int start = offset ?? 0;
     int size = limit ?? DefaultPageSize;
@@ -67,7 +50,7 @@ public static class ProjectEndpoints
       throw new ApiException(400, "invalid_pagination", "offset must be nonnegative; limit must be 1..10000");
     }
 
-    CityProject project = catalog.Get(id);
+    CityProject project = await catalog.GetAsync(id, token);
     LaneMap[] lanes = project.Lanes;
     List<ProjectMapEdge> edges = [];
     int totalEdges = 0;
@@ -88,26 +71,4 @@ public static class ProjectEndpoints
 
     return new ProjectMapResponse(project.Manifest.Id, project.Revision, project.Manifest.Network.Attribution, "SUMO local meters", lanes.Length, project.Junctions.Length, totalEdges, start, Endpoints.Page(lanes, start, size), Endpoints.Page(project.Junctions, start, size), edges.ToArray(), project.SignalIds, project.TerminalPoints, project.SignalPoints) { TrafficDevices = project.TrafficDevices };
   }
-
-  private static async Task<IResult> ImportZipAsync(HttpRequest request, ProjectCatalog catalog, SimulatorOptions options, CancellationToken token)
-  {
-    if (request.ContentLength > options.MaximumProjectBytes)
-    {
-      throw new ApiException(413, "project_too_large", $"ZIP exceeds {options.MaximumProjectBytes} bytes");
-    }
-
-    IHttpMaxRequestBodySizeFeature? feature = request.HttpContext.Features.Get<IHttpMaxRequestBodySizeFeature>();
-    if (feature is not null)
-    {
-      if (!feature.IsReadOnly)
-      {
-        feature.MaxRequestBodySize = options.MaximumProjectBytes;
-      }
-    }
-
-    ProjectInfo project = await catalog.ImportZipAsync(request.Body, token);
-    return Results.Created(ProjectLocation(project), project);
-  }
-
-  private static string ProjectLocation(ProjectInfo project) => $"/api/v1/projects/{Uri.EscapeDataString(project.Manifest.Id)}";
 }

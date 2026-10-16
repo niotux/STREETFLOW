@@ -40,11 +40,19 @@ public sealed class ProjectLoadingTests
     return JsonSerializer.Deserialize<JsonElement>(text);
   }
 
-  private static Task<HttpResponseMessage> ImportFolder(HttpClient client, string path) => client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(path), JsonDefaults.Options);
-  private static async Task<ApiError> Error(HttpResponseMessage response, HttpStatusCode status = HttpStatusCode.BadRequest)
+  // Invalid projects stay in the projects folder and are listed as unavailable with the reason.
+  private static async Task<string> Unavailable(BackendFactory factory, HttpClient client, string path)
   {
-    Assert.Equal(status, response.StatusCode);
-    return (await response.Content.ReadFromJsonAsync<ApiError>(JsonDefaults.Options))!;
+    ProjectSource source = await factory.AddSourceAsync(client, path);
+    Assert.Null(source.Project);
+    return source.Error!;
+  }
+
+  private static async Task<string> UnavailableZip(BackendFactory factory, HttpClient client, MemoryStream zip)
+  {
+    ProjectSource source = await factory.AddZipAsync(client, zip.ToArray(), "project.zip");
+    Assert.Null(source.Project);
+    return source.Error!;
   }
 
   [Fact]
@@ -61,9 +69,8 @@ public sealed class ProjectLoadingTests
 
     )
     {
-      HttpResponseMessage response = await ImportFolder(client, Draft(expected.Id));
-      Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-      JsonElement info = await Body(response);
+      await factory.AddProjectAsync(client, Draft(expected.Id));
+      JsonElement info = await Body(await client.GetAsync($"/api/v1/projects/{expected.Id}"));
       Assert.Equal(expected.EdgeCount, info.GetProperty("usable_edge_count").GetInt32());
       Assert.Equal(64, info.GetProperty("revision").GetString()!.Length);
       JsonElement map = await Body(await client.GetAsync($"/api/v1/projects/{expected.Id}/map?limit=2"));
@@ -83,62 +90,49 @@ public sealed class ProjectLoadingTests
   }
 
   [Fact]
-  public async Task FolderReferencesReadExternalEditsAndSurviveServiceRestart()
+  public async Task ProjectFoldersAreReadInPlaceWithEditsAcrossServiceRestart()
   {
-    using ProjectFixture source = new();
     string dataRoot;
     string revision;
+    string path;
     await using (BackendFactory factory = new())
     {
       dataRoot = factory.DataRoot;
       using HttpClient client = factory.CreateClient();
-      JsonElement imported = await Body(await ImportFolder(client, source.Path));
-      Assert.Equal(source.Path, imported.GetProperty("path").GetString());
-      source.ChangeDemand(d => d["profiles"]![0]!["intervals"]![0]!["weight"] = 10);
+      ProjectInfo added = await factory.AddProjectAsync(client, Draft("tiny-graph"));
+      path = Path.Combine(factory.ProjectsRoot, "tiny-graph");
+      Assert.Equal(path, added.Path);
+      JsonElement imported = await Body(await client.GetAsync("/api/v1/projects/tiny-graph"));
+      string demandFile = Path.Combine(path, "demand.json");
+      JsonNode demandNode = JsonNode.Parse(File.ReadAllText(demandFile))!;
+      demandNode["profiles"]![0]!["intervals"]![0]!["weight"] = 10;
+      File.WriteAllText(demandFile, demandNode.ToJsonString());
       JsonElement stored = await Body(await client.GetAsync("/api/v1/projects/tiny-graph/demand"));
       Assert.Equal(10, stored.GetProperty("profiles")[0].GetProperty("intervals")[0].GetProperty("weight").GetInt32());
       JsonElement changed = await Body(await client.GetAsync("/api/v1/projects/tiny-graph"));
       revision = changed.GetProperty("revision").GetString()!;
       Assert.NotEqual(imported.GetProperty("revision").GetString(), revision);
-      Assert.Empty(Directory.EnumerateDirectories(Path.Combine(dataRoot, "projects")));
     }
 
     await using BackendFactory restarted = new(dataRoot);
     using HttpClient reopened = restarted.CreateClient();
     JsonElement project = await Body(await reopened.GetAsync("/api/v1/projects/tiny-graph"));
     Assert.Equal(revision, project.GetProperty("revision").GetString());
-    Assert.Equal(source.Path, project.GetProperty("path").GetString());
+    Assert.Equal(path, project.GetProperty("path").GetString());
     Assert.Equal(0, (await Body(await reopened.GetAsync("/api/v1/runs"))).GetArrayLength());
   }
 
   [Theory]
   [InlineData("")]
   [InlineData("wrapped-project/")]
-  public async Task ZipImportsAcceptFlatAndWrappedPackages(string prefix)
+  public async Task ZipFilesAcceptFlatAndWrappedPackages(string prefix)
   {
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
     using MemoryStream zip = PackageZip(Draft("podu-ros"), prefix);
-    using StreamContent content = new(zip);
-    HttpResponseMessage response = await client.PostAsync("/api/v1/projects/import/zip", content);
-    Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    Assert.Equal(106, (await Body(response)).GetProperty("usable_edge_count").GetInt32());
+    ProjectSource source = await factory.AddZipAsync(client, zip.ToArray(), "podu-ros.zip");
+    Assert.Equal(106, source.Project!.UsableEdgeCount);
     Assert.Equal(68940, (await Body(await client.GetAsync("/api/v1/projects/podu-ros"))).GetProperty("manifest").GetProperty("defaults").GetProperty("start_time_seconds").GetInt32());
-  }
-
-  [Fact]
-  public async Task DuplicateIdsNeverOverwriteAnImportedProject()
-  {
-    await using BackendFactory factory = new();
-    using HttpClient client = factory.CreateClient();
-    JsonElement original = await Body(await ImportFolder(client, Draft("tiny-graph")));
-    using ProjectFixture changed = new();
-    changed.ChangeDemand(d => d["profiles"]![0]!["intervals"]![0]!["weight"] = 10);
-    ApiError error = await Error(await ImportFolder(client, changed.Path), HttpStatusCode.Conflict);
-    Assert.Equal("duplicate_project", error.Code);
-    JsonElement after = await Body(await client.GetAsync("/api/v1/projects/tiny-graph"));
-    Assert.Equal(original.GetProperty("revision").GetString(), after.GetProperty("revision").GetString());
-    Assert.Empty(Directory.EnumerateDirectories(Path.Combine(factory.DataRoot, ".project-imports")));
   }
 
   [Theory]
@@ -230,12 +224,10 @@ public sealed class ProjectLoadingTests
     });
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    ApiError error = await Error(await ImportFolder(client, source.Path));
-    Assert.Equal("invalid_project", error.Code);
-    Assert.Contains("demand.json", error.Message);
-    Assert.Contains(expected, error.Message);
+    string error = await Unavailable(factory, client, source.Path);
+    Assert.Contains("demand.json", error);
+    Assert.Contains(expected, error);
     Assert.Equal(0, (await Body(await client.GetAsync("/api/v1/projects"))).GetArrayLength());
-    Assert.Empty(Directory.EnumerateDirectories(Path.Combine(factory.DataRoot, ".project-imports")));
   }
 
   [Theory]
@@ -249,7 +241,7 @@ public sealed class ProjectLoadingTests
     source.ChangeManifest(m => m["network"]!["file"] = reference);
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    Assert.Contains("Unsafe project path", (await Error(await ImportFolder(client, source.Path))).Message);
+    Assert.Contains("Unsafe project path", await Unavailable(factory, client, source.Path));
   }
 
   [Theory]
@@ -269,8 +261,7 @@ public sealed class ProjectLoadingTests
     zip.Position = 0;
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    using StreamContent content = new(zip);
-    Assert.Contains("Unsafe project path", (await Error(await client.PostAsync("/api/v1/projects/import/zip", content))).Message);
+    Assert.Contains("Unsafe project path", await UnavailableZip(factory, client, zip));
     Assert.Empty(Directory.EnumerateDirectories(Path.Combine(factory.DataRoot, ".project-imports")));
     Assert.False(File.Exists(Path.Combine(factory.DataRoot, "escape.json")));
   }
@@ -303,9 +294,7 @@ public sealed class ProjectLoadingTests
       zip.Position = 0;
       await using BackendFactory factory = new();
       using HttpClient client = factory.CreateClient();
-      using StreamContent content = new(zip);
-      ApiError error = await Error(await client.PostAsync("/api/v1/projects/import/zip", content));
-      Assert.Contains(symlink ? "not a regular file" : "Duplicate ZIP path", error.Message);
+      Assert.Contains(symlink ? "not a regular file" : "Duplicate ZIP path", await UnavailableZip(factory, client, zip));
     }
   }
 
@@ -386,9 +375,8 @@ public sealed class ProjectLoadingTests
 
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    ApiError error = await Error(await ImportFolder(client, source.Path));
-    Assert.Equal("invalid_project", error.Code);
-    Assert.True(error.Message.Contains(".json") || error.Message.Contains(".xml"), error.Message);
+    string error = await Unavailable(factory, client, source.Path);
+    Assert.True(error.Contains(".json") || error.Contains(".xml"), error);
   }
 
   [Fact]
@@ -413,31 +401,22 @@ public sealed class ProjectLoadingTests
   }
 
   [Fact]
-  public async Task ZipExpansionAndFileCountLimitsRejectBeforeRegistering()
+  public async Task ZipExpansionAndFileCountLimitsMakeTheZipUnavailable()
   {
     string root = Path.Combine(Path.GetTempPath(), "streetflow-project-limit", Guid.NewGuid().ToString("N"));
-    ProjectCatalog catalog = new(new SimulatorOptions { DataRoot = root, MaximumProjectBytes = 10000, MaximumProjectFiles = 4096 });
+    string projects = Path.Combine(root, "projects-folder");
+    Directory.CreateDirectory(projects);
     using MemoryStream zip = PackageZip(Draft("tiny-graph"));
     Assert.True(zip.Length < 10000);
-    ApiException ex = await Assert.ThrowsAsync<ApiException>(() => catalog.ImportZipAsync(zip, CancellationToken.None));
-    Assert.Equal(413, ex.StatusCode);
-    Assert.Empty(catalog.List());
+    File.WriteAllBytes(Path.Combine(projects, "tiny.zip"), zip.ToArray());
+    ProjectCatalog catalog = new(new SimulatorOptions { DataRoot = root, ProjectsRoot = projects, MaximumProjectBytes = 10000, MaximumProjectFiles = 4096 });
+    Assert.Contains("exceeds limits", Assert.Single(await catalog.ListSourcesAsync(CancellationToken.None)).Error);
+    Assert.Empty(await catalog.ListAsync(CancellationToken.None));
     Assert.Empty(Directory.EnumerateDirectories(Path.Combine(root, ".project-imports")));
-    ProjectCatalog fileLimited = new(new SimulatorOptions { DataRoot = root, MaximumProjectFiles = 1, MaximumProjectBytes = 256L * 1024 * 1024 });
-    using MemoryStream secondZip = PackageZip(Draft("tiny-graph"));
-    ex = await Assert.ThrowsAsync<ApiException>(() => fileLimited.ImportZipAsync(secondZip, CancellationToken.None));
-    Assert.Equal(413, ex.StatusCode);
+    Assert.Empty(Directory.EnumerateDirectories(Path.Combine(root, "project-cache")));
+    ProjectCatalog fileLimited = new(new SimulatorOptions { DataRoot = root, ProjectsRoot = projects, MaximumProjectFiles = 1, MaximumProjectBytes = 256L * 1024 * 1024 });
+    Assert.Contains("exceeds limits", Assert.Single(await fileLimited.ListSourcesAsync(CancellationToken.None)).Error);
     Directory.Delete(root, true);
-  }
-
-  [Fact]
-  public async Task CorruptZipAndMissingFolderReturnValidationErrors()
-  {
-    await using BackendFactory factory = new();
-    using HttpClient client = factory.CreateClient();
-    using StringContent content = new("not a ZIP", Encoding.UTF8, "application/zip");
-    Assert.Contains("ZIP", (await Error(await client.PostAsync("/api/v1/projects/import/zip", content))).Message);
-    Assert.Contains("does not exist", (await Error(await ImportFolder(client, Path.Combine(factory.DataRoot, "absent")))).Message);
   }
 
   private static MemoryStream PackageZip(string source, string prefix = "")

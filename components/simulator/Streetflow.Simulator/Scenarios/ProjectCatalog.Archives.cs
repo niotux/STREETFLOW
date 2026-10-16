@@ -1,55 +1,80 @@
 using System.IO.Compression;
+using System.Security.Cryptography;
+using System.Text;
 using Streetflow.Simulator.Runtime;
 
 namespace Streetflow.Simulator.Scenarios;
 
-// Compatibility uploads extract once to a normal folder and register its path.
+// A ZIP in the projects folder is extracted once per file version; replacing or removing the ZIP retires its cache entry.
 public sealed partial class ProjectCatalog
 {
   private const int CopyBufferSize = 65536;
   private const int ZipFileKindMask = 0xf000;
   private const int ZipRegularFileKind = 0x8000;
   private const int ZipDirectoryKind = 0x4000;
+  private readonly Dictionary<string, string> zipFailures = new(StringComparer.Ordinal);
 
-  public async Task<ProjectInfo> ImportZipAsync(Stream input, CancellationToken token)
+  private async Task<ScannedSource> ReadZipAsync(string name, string path, HashSet<string> cacheKeys, CancellationToken token)
+  {
+    string key;
+    try
+    {
+      FileInfo file = new(path);
+      key = CacheKey(name, file.Length, file.LastWriteTimeUtc.Ticks);
+    }
+    catch (Exception exception) when (IsReadError(exception))
+    {
+      return Unavailable(name, ProjectSource.ZipKind, ReadErrorMessage(exception));
+    }
+
+    cacheKeys.Add(key);
+    if (zipFailures.TryGetValue(key, out string? failure))
+    {
+      return Unavailable(name, ProjectSource.ZipKind, failure);
+    }
+
+    string extracted = Path.Combine(cacheRoot, key);
+    try
+    {
+      if (!Directory.Exists(extracted))
+      {
+        await ExtractAsync(path, extracted, token);
+      }
+
+      CityProject project = CityProjectLoader.Load(extracted);
+      return new ScannedSource(new ProjectSource(name, ProjectSource.ZipKind, project.Info, null), project);
+    }
+    catch (Exception exception) when (IsReadError(exception))
+    {
+      string message = exception is InvalidDataException ? $"Unreadable ZIP file: {exception.Message}" : ReadErrorMessage(exception);
+      zipFailures[key] = message;
+      return Unavailable(name, ProjectSource.ZipKind, message);
+    }
+  }
+
+  private static string CacheKey(string name, long length, long modified)
+  {
+    byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes($"{name}\n{length}\n{modified}"));
+    return Convert.ToHexStringLower(hash.AsSpan(0, 16));
+  }
+
+  private async Task ExtractAsync(string zip, string destination, CancellationToken token)
   {
     string stage = Path.Combine(stagingRoot, Guid.NewGuid().ToString("N"));
-    string? destination = null;
-    bool registered = false;
     try
     {
       Directory.CreateDirectory(stage);
-      await PrepareZipAsync(input, stage, token);
-      string contents = Path.Combine(stage, "contents");
-      string[] manifests = Directory.GetFiles(contents, "experiment.json", SearchOption.AllDirectories);
+      await PrepareZipAsync(zip, stage, token);
+      string[] manifests = Directory.GetFiles(stage, ManifestFile, SearchOption.AllDirectories);
       if (manifests.Length != 1)
       {
-        throw ProjectPaths.Invalid("Package must contain exactly one experiment.json at its root or inside a single project folder");
+        throw ProjectPaths.Invalid($"ZIP must contain exactly one {ManifestFile} at its root or inside a single project folder");
       }
 
-      string packageRoot = Path.GetDirectoryName(manifests[0])!;
-      CityProject project = LoadFolder(packageRoot);
-      destination = Path.Combine(root, project.Manifest.Id + "-" + Guid.NewGuid().ToString("N"));
-      Directory.Move(packageRoot, destination);
-      ProjectInfo info = await ImportFolderAsync(destination, token);
-      registered = true;
-      return info;
-    }
-    catch (InvalidDataException exception)
-    {
-      throw ProjectPaths.Invalid($"Unreadable ZIP package: {exception.Message}");
-    }
-    catch (IOException exception)
-    {
-      throw ProjectPaths.Invalid($"Project files could not be read: {exception.Message}");
+      Directory.Move(Path.GetDirectoryName(manifests[0])!, destination);
     }
     finally
     {
-      if (!registered && destination is not null && Directory.Exists(destination))
-      {
-        Directory.Delete(destination, recursive: true);
-      }
-
       if (Directory.Exists(stage))
       {
         Directory.Delete(stage, recursive: true);
@@ -57,17 +82,33 @@ public sealed partial class ProjectCatalog
     }
   }
 
-  private async Task PrepareZipAsync(Stream input, string stage, CancellationToken token)
+  private void PruneCache(HashSet<string> current)
   {
-    string upload = Path.Combine(stage, "upload.zip");
-    await using (FileStream spool = File.Create(upload))
+    foreach (string directory in Directory.EnumerateDirectories(cacheRoot))
     {
-      await CopyLimitedAsync(input, spool, maximumBytes, token);
+      if (!current.Contains(Path.GetFileName(directory)))
+      {
+        Directory.Delete(directory, recursive: true);
+      }
     }
 
-    string contents = Path.Combine(stage, "contents");
-    Directory.CreateDirectory(contents);
-    using ZipArchive archive = ZipFile.OpenRead(upload);
+    foreach (string key in zipFailures.Keys.ToArray())
+    {
+      if (!current.Contains(key))
+      {
+        zipFailures.Remove(key);
+      }
+    }
+  }
+
+  private async Task PrepareZipAsync(string zip, string contents, CancellationToken token)
+  {
+    if (new FileInfo(zip).Length > maximumBytes)
+    {
+      throw Limit();
+    }
+
+    using ZipArchive archive = ZipFile.OpenRead(zip);
     if (archive.Entries.Count > maximumFiles * 2L)
     {
       throw Limit();
@@ -130,5 +171,5 @@ public sealed partial class ProjectCatalog
     return copied;
   }
 
-  private ApiException Limit() => new(413, "project_too_large", $"Project import exceeds limits: {maximumBytes} bytes and {maximumFiles} files");
+  private ApiException Limit() => new(413, "project_too_large", $"Project ZIP exceeds limits: {maximumBytes} bytes and {maximumFiles} files");
 }

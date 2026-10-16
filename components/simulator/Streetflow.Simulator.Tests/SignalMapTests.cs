@@ -51,8 +51,7 @@ public sealed class SignalMapTests
   {
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    HttpResponseMessage imported = await client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(PoduRos), JsonDefaults.Options);
-    imported.EnsureSuccessStatusCode();
+    await factory.AddProjectAsync(client, PoduRos);
     ProjectMapResponse? map = await client.GetFromJsonAsync<ProjectMapResponse>("/api/v1/projects/podu-ros/map?limit=1", JsonDefaults.Options);
     Assert.NotNull(map);
     Assert.Single(map.Lanes);
@@ -76,8 +75,7 @@ public sealed class SignalMapTests
 
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    HttpResponseMessage imported = await client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(fixture.Path), JsonDefaults.Options);
-    imported.EnsureSuccessStatusCode();
+    await factory.AddProjectAsync(client, fixture.Path);
     HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/projects/podu-ros/runs", new CreateCityRunRequest(42), JsonDefaults.Options);
     CityRunStatus status = (await response.Content.ReadFromJsonAsync<CityRunStatus>(JsonDefaults.Options))!;
     Assert.True(status.State == "paused", status.Failure);

@@ -1,20 +1,17 @@
-using System.Text.Json;
 using Streetflow.Simulator.Runtime;
 
 namespace Streetflow.Simulator.Scenarios;
 
-// The registry stores folder references. Project inputs are read from those folders on demand.
+// Lists the projects folder. Project folders are read in place; ZIP files are extracted once into a cache.
 public sealed partial class ProjectCatalog
 {
-  private static readonly StringComparer FolderComparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
-  private readonly SemaphoreSlim importGate = new(1, 1);
-  private readonly string root;
+  private const string ManifestFile = "experiment.json";
+  private readonly SemaphoreSlim scanGate = new(1, 1);
+  private readonly string projectsRoot;
+  private readonly string cacheRoot;
   private readonly string stagingRoot;
   private readonly long maximumBytes;
   private readonly int maximumFiles;
-  private ProjectFolder[] folders;
-
-  public string RegistryPath { get; }
 
   public ProjectCatalog(SimulatorOptions options)
   {
@@ -22,26 +19,30 @@ public sealed partial class ProjectCatalog
     maximumFiles = options.MaximumProjectFiles;
     if (maximumBytes <= 0 || maximumFiles <= 0)
     {
-      throw new InvalidOperationException("Project upload limits must be positive");
+      throw new InvalidOperationException("Project ZIP limits must be positive");
     }
 
+    if (string.IsNullOrWhiteSpace(options.ProjectsRoot))
+    {
+      throw new InvalidOperationException("ProjectsRoot must name the projects folder");
+    }
+
+    projectsRoot = Path.GetFullPath(options.ProjectsRoot);
     string dataRoot = Path.GetFullPath(options.DataRoot);
-    root = Path.Combine(dataRoot, "projects");
+    cacheRoot = Path.Combine(dataRoot, "project-cache");
     stagingRoot = Path.Combine(dataRoot, ".project-imports");
-    RegistryPath = Path.Combine(dataRoot, "project-folders.json");
-    Directory.CreateDirectory(root);
+    Directory.CreateDirectory(cacheRoot);
     Directory.CreateDirectory(stagingRoot);
-    folders = ReadRegistry();
   }
 
-  public ProjectInfo[] List()
+  public async Task<ProjectInfo[]> ListAsync(CancellationToken token)
   {
     List<ProjectInfo> result = [];
-    foreach (ProjectFolderStatus folder in ListFolders())
+    foreach (ScannedSource scanned in await ScanAsync(token))
     {
-      if (folder.Project is not null)
+      if (scanned.Project is not null)
       {
-        result.Add(folder.Project);
+        result.Add(scanned.Project.Info);
       }
     }
 
@@ -49,233 +50,102 @@ public sealed partial class ProjectCatalog
     return result.ToArray();
   }
 
-  public ProjectFolderStatus[] ListFolders()
+  public async Task<ProjectSource[]> ListSourcesAsync(CancellationToken token)
   {
-    List<ProjectFolderStatus> result = [];
-    HashSet<string> ids = new(StringComparer.Ordinal);
-    foreach (ProjectFolder folder in Volatile.Read(ref folders))
+    List<ProjectSource> result = [];
+    foreach (ScannedSource scanned in await ScanAsync(token))
     {
-      ProjectFolderStatus status = ReadFolder(folder.Path);
-      if (status.Project is not null)
-      {
-        string id = status.Project.Manifest.Id;
-        if (!ids.Add(id))
-        {
-          status = new ProjectFolderStatus(folder.Path, null, $"Duplicate project ID: {id}");
-        }
-      }
-
-      result.Add(status);
+      result.Add(scanned.Source);
     }
 
     return result.ToArray();
   }
 
-  public CityProject Get(string id)
+  public async Task<CityProject> GetAsync(string id, CancellationToken token)
   {
-    foreach (ProjectFolder folder in Volatile.Read(ref folders))
+    foreach (ScannedSource scanned in await ScanAsync(token))
     {
-      CityProject? project = TryReadProject(folder.Path, out _);
-      if (project is null)
+      if (scanned.Project?.Manifest.Id == id)
       {
-        continue;
-      }
-
-      if (project.Manifest.Id == id)
-      {
-        return project;
+        return scanned.Project;
       }
     }
 
-    throw new ApiException(404, "unknown_project", $"No readable registered folder has project ID '{id}'. Refresh the folder list to inspect missing or invalid files.");
+    throw new ApiException(404, "unknown_project", $"No readable project in the projects folder has ID '{id}'. Refresh the list to see unavailable entries.");
   }
 
-  public async Task<ProjectInfo> ImportFolderAsync(string source, CancellationToken token)
+  private async Task<ScannedSource[]> ScanAsync(CancellationToken token)
   {
-    string path = NormalizeFolder(source);
-    await importGate.WaitAsync(token);
+    if (!Directory.Exists(projectsRoot))
+    {
+      return [];
+    }
+
+    await scanGate.WaitAsync(token);
     try
     {
-      CityProject project = LoadFolder(path);
-      EnsureUniqueId(project.Manifest.Id, path);
-      ProjectFolder[] current = Volatile.Read(ref folders);
-      foreach (ProjectFolder folder in current)
+      List<string> names = [];
+      foreach (string entry in Directory.EnumerateFileSystemEntries(projectsRoot))
       {
-        if (FolderComparer.Equals(folder.Path, path))
+        string name = Path.GetFileName(entry);
+        bool isZip = File.Exists(entry) && name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
+        if (!name.StartsWith('.') && (Directory.Exists(entry) || isZip))
         {
-          return project.Info;
+          names.Add(name);
         }
       }
 
-      List<ProjectFolder> next = new(current);
-      next.Add(new ProjectFolder(path));
-      token.ThrowIfCancellationRequested();
-      SaveFolders(next.ToArray());
-      return project.Info;
+      names.Sort(StringComparer.Ordinal);
+      List<ScannedSource> result = [];
+      HashSet<string> ids = new(StringComparer.Ordinal);
+      HashSet<string> cacheKeys = new(StringComparer.Ordinal);
+      foreach (string name in names)
+      {
+        string path = Path.Combine(projectsRoot, name);
+        bool isZip = File.Exists(path);
+        ScannedSource scanned = isZip ? await ReadZipAsync(name, path, cacheKeys, token) : ReadFolder(name, path);
+        string? id = scanned.Project?.Manifest.Id;
+        if (id is not null && !ids.Add(id))
+        {
+          scanned = Unavailable(name, scanned.Source.Kind, $"Duplicate project ID '{id}'; another entry in the projects folder already uses it");
+        }
+
+        result.Add(scanned);
+      }
+
+      PruneCache(cacheKeys);
+      return result.ToArray();
     }
     finally
     {
-      importGate.Release();
+      scanGate.Release();
     }
   }
 
-  public async Task RemoveFolderAsync(string source, CancellationToken token)
+  private static ScannedSource ReadFolder(string name, string path)
   {
-    string path = NormalizeFolder(source);
-    await importGate.WaitAsync(token);
-    try
+    if (!File.Exists(Path.Combine(path, ManifestFile)))
     {
-      List<ProjectFolder> remaining = [];
-      bool found = false;
-      foreach (ProjectFolder folder in Volatile.Read(ref folders))
-      {
-        if (FolderComparer.Equals(folder.Path, path))
-        {
-          found = true;
-        }
-        else
-        {
-          remaining.Add(folder);
-        }
-      }
-
-      if (!found)
-      {
-        throw new ApiException(404, "unknown_project_folder", "This folder is not registered");
-      }
-
-      token.ThrowIfCancellationRequested();
-      SaveFolders(remaining.ToArray());
-    }
-    finally
-    {
-      importGate.Release();
-    }
-  }
-
-  private ProjectFolder[] ReadRegistry()
-  {
-    if (File.Exists(RegistryPath))
-    {
-      ProjectFolder[] saved = JsonSerializer.Deserialize<ProjectFolder[]>(File.ReadAllText(RegistryPath), JsonDefaults.Options) ?? throw new InvalidDataException("Project folder registry must contain an array");
-      List<ProjectFolder> normalized = [];
-      foreach (ProjectFolder folder in saved)
-      {
-        if (folder is null)
-        {
-          throw new InvalidDataException("Project folder registry cannot contain null entries");
-        }
-
-        normalized.Add(new ProjectFolder(NormalizeFolder(folder.Path)));
-      }
-
-      return normalized.ToArray();
-    }
-
-    // Keep existing on-disk imports usable without copying or rewriting their inputs.
-    List<ProjectFolder> migrated = [];
-    foreach (string stored in Directory.EnumerateDirectories(root))
-    {
-      if (File.Exists(Path.Combine(stored, "import.json")))
-      {
-        migrated.Add(new ProjectFolder(Path.Combine(stored, "package")));
-      }
-    }
-
-    ProjectFolder[] initial = migrated.ToArray();
-    WriteRegistry(initial);
-    return initial;
-  }
-
-  private void SaveFolders(ProjectFolder[] next)
-  {
-    WriteRegistry(next);
-    Volatile.Write(ref folders, next);
-  }
-
-  private void WriteRegistry(ProjectFolder[] next)
-  {
-    string temporary = RegistryPath + ".tmp";
-    File.WriteAllText(temporary, JsonSerializer.Serialize(next, JsonDefaults.Options));
-    File.Move(temporary, RegistryPath, overwrite: true);
-  }
-
-  private static ProjectFolderStatus ReadFolder(string path)
-  {
-    CityProject? project = TryReadProject(path, out string? error);
-    return new ProjectFolderStatus(path, project?.Info, error);
-  }
-
-  private static CityProject? TryReadProject(string path, out string? error)
-  {
-    error = null;
-    try
-    {
-      return LoadFolder(path);
-    }
-    catch (ApiException exception)
-    {
-      error = exception.Message;
-    }
-    catch (IOException exception)
-    {
-      error = exception.Message;
-    }
-    catch (UnauthorizedAccessException)
-    {
-      error = "Project folder is not readable by the simulator service";
-    }
-
-    return null;
-  }
-
-  private static CityProject LoadFolder(string path)
-  {
-    if (!Directory.Exists(path))
-    {
-      throw ProjectPaths.Invalid($"Project folder does not exist: {path}");
-    }
-
-    ProjectPaths.RejectLink(path);
-    return CityProjectLoader.Load(path);
-  }
-
-  private static string NormalizeFolder(string source)
-  {
-    if (string.IsNullOrWhiteSpace(source) || !Path.IsPathFullyQualified(source))
-    {
-      throw ProjectPaths.Invalid("path must be an absolute project folder path visible to the simulator");
+      return Unavailable(name, ProjectSource.FolderKind, $"No {ManifestFile} in this folder");
     }
 
     try
     {
-      return Path.TrimEndingDirectorySeparator(Path.GetFullPath(source));
+      ProjectPaths.RejectLink(path);
+      CityProject project = CityProjectLoader.Load(path);
+      return new ScannedSource(new ProjectSource(name, ProjectSource.FolderKind, project.Info, null), project);
     }
-    catch (ArgumentException)
+    catch (Exception exception) when (IsReadError(exception))
     {
-      throw ProjectPaths.Invalid("Invalid project folder path");
+      return Unavailable(name, ProjectSource.FolderKind, ReadErrorMessage(exception));
     }
   }
 
-  private void EnsureUniqueId(string id, string path)
-  {
-    foreach (ProjectFolder folder in Volatile.Read(ref folders))
-    {
-      if (FolderComparer.Equals(folder.Path, path))
-      {
-        continue;
-      }
+  private static ScannedSource Unavailable(string name, string kind, string error) => new(new ProjectSource(name, kind, null, error), null);
 
-      CityProject? project = TryReadProject(folder.Path, out _);
-      if (project is null)
-      {
-        continue;
-      }
+  private static bool IsReadError(Exception exception) => exception is ApiException or IOException or UnauthorizedAccessException or InvalidDataException;
 
-      if (project.Manifest.Id == id)
-      {
-        throw new ApiException(409, "duplicate_project", $"Another registered folder has project ID '{id}'");
-      }
-    }
-  }
+  private static string ReadErrorMessage(Exception exception) => exception is UnauthorizedAccessException ? "Project files are not readable by the simulator service" : exception.Message;
+
+  private sealed record ScannedSource(ProjectSource Source, CityProject? Project);
 }

@@ -9,6 +9,7 @@ namespace Streetflow.Simulator.Tests;
 public sealed class BackendFactory : WebApplicationFactory<Program>
 {
   public string DataRoot { get; }
+  public string ProjectsRoot => Path.Combine(DataRoot, "projects-folder");
   public string? ConnectionString { get; init; }
   public string? SumoBinary { get; init; }
   public int MaximumLiveVehicles { get; init; } = 5000;
@@ -43,7 +44,7 @@ public sealed class BackendFactory : WebApplicationFactory<Program>
       }
 
       services.RemoveAll<SimulatorOptions>();
-      services.AddSingleton(new SimulatorOptions { ScenarioRoot = Path.Combine(directory.FullName, "scenarios"), DataRoot = DataRoot, SumoBinary = SumoBinary ?? Environment.GetEnvironmentVariable("Simulator__SumoBinary") ?? "sumo", ConnectionString = ConnectionString, ObservationRetention = Retention, EngineTimeoutSeconds = 5, NetconvertBinary = "netconvert", DuarouterBinary = "duarouter", MaximumProjectBytes = 256L * 1024 * 1024, MaximumProjectFiles = 4096, MaximumLiveVehicles = MaximumLiveVehicles, MaximumPendingEntries = MaximumPendingEntries, GenerationBatchSize = 64, MaximumBacklogSeconds = MaximumBacklogSeconds, MaximumTransformerStates = 512, MaximumTransformerRouteMovements = 10000, MaximumTransformerCachedContexts = 128, MaximumDynamicRoutes = 4096, MaximumNeuralRouteMovements = 10000 });
+      services.AddSingleton(new SimulatorOptions { ScenarioRoot = Path.Combine(directory.FullName, "scenarios"), DataRoot = DataRoot, ProjectsRoot = ProjectsRoot, SumoBinary = SumoBinary ?? Environment.GetEnvironmentVariable("Simulator__SumoBinary") ?? "sumo", ConnectionString = ConnectionString, ObservationRetention = Retention, EngineTimeoutSeconds = 5, NetconvertBinary = "netconvert", DuarouterBinary = "duarouter", MaximumProjectBytes = 256L * 1024 * 1024, MaximumProjectFiles = 4096, MaximumLiveVehicles = MaximumLiveVehicles, MaximumPendingEntries = MaximumPendingEntries, GenerationBatchSize = 64, MaximumBacklogSeconds = MaximumBacklogSeconds, MaximumTransformerStates = 512, MaximumTransformerRouteMovements = 10000, MaximumTransformerCachedContexts = 128, MaximumDynamicRoutes = 4096, MaximumNeuralRouteMovements = 10000 });
     });
   }
 }

@@ -25,7 +25,7 @@ COPY --from=build /out/ ./
 COPY scenarios/ scenarios/
 RUN mkdir -p /app/data && chown -R app:app /app/data
 USER app
-ENV ASPNETCORE_URLS=http://+:8080 Simulator__ScenarioRoot=/app/scenarios Simulator__DataRoot=/app/data
+ENV ASPNETCORE_URLS=http://+:8080 Simulator__ScenarioRoot=/app/scenarios Simulator__DataRoot=/app/data Simulator__ProjectsRoot=/projects
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "Streetflow.Simulator.dll"]
 

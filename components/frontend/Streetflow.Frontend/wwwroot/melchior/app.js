@@ -80,7 +80,7 @@ function clearSession() {
   $('command-status').textContent = '';
   $('run').replaceChildren(new Option('No active session', ''));
   hoveredDevice = null;
-  $('run-note').textContent = 'No active session. In Balthasar, load a simulation in Loader. Selecting a project preview does not create a session.';
+  $('run-note').textContent = 'No active session. In Balthasar, choose a project in Loader and click Load.';
   fillDevices();
   draw();
 }

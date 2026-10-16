@@ -1,8 +1,7 @@
-import {initializeWorkspace} from './workspace.js?v=shared-windows-1';
+import {initializeWorkspace} from './workspace.js?v=shared-ui-1';
 import {vehicleSettingsXml} from './sumo-settings.js?v=workspace-1';
 import {VehicleMotion} from './vehicle-motion.js?v=motion-2';
 import {signalAppearance, deviceState, deviceDescription, layoutSignalMarkers, controlledLanes, deviceMapStatus} from './signals.js?v=physical-devices-3';
-let projectFolders = [];
 const $ = id => document.getElementById(id);
 const workspace = initializeWorkspace();
 const canvas = $('map');
@@ -12,7 +11,7 @@ const roadCanvas = document.createElement('canvas');
 const roadContext = roadCanvas.getContext('2d');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 let animationFrame = 0, roadCache = null, signalLayoutDirty = true;
-let projects = [], selectedProject = null, run = null, network = null, snapshot = null;
+let sources = [], projects = [], selectedProject = null, run = null, network = null, snapshot = null;
 let trafficInput = null;
 let busy = false, generation = 0, initialized = false;
 let width = 1, height = 1, view = {x: 0, y: 0, scale: 1}, drag = null;
@@ -106,13 +105,13 @@ function showArrivalRate() {
   const {demand, weights} = trafficInput;
   let rate = demand.generation?.mean_departures_per_hour;
   if (demand.format_version === 3) {
-    const clock = run?.city_time_seconds ?? selectedProject?.manifest.defaults.start_time_seconds ?? 0;
+    const clock = run?.city_time_seconds ?? 0;
     const period = demand.periods.find(item => clock >= item.start_seconds && clock < item.end_seconds);
     rate = 0;
     for (const arrival of period?.arrivals || []) rate += arrival.vehicles_per_hour;
   }
   if (demand.format_version === 2) {
-    const clock = run?.city_time_seconds ?? selectedProject?.manifest.defaults.start_time_seconds ?? 0;
+    const clock = run?.city_time_seconds ?? 0;
     const period = demand.axes.period.findIndex(item => clock >= item.start_seconds && clock < item.end_seconds);
     rate = 0;
     const origins = demand.axes.origin.length;
@@ -143,11 +142,9 @@ function pacing() {
 }
 function controls() {
   showArrivalRate();
-  $('project').disabled = busy || active();
-  $('refresh-projects').disabled = busy || active();
-  $('folder-choice').disabled = busy || active() || !projectFolders.length;
-  $('remove-folder').disabled = busy || active() || !$('folder-choice').value;
-  $('signal-note').textContent = network ? deviceMapStatus(network.traffic_devices || []) : 'Select a project to inspect its traffic lights.';
+  $('project').disabled = busy;
+  $('refresh-projects').disabled = busy;
+  $('signal-note').textContent = network ? deviceMapStatus(network.traffic_devices || []) : 'Load a project to inspect its traffic lights.';
   if (network?.traffic_devices?.length) {
     $('signal-note').textContent += active() ? snapshot?.available ? ' Live states come from the loaded simulation; use Melchior for manual control.' : ' Simulation loaded; waiting for live device states.' : ' No active simulation. Load it in Loader to make it available to Melchior.';
   }
@@ -155,12 +152,13 @@ function controls() {
   $('fit').disabled = !network;
   $('zoom-in').disabled = !network;
   $('zoom-out').disabled = !network;
-  $('folder').disabled = busy || active();
-  $('folder-form').querySelector('button').disabled = busy || active();
-  $('seed').disabled = busy || active();
-  $('start-time').disabled = busy || active();
-  $('load').disabled = busy || active() || !selectedProject;
-  $('step-seconds').disabled = busy || active();
+  $('seed').disabled = busy;
+  $('start-time').disabled = busy;
+  $('load').disabled = busy || !selectedProject;
+  $('unload').disabled = busy || !run;
+  $('step-seconds').disabled = busy;
+  // Runner is unavailable only while nothing is loaded.
+  $('runner-applet').inert = !run;
   $('start').disabled = busy || run?.state !== 'paused';
   $('start').textContent = run?.simulation_time > 0 ? '▶ Resume' : '▶ Start';
   $('speed').disabled = busy;
@@ -170,14 +168,14 @@ function controls() {
   $('step').disabled = busy || run?.state !== 'paused';
   $('stop').disabled = busy || !active();
   $('restart').disabled = busy || !run;
-  $('state').textContent = run ? `${run.state[0].toUpperCase()}${run.state.slice(1)}${run.backlog_seconds > 5 ? ' · traffic waiting' : ''}` : selectedProject ? 'Map ready · traffic stopped' : 'No project loaded';
+  $('state').textContent = run ? `${run.state[0].toUpperCase()}${run.state.slice(1)}${run.backlog_seconds > 5 ? ' · traffic waiting' : ''}` : 'No project loaded';
   $('state').dataset.state = run?.state || 'ready';
   $('vehicle-count').textContent = snapshot?.available ? snapshot.total_active_count.toLocaleString() : '—';
   $('lane-count').textContent = network ? network.lanes.length.toLocaleString() : '—';
-  $('city-clock').textContent = timeText(run?.city_time_seconds ?? selectedProject?.manifest.defaults.start_time_seconds);
+  $('city-clock').textContent = timeText(run?.city_time_seconds);
   $('city-day').textContent = run ? `CITY TIME · DAY ${run.day + 1}` : 'CITY TIME';
-  $('run-note').textContent = run?.state === 'running' ? 'Traffic keeps running if you close this page.' : run?.state === 'paused' ? 'Simulation loaded and paused. Start or advance one step.' : 'Load a simulation in Loader, then start here.';
-  $('load-note').textContent = active() ? 'Simulation loaded. Stop it in Runner before loading another.' : 'Load prepares a paused run. Runner controls the traffic.';
+  $('run-note').textContent = run?.state === 'running' ? 'Traffic keeps running if you close this page.' : run?.state === 'paused' ? 'Simulation loaded and paused. Start or advance one step.' : run ? 'Traffic stopped. Reset run to replay it, or load another project.' : 'Load a project in Loader to use Runner.';
+  $('load-note').textContent = run ? 'Loading replaces the current simulation. Unload returns to an empty map.' : 'Load prepares a paused simulation. Runner controls the traffic.';
   $('arrived-count').textContent = run ? (run.arrived_vehicles || 0).toLocaleString() : '—';
   $('pending-count').textContent = run ? run.pending_entries.toLocaleString() : '—';
   $('elapsed-value').textContent = timeText(run?.simulation_time);
@@ -194,80 +192,72 @@ async function action(work) {
   catch (error) { showError(error); }
   finally { busy = false; controls(); }
 }
-function renderFolderStatus() {
-  const folder = projectFolders.find(entry => entry.path === $('folder-choice').value);
-  $('folder-status').textContent = !folder ? 'No project folders registered.' : folder.error || 'Ready. Refresh to read disk edits. Removing this entry leaves its files and saved runs on disk.';
-}
 async function refreshProjects() {
-  projectFolders = await api('/projects/folders');
+  const previous = $('project').value;
+  sources = await api('/projects/sources');
   projects = [];
-  for (const folder of projectFolders) {
-    if (folder.project) projects.push(folder.project);
-  }
-  projects.sort((left, right) => left.manifest.id.localeCompare(right.manifest.id));
-  const value = $('project').value;
-  const folderValue = $('folder-choice').value;
   $('project').replaceChildren();
-  $('folder-choice').replaceChildren();
-  if (!projects.length) $('project').add(new Option('Add a project folder to begin', ''));
-  for (const project of projects) $('project').add(new Option(`${project.manifest.name} · ${project.model_kind || "Edge Population"}`, project.manifest.id));
-  for (const folder of projectFolders) $('folder-choice').add(new Option(`${folder.error ? 'Unavailable · ' : ''}${folder.path}`, folder.path));
-  if (projects.some(project => project.manifest.id === value)) $('project').value = value;
-  if (projectFolders.some(folder => folder.path === folderValue)) $('folder-choice').value = folderValue;
-  if (!projectFolders.length) $('folder-manager').open = true;
-  renderFolderStatus();
+  for (const source of sources) {
+    if (!source.project) continue;
+    projects.push(source.project);
+    const kind = source.project.model_kind || 'Edge Population';
+    $('project').add(new Option(`${source.project.manifest.name} · ${kind}${source.kind === 'zip' ? ' · ZIP' : ''}`, source.project.manifest.id));
+  }
+  if (!projects.length) $('project').add(new Option('No projects found', ''));
+  if (projects.some(project => project.manifest.id === previous)) $('project').value = previous;
+  const problems = sources.filter(source => source.error);
+  $('source-problems').hidden = problems.length === 0;
+  $('source-problems-summary').textContent = `${problems.length} unavailable ${problems.length === 1 ? 'entry' : 'entries'}`;
+  $('source-problems-list').replaceChildren();
+  for (const source of problems) {
+    const item = document.createElement('li');
+    item.textContent = `${source.name}: ${source.error}`;
+    $('source-problems-list').append(item);
+  }
+  selectProject($('project').value, $('project').value !== previous);
 }
-function clearProject() {
-  selectedProject = null;
+// Choosing a project only prepares the Load form; the map shows the loaded simulation.
+function selectProject(id, applyDefaults) {
+  selectedProject = projects.find(project => project.manifest.id === id) || null;
+  const source = sources.find(entry => entry.project?.manifest.id === id);
+  if (!selectedProject) {
+    $('project-note').textContent = sources.length ? 'No loadable projects. See the unavailable entries below.' : 'Put project folders or .zip files in the projects folder, then refresh.';
+  } else {
+    $('project-note').textContent = `${selectedProject.manifest.description || selectedProject.manifest.name} Source: projects/${source.name}`;
+    if (applyDefaults) {
+      $('start-time').value = timeText(selectedProject.manifest.defaults.start_time_seconds);
+      $('step-seconds').value = selectedProject.manifest.defaults.step_seconds;
+    }
+  }
+  controls();
+}
+function showEmpty() {
+  ++generation;
   run = null;
   acceptSnapshot(null);
   network = null;
   trafficInput = null;
   selectedSignal = null;
   hoveredSignal = null;
+  selectedTerminal = null;
   signalMarkers = [];
   $('map-label').textContent = 'Your city. In motion.';
-  $('project-note').textContent = 'Add a folder containing experiment.json. Project files stay in that folder.';
-  $('snapshot-note').textContent = 'Add a project folder, then load a simulation.';
+  $('snapshot-note').textContent = 'No simulation loaded. Choose a project in Loader.';
   $('attribution').textContent = '';
   $('empty').hidden = false;
+  $('terminal-tooltip').hidden = true;
   $('terminal-inspector').hidden = true;
+  $('entry-legend').hidden = true;
+  $('exit-legend').hidden = true;
   $('signal-choice').replaceChildren(new Option('Choose a physical traffic light', ''));
   $('signal-choice').disabled = true;
   $('signal-detail').textContent = 'Select a light to highlight its controlled incoming lanes.';
-  $('vehicle-type').replaceChildren(new Option('Select a project first', ''));
-  draw();
-}
-async function openProject(id) {
-  const token = ++generation;
-  const info = projects.find(project => project.manifest.id === id);
-  if (!info) { clearProject(); return; }
-  selectedProject = info;
-  run = null; acceptSnapshot(null); network = null; trafficInput = null;
-  $('map-label').textContent = 'Loading streets…';
-  const map = {lanes: [], junctions: [], terminals: []};
-  for (let offset = 0; ; offset += 10000) {
-    const page = await api(`/projects/${encodeURIComponent(id)}/map?offset=${offset}&limit=10000`);
-    if (token !== generation) return;
-    map.lanes.push(...page.lanes);
-    map.junctions.push(...page.junctions);
-    map.attribution = page.attribution;
-    if (offset === 0) {
-      map.terminals = page.terminals || [];
-      map.traffic_devices = page.traffic_devices || [];
-    }
-    if (offset + 10000 >= Math.max(page.total_lanes, page.total_junctions)) break;
-  }
-  if (token !== generation) return;
-  const {demand, weights} = await readTrafficInput(id);
-  if (token !== generation) return;
-  showMap(map, info.manifest.name);
-  $('start-time').value = timeText(info.manifest.defaults.start_time_seconds);
-  $('step-seconds').value = info.manifest.defaults.step_seconds;
-  showDemand(demand, weights);
-  $('project-note').textContent = `${info.manifest.description || info.manifest.name} ${profileTimeSummary(demand)} Folder: ${info.path}`;
-  $('snapshot-note').textContent = 'Network ready. Load a simulation in Loader.';
+  $('vehicle-type').replaceChildren(new Option('Load a project first', ''));
+  $('export-sumo').disabled = true;
+  $('demand-value').textContent = '—';
+  $('road-speed-value').textContent = '—';
   controls();
+  draw();
 }
 function showMap(map, name) {
   network = map;
@@ -301,28 +291,40 @@ async function openRun(status) {
   if (token !== generation) return;
   run = status;
   acceptSnapshot(null);
-  selectedProject = projects.find(project => project.manifest.id === status.configuration.project_id) || null;
-  $('project').value = status.configuration.project_id;
+  const loaded = projects.find(project => project.manifest.id === status.configuration.project_id) || null;
+  if (loaded) {
+    $('project').value = loaded.manifest.id;
+    selectProject(loaded.manifest.id, false);
+  }
   $('seed').value = status.configuration.seed;
   $('start-time').value = timeText(status.configuration.start_time_seconds);
   $('step-seconds').value = status.configuration.step_seconds;
   const playback = status.pacing.mode === 'unpaced' ? 'unpaced' : String(status.pacing.multiplier);
   if (!Array.from($('speed').options).some(option => option.value === playback)) $('speed').add(new Option(`${playback}×`, playback));
   $('speed').value = playback;
-  showMap(map, selectedProject?.manifest.name || status.configuration.project_id);
-  if (selectedProject) {
-    const {demand, weights} = await readTrafficInput(selectedProject.manifest.id);
+  showMap(map, loaded?.manifest.name || status.configuration.project_id);
+  if (loaded) {
+    const {demand, weights} = await readTrafficInput(loaded.manifest.id);
     if (token !== generation) return;
-    $('project-note').textContent = `${selectedProject.manifest.description || selectedProject.manifest.name} ${profileTimeSummary(demand)}`;
+    $('project-note').textContent += ` ${profileTimeSummary(demand)}`;
     showDemand(demand, weights);
   }
   await refresh(token);
   controls();
 }
+// Follows the server's loaded simulation, so loads and unloads from another tab appear here too.
 async function refresh(token) {
-  if (!run) return;
-  const id = run.id;
-  const [status, nextSnapshot] = await Promise.all([api(`/city-runs/${id}`), api(`/city-runs/${id}/snapshot`)]);
+  const status = await api('/city-runs/loaded');
+  if (token !== generation || busy) return;
+  if (!status) {
+    if (run) showEmpty();
+    return;
+  }
+  if (status.id !== run?.id) {
+    await openRun(status);
+    return;
+  }
+  const nextSnapshot = await api(`/city-runs/${status.id}/snapshot`);
   if (token !== generation || busy) return;
   run = status;
   acceptSnapshot(nextSnapshot);
@@ -333,29 +335,12 @@ async function refresh(token) {
   if (status.failure) showError(new Error(status.failure));
   draw();
 }
-async function registerResult(info) {
-  await refreshProjects();
-  $('project').value = info.manifest.id;
-  $('folder-choice').value = info.path;
-  $('folder-manager').open = false;
-  renderFolderStatus();
-  await openProject(info.manifest.id);
-}
-$('project').onchange = () => action(() => openProject($('project').value));
-$('folder-choice').onchange = () => { renderFolderStatus(); controls(); };
-$('refresh-projects').onclick = () => action(async () => {
-  await refreshProjects();
-  if (!active()) await openProject($('project').value);
+$('project').onchange = () => selectProject($('project').value, true);
+$('refresh-projects').onclick = () => action(refreshProjects);
+$('unload').onclick = () => action(async () => {
+  await api('/city-runs/loaded', 'DELETE');
+  showEmpty();
 });
-$('remove-folder').onclick = () => action(async () => {
-  await api('/projects/folders', 'DELETE', {path: $('folder-choice').value});
-  await refreshProjects();
-  if (!active()) await openProject($('project').value);
-});
-$('folder-form').onsubmit = event => {
-  event.preventDefault();
-  action(async () => registerResult(await api('/projects/folders', 'POST', {path: $('folder').value})));
-};
 $('load-form').onsubmit = event => {
   event.preventDefault();
   if (!$('step-seconds').checkValidity()) {
@@ -399,12 +384,12 @@ function syncSpeed() {
   speedSlider.value = index < 0 ? 1 : index;
   speedSlider.style.setProperty('--speed-progress', `${Number(speedSlider.value) * 20}%`);
   speedSlider.setAttribute('aria-valuetext', value === 'unpaced' ? 'As fast as possible' : `${value} times speed`);
-  speedSlider.disabled = busy;
+  speedSlider.disabled = busy || !run;
   $('speed-value').textContent = label;
   $('playback-value').textContent = run && active() ? run.pacing.mode === 'unpaced' ? 'MAX' : `${run.pacing.multiplier}×` : label;
   for (const button of document.querySelectorAll('[data-speed]')) {
     button.setAttribute('aria-pressed', String(button.dataset.speed === value));
-    button.disabled = busy;
+    button.disabled = busy || !run;
   }
 }
 function setSpeed(index, commit = true) {
@@ -684,14 +669,14 @@ canvas.addEventListener('wheel', event => {
 }, {passive: false});
 async function initialize() {
   await refreshProjects();
-  const runs = await api('/city-runs');
-  const existing = runs.find(status => ['running', 'paused'].includes(status.state));
-  if (existing) await openRun(existing);
-  else if (projects.length) {
-    const requested = new URLSearchParams(window.location.search).get('project');
-    if (projects.some(project => project.manifest.id === requested)) $('project').value = requested;
-    await openProject($('project').value);
+  const requested = new URLSearchParams(window.location.search).get('project');
+  if (projects.some(project => project.manifest.id === requested)) {
+    $('project').value = requested;
+    selectProject(requested, true);
   }
+  const loaded = await api('/city-runs/loaded');
+  if (loaded) await openRun(loaded);
+  else showEmpty();
   initialized = true;
   controls();
 }

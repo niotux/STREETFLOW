@@ -4,10 +4,12 @@ namespace Streetflow.Simulator.Tests;
 
 internal sealed class ProjectFixture : IDisposable
 {
-  public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "streetflow-project-tests", Guid.NewGuid().ToString("N"));
+  public string Path { get; }
 
-  public ProjectFixture()
+  // A parent folder places the fixture directly in a projects folder, where tests edit it in place.
+  public ProjectFixture(string? parent = null)
   {
+    Path = System.IO.Path.Combine(parent ?? System.IO.Path.Combine(System.IO.Path.GetTempPath(), "streetflow-project-tests"), Guid.NewGuid().ToString("N"));
     Directory.CreateDirectory(Path);
     foreach (string file in Directory.GetFiles(System.IO.Path.Combine(ProjectLoadingTests.Workspace, "experiments", "drafts", "tiny-graph")))
     {

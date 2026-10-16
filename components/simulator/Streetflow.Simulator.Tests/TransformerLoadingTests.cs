@@ -16,8 +16,8 @@ public sealed class TransformerLoadingTests
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
     string original = Path.Combine(ProjectLoadingTests.Workspace, "experiments", "drafts", "tiny-graph");
-    Assert.Equal(HttpStatusCode.Created, (await Import(client, original)).StatusCode);
-    Assert.Equal(HttpStatusCode.Created, (await Import(client, TransformerProjectFixture.Source)).StatusCode);
+    await factory.AddProjectAsync(client, original);
+    await factory.AddProjectAsync(client, TransformerProjectFixture.Source);
 
     CityProject oldProject = CityProjectLoader.Load(original);
     CityProject newProject = CityProjectLoader.Load(TransformerProjectFixture.Source);
@@ -60,7 +60,7 @@ public sealed class TransformerLoadingTests
   [InlineData("duplicate-movement", "journey-model.json")]
   [InlineData("missing-movement", "journey-model.json")]
   [InlineData("unknown-movement", "journey-model.json")]
-  public async Task InvalidModelCoordinatesAndTensorsAreRejectedBeforeImport(string mutation, string expectedFile)
+  public async Task InvalidModelCoordinatesAndTensorsMakeTheProjectUnavailable(string mutation, string expectedFile)
   {
     using TransformerProjectFixture fixture = new();
     if (expectedFile == "weights.json")
@@ -88,11 +88,9 @@ public sealed class TransformerLoadingTests
 
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    HttpResponseMessage response = await Import(client, fixture.Path);
-    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    ApiError error = (await response.Content.ReadFromJsonAsync<ApiError>(JsonDefaults.Options))!;
-    Assert.Equal("invalid_project", error.Code);
-    Assert.Contains(expectedFile, error.Message);
+    ProjectSource source = await factory.AddSourceAsync(client, fixture.Path);
+    Assert.Null(source.Project);
+    Assert.Contains(expectedFile, source.Error);
     Assert.Equal(0, (await Body(await client.GetAsync("/api/v1/projects"))).GetArrayLength());
   }
 
@@ -226,8 +224,6 @@ public sealed class TransformerLoadingTests
         break;
     }
   }
-
-  private static Task<HttpResponseMessage> Import(HttpClient client, string path) => client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(path), JsonDefaults.Options);
 
   private static async Task<JsonElement> Body(HttpResponseMessage response)
   {

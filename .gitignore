@@ -11,3 +11,6 @@ TestResults/
 .env
 scenarios/**/source.osm
 scenarios/**/conversion.log
+# Local project folders and ZIPs; only the guide is tracked.
+/projects/*
+!/projects/README.md

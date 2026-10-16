@@ -1,26 +1,18 @@
 # Transformer Routes
 
-The simulator supports two city-project formats. **Edge Population** is version 1, with its existing road profiles and generator. **Transformer Routes** is version 2, with numerical arrival, journey, and movement tensors. Both use the same import API, map, run controls, SUMO engine, and external signal-control API.
+The simulator supports two city-project formats. **Edge Population** is version 1, with its existing road profiles and generator. **Transformer Routes** is version 2, with numerical arrival, journey, and movement tensors. Both use the same projects folder, map, run controls, SUMO engine, and external signal-control API.
 
 Transformer Routes is the product name for the implemented `contextual_journey_v1` probabilistic model. It uses authored weights and the destination-conditioning mathematics; it is not a trained neural transformer. The [file specification](../../active/ideas/simulator/project-format-v2.md) and [mathematical design](../../active/ideas/simulator/traffic-route-model-proposal.md) define its inputs and behavior.
 
 ## Four-way test project
 
-Import [four-way-transformer-routes](../../../experiments/drafts/four-way-transformer-routes/README.md). It uses the same four-way geometry as the existing `tiny-graph` Edge Population project. Its five periods, four origins, four exits, one vehicle type/category, and twelve movements require **1,060 numeric parameters**.
+Copy [four-way-transformer-routes](../../../experiments/drafts/four-way-transformer-routes/README.md) into the projects folder. It uses the same four-way geometry as the existing `tiny-graph` Edge Population project. Its five periods, four origins, four exits, one vehicle type/category, and twelve movements require **1,060 numeric parameters**.
 
 The synthetic morning weights favor south-to-north traffic; evening weights reverse that direction. East/west turning shares also change. The project README describes expected shares and its preparation script. The project has no stored vehicles, named journey templates, or fixed routes.
 
 The separate [north-to-east experiment](../../../experiments/drafts/four-way-north-east/README.md), project ID `four-way-north-east`, makes traffic from the top toward the right visually dominant. It requests 900 north arrivals/hour, with 96% selecting the east exit, and 30 arrivals/hour from each other entry. These weights apply all day; the original four-way checkpoint remains unchanged.
 
-In Docker, the project folder is `/app/projects/four-way-transformer-routes`. Import it through Loader or:
-
-```sh
-curl -sS http://localhost:8080/api/v1/projects/import/folder \
-  -H 'Content-Type: application/json' \
-  --data '{"path":"/app/projects/four-way-transformer-routes"}'
-```
-
-Select **Four-way intersection · Transformer Routes** in the Loader, use seed 42, and compare 07:30 with 17:00. Load creates a paused run; Start runs it. Stop before loading another run. For an Edge Population comparison, select the existing `tiny-graph` project. Imported projects are immutable; updated parameter files need a new project ID.
+Select **Four-way intersection · Transformer Routes** in the Loader, use seed 42, and compare 07:30 with 17:00. Load creates a paused run; Start runs it. Loading another project replaces it. For an Edge Population comparison, select the existing `tiny-graph` project. Edit parameter files in place and refresh the list; saved runs keep their own snapshot.
 
 Traffic lights start off. Vehicles follow SUMO priority rules until an external controller changes them. Lights remain visible; no traffic-light control panel is introduced.
 

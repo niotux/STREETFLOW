@@ -1,6 +1,6 @@
 # City project catalog
 
-This folder contains inputs for the current simulator workflow. The projects remain under `drafts/` for path continuity, although their format and contents were accepted. They are registered by folder path through the [project loader](../docs/components/simulator/project-loading.md); runtime behavior and open review items are in the [simulator guide](../components/simulator/README.md) and [review checklist](../docs/active/plans/simulator/review-checklist.md).
+This folder contains inputs for the current simulator workflow. The projects remain under `drafts/` for path continuity, although their format and contents were accepted. Copy them into the repository's `projects/` folder to use them in the [simulator](../docs/components/simulator/project-loading.md); runtime behavior and open review items are in the [simulator guide](../components/simulator/README.md) and [review checklist](../docs/active/plans/simulator/review-checklist.md).
 
 | Project | Topic and evidence | Status |
 | --- | --- | --- |
@@ -13,6 +13,6 @@ This folder contains inputs for the current simulator workflow. The projects rem
 | [Podu Roș](drafts/podu-ros/README.md) | Real intersection map with evening camera-sample evidence and explicit estimates outside coverage | Accepted input; not calibrated full-day demand |
 | [Podu Roș commute estimate](drafts/podu-ros-commute/README.md) | Directional morning/evening commute variant on the Podu Roș network | In-progress estimate; derived from observed direction and existing camera proxies |
 
-Compose mounts `drafts/` into the simulator; the runtime image does not bundle these projects. Registered folders remain editable on disk, and other tools can use them without starting the simulator or a database. Refresh in Loader after editing; removal from the registry leaves the folder intact.
+The runtime image does not bundle these projects; Compose mounts `projects/`, not `drafts/`. Projects remain editable on disk, and other tools can use them without starting the simulator or a database. Refresh in Loader after editing.
 
 The projects contain maps, demand inputs, and detector placeholders. SUMO generates vehicle trips and routes at runtime. Research source files and preparation scripts are listed in the [research index](../docs/research/README.md); individual source folders describe whether their contents are measured, estimated, or archived.

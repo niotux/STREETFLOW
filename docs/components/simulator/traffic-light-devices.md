@@ -62,13 +62,13 @@ The packages currently have these authored device inventories:
 | `four-way-neural-routes` | 4 | One marker per approach |
 | `podu-ros`, `podu-ros-commute`, `iasi-central-day` | 0 | Roads load; physical inventory still needs authoring |
 
-To inspect working lights, register any canonical four-way folder or retained `-devices` folder in Balthasar's Loader, then create/load a simulation from that package. A project preview does not create the active session that Melchior discovers. A paused simulation is sufficient for discovery and manual commands; simulation stepping is required to observe vehicles responding.
+To inspect working lights, put any canonical four-way folder or retained `-devices` folder in the projects folder, then load it in Balthasar's Loader. Only a loaded simulation is a session that Melchior discovers. A paused simulation is sufficient for discovery and manual commands; simulation stepping is required to observe vehicles responding.
 
 For a package that needs a new inventory:
 
-1. Edit the registered project folder directly. Use a separate folder and project ID only if you want to keep both variants in the list. Saved runs already preserve their original input snapshots.
+1. Edit the project folder directly. Use a separate folder and project ID only if you want to keep both variants in the list. Saved runs already preserve their original input snapshots.
 2. Author `traffic-lights.json` using the format above and reference it with `traffic_lights_file`. Keep a world's identity stable when it represents the same infrastructure; the infrastructure revision changes when its mapping changes.
-3. Click **Refresh from disk** in Loader, or register the folder if it is not yet listed. Validation includes lane coverage and controller/link ownership. Fix any reported mapping errors in the same folder and refresh again.
+3. Click **Refresh list** in Loader. Validation includes lane coverage and controller/link ownership. Fix any reported mapping errors in the same folder and refresh again.
 4. Create/load a new simulation from the new project. Check its map's `traffic_devices` array, then the active TLC session map's `devices` array. Each device's `lane_ids` must resolve to the incoming lane geometry in that map.
 5. Select a device in Logistics, command a state, and verify readback and the simulator marker. All mapped movements change together. Restarting an earlier run uses its archived package, so it does not pick up this migration.
 
@@ -92,7 +92,7 @@ The device file supplies `world_id`. An unmapped legacy project uses its project
 
 All four-way projects share the same world ID and infrastructure revision when they use the shared device mapping. Session IDs change whenever a new simulation is loaded. Cached geometry can be reused across those sessions and traffic formats; physical-device state is read again for the new session.
 
-The device file participates in project revisions and is copied into saved run snapshots. To use a new mapping, edit the registered folder, refresh from disk, and load a new simulation. A new project ID is not required for edits to the same folder. Restart reuses the saved mapping and starts signals off.
+The device file participates in project revisions and is copied into saved run snapshots. To use a new mapping, edit the project folder, refresh the list, and load it again. A new project ID is not required for edits to the same folder. Restart reuses the saved mapping and starts signals off.
 
 Both maps draw one marker per configured physical device. The simulator map remains read-only for light control. Logistics offers one set of controls per device and does not expose per-lane or per-movement commands.
 

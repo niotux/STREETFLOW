@@ -15,7 +15,7 @@ public sealed class TransformerRunTests
   {
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    await Import(client, projectId);
+    await Import(factory, client, projectId);
     HttpResponseMessage created = await client.PostAsJsonAsync($"/api/v1/projects/{projectId}/runs", new CreateCityRunRequest(42, 8 * 3600), JsonDefaults.Options);
     CityRunStatus run = await Status(created);
     Assert.Equal("paused", run.State);
@@ -53,7 +53,7 @@ public sealed class TransformerRunTests
     {
       dataRoot = factory.DataRoot;
       using HttpClient client = factory.CreateClient();
-      await Import(client, TransformerProjectFixture.ProjectId);
+      await Import(factory, client, TransformerProjectFixture.ProjectId);
       HttpResponseMessage created = await client.PostAsJsonAsync($"/api/v1/projects/{TransformerProjectFixture.ProjectId}/runs", new CreateCityRunRequest(42), JsonDefaults.Options);
       CityRunStatus run = await Status(created);
       runId = run.Id;
@@ -78,11 +78,10 @@ public sealed class TransformerRunTests
     await Command(reopened, replay.Id, "stop");
   }
 
-  private static async Task Import(HttpClient client, string projectId)
+  private static async Task Import(BackendFactory factory, HttpClient client, string projectId)
   {
     string source = Path.Combine(ProjectLoadingTests.Workspace, "experiments", "drafts", projectId);
-    HttpResponseMessage imported = await client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(source), JsonDefaults.Options);
-    Assert.Equal(HttpStatusCode.Created, imported.StatusCode);
+    await factory.AddProjectAsync(client, source);
   }
 
   private static async Task<CityRunStatus> Command(HttpClient client, string runId, string command, int steps = 1)

@@ -20,7 +20,7 @@ public sealed class PhysicalDevicesTests
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
     Assert.Null((await client.GetFromJsonAsync<TlcSession>("/api/v1/tlc/session", JsonDefaults.Options))!.Id);
-    CityRunStatus run = await Start(client, fixture);
+    CityRunStatus run = await Start(factory, client, fixture);
     TlcSession session = (await client.GetFromJsonAsync<TlcSession>("/api/v1/tlc/session", JsonDefaults.Options))!;
     Assert.Equal(run.Id, session.Id);
     Assert.Equal("four-way", session.WorldId);
@@ -48,7 +48,7 @@ public sealed class PhysicalDevicesTests
     using PhysicalDevicesFixture fixture = new(projectId);
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    CityRunStatus run = await Start(client, fixture);
+    CityRunStatus run = await Start(factory, client, fixture);
     TlcSession session = (await client.GetFromJsonAsync<TlcSession>("/api/v1/tlc/session", JsonDefaults.Options))!;
     string path = $"/api/v1/tlc/sessions/{run.Id}/devices/north";
     Snapshot initial = (await client.GetFromJsonAsync<Snapshot>($"/api/v1/city-runs/{run.Id}/snapshot", JsonDefaults.Options))!;
@@ -87,7 +87,7 @@ public sealed class PhysicalDevicesTests
     using PhysicalDevicesFixture fixture = new();
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    CityRunStatus run = await Start(client, fixture);
+    CityRunStatus run = await Start(factory, client, fixture);
     TlcSession session = (await client.GetFromJsonAsync<TlcSession>("/api/v1/tlc/session", JsonDefaults.Options))!;
     string path = $"/api/v1/tlc/sessions/{run.Id}/devices/";
     Assert.Equal(HttpStatusCode.Conflict, (await client.PutAsJsonAsync(path + "north", new TlcDeviceCommand("green", "other-world", session.Revision!), JsonDefaults.Options)).StatusCode);
@@ -108,7 +108,7 @@ public sealed class PhysicalDevicesTests
     using PhysicalDevicesFixture fixture = new(projectId);
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    CityRunStatus run = await Start(client, fixture);
+    CityRunStatus run = await Start(factory, client, fixture);
     TlcSession session = (await client.GetFromJsonAsync<TlcSession>("/api/v1/tlc/session", JsonDefaults.Options))!;
     TlcMap map = (await client.GetFromJsonAsync<TlcMap>($"/api/v1/tlc/sessions/{run.Id}/map", JsonDefaults.Options))!;
     foreach (TlcDevice device in map.Devices)
@@ -158,7 +158,7 @@ public sealed class PhysicalDevicesTests
     using PhysicalDevicesFixture fixture = new(projectId);
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    CityRunStatus run = await Start(client, fixture);
+    CityRunStatus run = await Start(factory, client, fixture);
     TlcSession session = (await client.GetFromJsonAsync<TlcSession>("/api/v1/tlc/session", JsonDefaults.Options))!;
     await SetDevice(client, session, "north", "green");
     HttpResponseMessage response = await client.PostAsJsonAsync($"/api/v1/city-runs/{run.Id}/restart", new CityRunCommand(), JsonDefaults.Options);
@@ -212,7 +212,7 @@ public sealed class PhysicalDevicesTests
     using HttpClient client = factory.CreateClient();
     using ProjectFixture source = new();
     source.ChangeManifest(manifest => manifest["traffic_lights_file"] = null);
-    await client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(source.Path), JsonDefaults.Options);
+    await factory.AddProjectAsync(client, source.Path);
     HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/projects/tiny-graph/runs", new CreateCityRunRequest(42), JsonDefaults.Options);
     CityRunStatus run = (await response.Content.ReadFromJsonAsync<CityRunStatus>(JsonDefaults.Options))!;
     TlcMap map = (await client.GetFromJsonAsync<TlcMap>($"/api/v1/tlc/sessions/{run.Id}/map", JsonDefaults.Options))!;
@@ -260,7 +260,7 @@ public sealed class PhysicalDevicesTests
     using PhysicalDevicesFixture fixture = new();
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    CityRunStatus run = await Start(client, fixture);
+    CityRunStatus run = await Start(factory, client, fixture);
     string saved = Path.Combine(factory.DataRoot, "city-runs", run.Id, "package", "traffic-lights.json");
     Assert.True(File.Exists(saved));
     fixture.Change("traffic-lights.json", node => node["devices"]![0]!["label"] = "Source changed");
@@ -273,10 +273,9 @@ public sealed class PhysicalDevicesTests
     await Stop(client, replay.Id);
   }
 
-  private static async Task<CityRunStatus> Start(HttpClient client, PhysicalDevicesFixture fixture)
+  private static async Task<CityRunStatus> Start(BackendFactory factory, HttpClient client, PhysicalDevicesFixture fixture)
   {
-    HttpResponseMessage imported = await client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(fixture.Path), JsonDefaults.Options);
-    imported.EnsureSuccessStatusCode();
+    await factory.AddProjectAsync(client, fixture.Path);
     HttpResponseMessage created = await client.PostAsJsonAsync($"/api/v1/projects/{fixture.Id}/runs", new CreateCityRunRequest(42), JsonDefaults.Options);
     created.EnsureSuccessStatusCode();
     CityRunStatus run = (await created.Content.ReadFromJsonAsync<CityRunStatus>(JsonDefaults.Options))!;

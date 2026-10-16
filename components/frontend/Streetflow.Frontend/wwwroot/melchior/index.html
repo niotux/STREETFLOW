@@ -5,12 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#090e13">
   <title>Streetflow · Melchior logistics</title>
+  <link rel="stylesheet" href="/ui/streetflow-ui.css?v=shared-ui-1">
   <link rel="stylesheet" href="/balthasar/styles.css">
-  <link rel="stylesheet" href="/magi.css">
-  <script type="module" src="/melchior/app.js?v=physical-devices-3"></script>
+  <link rel="stylesheet" href="/magi.css?v=shared-ui-1">
+  <script type="module" src="/melchior/app.js?v=projects-folder-1"></script>
 </head>
 <body class="magi-page">
-  <header class="title-bar">
+  <header class="title-bar ui-app-header">
     <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">≋</span><span>STREETFLOW<small>MELCHIOR / LOGISTICS CONTROL</small></span></a>
     <nav class="component-nav" aria-label="MAGI components"><a href="/">MAGI</a><a href="/melchior/" aria-current="page">Melchior</a><a href="/balthasar/">Balthasar ↗</a></nav>
     <span id="connection" role="status" data-connected="false">Connecting…</span>
@@ -18,8 +19,8 @@
   <div id="error" class="logistics-error" role="alert" hidden></div>
   <main class="logistics-layout">
     <section class="control-panel" aria-labelledby="connection-title">
-      <div class="applet-heading"><span class="applet-number">01</span><h2 id="connection-title">Connection</h2><span class="applet-category">TLCAPI</span></div>
-      <div class="applet-body">
+      <div class="ui-window-titlebar"><span class="ui-window-number">01</span><h2 id="connection-title">Connection</h2><span class="ui-window-category">TLCAPI</span></div>
+      <div class="ui-window-body">
         <form id="connection-form">
           <label for="target-host">Server address</label><input id="target-host" type="url" required placeholder="http://localhost" aria-describedby="connection-help">
           <div class="connection-fields"><div><label for="target-port">Port</label><input id="target-port" type="number" required min="1" max="65535" placeholder="8080"></div></div>
@@ -42,8 +43,8 @@
       <div id="map-detail">Select a traffic light to open its controller.</div>
     </section>
     <section class="control-panel signals-panel" aria-labelledby="signals-title">
-      <div class="applet-heading"><span class="applet-number">02</span><h2 id="signals-title">Traffic lights</h2><span class="applet-category">SWITCHBOARD</span></div>
-      <div class="applet-body">
+      <div class="ui-window-titlebar"><span class="ui-window-number">02</span><h2 id="signals-title">Traffic lights</h2><span class="ui-window-category">SWITCHBOARD</span></div>
+      <div class="ui-window-body">
         <label for="signal-filter">Find a device</label><input id="signal-filter" class="signal-filter" type="search" placeholder="Device name or lane ID">
         <label for="controller">Physical device</label><select id="controller" disabled><option value="">No physical devices configured</option></select>
         <p id="signal-summary" class="status-note" role="status">Select a run to begin.</p>

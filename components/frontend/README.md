@@ -26,6 +26,6 @@ Defaults are frontend port 8090, simulator port 8080, and logistics port 8081. C
 
 Balthasar assets are included directly from `components/simulator/Streetflow.Simulator/wwwroot` during build and publish, under `wwwroot/balthasar`. There is one source for the simulator UI; the simulator also retains its standalone inspector on port 8080. The frontend serves build output, so rebuild after browser asset edits.
 
-The frontend streams `/api/v1/*` to Balthasar and `/melchior-api/*` to Melchior's `/api/v1/*`, preserving simulator ZIP imports. Browser requests share the frontend origin and need no CORS setup. Melchior connects to tlcapi independently using its saved Connection settings.
+The frontend streams `/api/v1/*` to Balthasar and `/melchior-api/*` to Melchior's `/api/v1/*`. Browser requests share the frontend origin and need no CORS setup. Melchior connects to tlcapi independently using its saved Connection settings.
 
 The frontend does not start other processes itself; Compose starts and checks all services. New assets are under `Streetflow.Frontend/wwwroot`. Styles and traffic-light map helpers reuse Balthasar's assets.

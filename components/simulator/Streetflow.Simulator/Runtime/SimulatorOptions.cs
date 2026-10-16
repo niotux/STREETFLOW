@@ -4,6 +4,7 @@ public sealed class SimulatorOptions
 {
   public string ScenarioRoot { get; set; } = null!;
   public string DataRoot { get; set; } = null!;
+  public string ProjectsRoot { get; set; } = null!;
   public string SumoBinary { get; set; } = null!;
   public string NetconvertBinary { get; set; } = null!;
   public string DuarouterBinary { get; set; } = null!;

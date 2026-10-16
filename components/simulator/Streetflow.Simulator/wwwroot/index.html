@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#090e13">
   <title>Streetflow · Balthasar simulation studio</title>
-  <link rel="stylesheet" href="/ui/streetflow-ui.css">
-  <link rel="stylesheet" href="styles.css?v=shared-windows-1">
-  <script type="module" src="app.js?v=project-folders-1"></script>
+  <link rel="stylesheet" href="/ui/streetflow-ui.css?v=shared-ui-1">
+  <link rel="stylesheet" href="styles.css?v=projects-folder-1">
+  <script type="module" src="app.js?v=projects-folder-1"></script>
 </head>
 <body>
   <header class="title-bar ui-app-header">
@@ -24,7 +24,7 @@
     <div id="map-wrap">
       <canvas id="map" aria-label="Road network, traffic lights and simulated moving cars. Drag to pan and scroll to zoom."></canvas>
       <div class="workspace-heading"><div><span class="eyebrow">LIVE NETWORK / SUMO</span><h1 id="map-label">Your city. In motion.</h1></div><div class="view-actions"><button id="focus-view" type="button" aria-pressed="false">Focus map</button><button id="fit" type="button" aria-label="Fit road network to view">↗ Fit</button></div></div>
-      <div id="empty"><span class="empty-icon" aria-hidden="true">⌁</span><span class="eyebrow">THE CITY IS YOUR CANVAS</span><strong>Set the streets in motion.</strong><span>Open Loader to add a project folder and prepare your simulation.</span><button type="button" data-open-applet="loader">Open Loader ↗</button></div>
+      <div id="empty"><span class="empty-icon" aria-hidden="true">⌁</span><span class="eyebrow">THE CITY IS YOUR CANVAS</span><strong>Set the streets in motion.</strong><span>Open Loader to choose a project and load your simulation.</span><button type="button" data-open-applet="loader">Open Loader ↗</button></div>
       <div class="map-hint">Drag to pan <span>/</span> Scroll to zoom</div>
       <div class="map-legend"><span><i class="moving-dot"></i> Moving</span><span><i class="stopped-dot"></i> Stopped</span><span id="entry-legend" hidden><i class="entry-dot"></i> Entry</span><span id="exit-legend" hidden><i class="exit-dot"></i> Exit</span></div>
       <div id="terminal-tooltip" class="terminal-tooltip" hidden></div>
@@ -42,21 +42,17 @@
           <div class="speed-presets" aria-label="Speed presets"><button type="button" data-speed="0.5" aria-pressed="false">0.5×</button><button type="button" data-speed="1" aria-pressed="true">1×</button><button type="button" data-speed="2" aria-pressed="false">2×</button><button type="button" data-speed="5" aria-pressed="false">5×</button><button type="button" data-speed="10" aria-pressed="false">10×</button><button type="button" data-speed="unpaced" aria-label="Maximum speed" aria-pressed="false">MAX</button></div>
           <select id="speed" aria-label="Playback speed" hidden><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option><option value="unpaced">Maximum</option></select>
           <p id="speed-help" class="muted">Playback changes the clock rate, not vehicle driving speed.</p>
-          <p id="run-note" class="applet-note">Load a simulation in Loader, then start here.</p>
+          <p id="run-note" class="applet-note">Load a project in Loader to use Runner.</p>
         </section>
       <section id="loader-applet" class="applet-body" data-applet="loader" data-title="Loader" data-category="PREPARATION">
-          <span class="eyebrow">01 / SELECT YOUR NETWORK</span>
-          <label for="project">City project</label><select id="project"><option value="">Add a project folder to begin</option></select>
-          <p id="project-note" class="muted">Add a folder containing experiment.json. Project files stay in that folder.</p>
-          <button id="refresh-projects" type="button">Refresh from disk ↻</button>
-          <details id="folder-manager"><summary>Manage project folders</summary>
-            <form id="folder-form"><label for="folder">Project folder path</label><input id="folder" type="text" placeholder="/app/projects/tiny-graph" required><button type="submit">Add folder +</button></form>
-            <p class="muted">Use an absolute path visible to the simulator. Docker mounts experiments/drafts at /app/projects.</p>
-            <label for="folder-choice">Registered folder</label><select id="folder-choice"></select><p id="folder-status" class="muted" role="status">No project folders registered.</p><button id="remove-folder" type="button" disabled>Remove from list</button>
-          </details>
-          <div class="section-divider"></div><span class="eyebrow">02 / PREPARE THE SIMULATION</span>
-          <form id="load-form"><div class="field-pair"><div><label for="seed">Random seed</label><input id="seed" type="number" value="42" min="0" max="2147483647" required></div><div><label for="start-time">City start time</label><input id="start-time" type="time" value="07:00" step="1" required></div></div><button id="load" class="primary" type="submit" disabled>Load simulation <span aria-hidden="true">↗</span></button></form>
-          <p id="load-note" class="applet-note">Load prepares a paused run. Runner controls the traffic.</p>
+          <span class="eyebrow">01 / CHOOSE A PROJECT</span>
+          <label for="project">Projects folder</label><select id="project"><option value="">No projects found</option></select>
+          <p id="project-note" class="muted">Put project folders or .zip files in the projects folder, then refresh.</p>
+          <button id="refresh-projects" type="button">Refresh list ↻</button>
+          <details id="source-problems" hidden><summary id="source-problems-summary"></summary><ul id="source-problems-list"></ul></details>
+          <div class="section-divider"></div><span class="eyebrow">02 / LOAD THE SIMULATION</span>
+          <form id="load-form"><div class="field-pair"><div><label for="seed">Random seed</label><input id="seed" type="number" value="42" min="0" max="2147483647" required></div><div><label for="start-time">City start time</label><input id="start-time" type="time" value="07:00" step="1" required></div></div><div class="load-actions"><button id="load" class="primary" type="submit" disabled>Load <span aria-hidden="true">↗</span></button><button id="unload" type="button" disabled>Unload <span aria-hidden="true">⏏</span></button></div></form>
+          <p id="load-note" class="applet-note">Load prepares a paused simulation. Runner controls the traffic.</p>
           <p id="signal-note" class="applet-note" role="status">Select a project to inspect its traffic lights.</p>
           <a class="legacy-link" href="legacy-inspector.html">Scenario inspector ↗</a>
         </section>
@@ -86,7 +82,7 @@
           <p class="applet-note">A speed factor of 1 follows road limits; actual average speed depends on traffic. Export values are an editable draft, not readings from the loaded project.</p>
         </section>
     </div>
-    <footer class="map-footer"><span id="snapshot-note">Add a project folder. Load a simulation. Start in Runner.</span><span id="lights-status" role="status"></span><span id="attribution"></span><span class="grid-label">16 PX GRID / EDGES SNAP TOGETHER</span></footer>
+    <footer class="map-footer"><span id="snapshot-note">No simulation loaded. Choose a project in Loader.</span><span id="lights-status" role="status"></span><span id="attribution"></span><span class="grid-label">16 PX GRID / EDGES SNAP TOGETHER</span></footer>
     <div id="workspace-announcement" class="ui-visually-hidden" role="status" aria-live="polite"></div>
   </main>
 

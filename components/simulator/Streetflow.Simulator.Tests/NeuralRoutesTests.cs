@@ -125,8 +125,7 @@ public sealed class NeuralRoutesTests
       foreach (string projectId in new string[] { "tiny-graph", TransformerProjectFixture.ProjectId, NeuralProjectFixture.ProjectId })
       {
         string source = Path.Combine(ProjectLoadingTests.Workspace, "experiments", "drafts", projectId);
-        HttpResponseMessage imported = await client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(source), JsonDefaults.Options);
-        Assert.Equal(HttpStatusCode.Created, imported.StatusCode);
+        await factory.AddProjectAsync(client, source);
       }
 
       Assert.Equal(HttpStatusCode.OK, (await client.GetAsync($"/api/v1/projects/{NeuralProjectFixture.ProjectId}/model")).StatusCode);

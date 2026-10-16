@@ -9,11 +9,10 @@ namespace Streetflow.Simulator.Tests;
 
 public sealed class CityRunTests
 {
-  private static async Task Import(HttpClient client, string id)
+  private static async Task Import(BackendFactory factory, HttpClient client, string id)
   {
     string path = Path.Combine(ProjectLoadingTests.Workspace, "experiments", "drafts", id);
-    HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(path), JsonDefaults.Options);
-    Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    await factory.AddProjectAsync(client, path);
   }
 
   private static async Task<CityRunStatus> Start(HttpClient client, string id, double? start = null)
@@ -40,7 +39,7 @@ public sealed class CityRunTests
   {
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    await Import(client, id);
+    await Import(factory, client, id);
     CityRunStatus run = await Start(client, id);
     CityRunStatus stepped = await Command(client, run.Id, "step", 200);
     Assert.Equal("paused", stepped.State);
@@ -76,15 +75,13 @@ public sealed class CityRunTests
   {
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    await Import(client, "tiny-graph");
+    await Import(factory, client, "tiny-graph");
     CityRunStatus run = await Start(client, "tiny-graph", 86398);
     run = await Command(client, run.Id, "step", 8);
     Assert.Equal(1, run.Day);
     Assert.Equal(2, run.CityTimeSeconds);
     Assert.Equal("paused", run.State);
-    HttpResponseMessage conflict = await client.PostAsJsonAsync("/api/v1/projects/tiny-graph/runs", new CreateCityRunRequest(42), JsonDefaults.Options);
-    Assert.Equal(HttpStatusCode.Conflict, conflict.StatusCode);
-    conflict = await client.PostAsJsonAsync("/api/v1/runs", new CreateRunRequest("tiny-intersection", "ownership-check", Seed: 42), JsonDefaults.Options);
+    HttpResponseMessage conflict = await client.PostAsJsonAsync("/api/v1/runs", new CreateRunRequest("tiny-intersection", "ownership-check", Seed: 42), JsonDefaults.Options);
     Assert.Equal(HttpStatusCode.Conflict, conflict.StatusCode);
     await Command(client, run.Id, "pacing", pacing: new Pacing("unpaced"));
     await Command(client, run.Id, "resume");
@@ -104,7 +101,7 @@ public sealed class CityRunTests
     fixture.ChangeDemand(d => d["generation"]!["mean_departures_per_hour"] = 0);
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    await client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(fixture.Path), JsonDefaults.Options);
+    await factory.AddProjectAsync(client, fixture.Path);
     CityRunStatus run = await Start(client, "tiny-graph");
     run = await Command(client, run.Id, "step", 100);
     Assert.Equal("paused", run.State);
@@ -120,7 +117,7 @@ public sealed class CityRunTests
     fixture.ChangeDemand(d => d["generation"]!["mean_departures_per_hour"] = 360000);
     await using BackendFactory factory = new() { MaximumLiveVehicles = 2, MaximumPendingEntries = 1, MaximumBacklogSeconds = 2 };
     using HttpClient client = factory.CreateClient();
-    await client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(fixture.Path), JsonDefaults.Options);
+    await factory.AddProjectAsync(client, fixture.Path);
     CityRunStatus run = await Start(client, "tiny-graph");
     run = await Command(client, run.Id, "step", 100);
     Assert.Equal("paused", run.State);
@@ -143,7 +140,7 @@ public sealed class CityRunTests
     {
       root = factory.DataRoot;
       using HttpClient client = factory.CreateClient();
-      await Import(client, "tiny-graph");
+      await Import(factory, client, "tiny-graph");
       CityRunStatus run = await Start(client, "tiny-graph");
       id = run.Id;
       await Command(client, id, "step", 20);
@@ -171,7 +168,7 @@ public sealed class CityRunTests
     });
     await using BackendFactory factory = new();
     using HttpClient client = factory.CreateClient();
-    await client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(fixture.Path), JsonDefaults.Options);
+    await factory.AddProjectAsync(client, fixture.Path);
     CityRunStatus run = await Start(client, "tiny-graph", 86390);
     run = await Command(client, run.Id, "step", 1000);
     Assert.True(run.GenerationEnded);

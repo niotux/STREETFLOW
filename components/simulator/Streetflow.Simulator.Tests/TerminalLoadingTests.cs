@@ -21,8 +21,7 @@ public sealed class TerminalLoadingTests
     {
       dataRoot = factory.DataRoot;
       using HttpClient client = factory.CreateClient();
-      HttpResponseMessage imported = await client.PostAsJsonAsync("/api/v1/projects/import/folder", new FolderImportRequest(source.Path), JsonDefaults.Options);
-      Assert.Equal(HttpStatusCode.Created, imported.StatusCode);
+      await factory.AddProjectAsync(client, source.Path);
       ProjectMapResponse? map = await client.GetFromJsonAsync<ProjectMapResponse>("/api/v1/projects/tiny-graph/map?limit=1", JsonDefaults.Options);
       Assert.NotNull(map);
       Assert.Single(map.Lanes);

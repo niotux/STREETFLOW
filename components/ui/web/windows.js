@@ -1,4 +1,4 @@
-import {fitRectangle, fitResizedRectangle, snapRectangle, resizeFromEdge, dockRectangle, restoreWindowState} from './window-geometry.js';
+import {fitRectangle, fitResizedRectangle, snapRectangle, resizeFromEdge, dockRectangle, restoreWindowState} from './window-geometry.js?v=shared-ui-1';
 
 const directions = {ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1]};
 const edges = ['top', 'bottom', 'left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right'];

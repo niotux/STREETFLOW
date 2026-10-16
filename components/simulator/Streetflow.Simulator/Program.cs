@@ -12,6 +12,7 @@ SimulatorOptions options = new()
 {
   ScenarioRoot = "scenarios",
   DataRoot = ".data/simulator",
+  ProjectsRoot = "projects",
   SumoBinary = "sumo",
   NetconvertBinary = "netconvert",
   DuarouterBinary = "duarouter",
@@ -33,6 +34,7 @@ builder.Configuration.GetSection("Simulator").Bind(options);
 string workspace = FindWorkspace(builder.Environment.ContentRootPath);
 options.ScenarioRoot = Path.GetFullPath(options.ScenarioRoot, workspace);
 options.DataRoot = Path.GetFullPath(options.DataRoot, workspace);
+options.ProjectsRoot = Path.GetFullPath(options.ProjectsRoot, workspace);
 if (HasArgument(args, "prepare-scenarios"))
 {
   await ScenarioPreparation.PrepareAsync(workspace, options, CancellationToken.None);

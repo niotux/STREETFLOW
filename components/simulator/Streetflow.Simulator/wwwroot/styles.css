@@ -45,12 +45,15 @@ h1 { margin: 5px 0 0; font-size: 22px; font-weight: 550; letter-spacing: -.025em
 .applet-body > label:first-of-type { margin-top: 0; }
 .muted { color: #91a5b1; font-size: 10px; margin: 10px 0 12px; overflow-wrap: anywhere; }
 .applet-note { border-left: 2px solid #678747; background: linear-gradient(90deg, #a8e76a08, transparent); padding: 8px 10px; color: #99afbc; font-size: 10px; margin: 14px 0 0; }
-#load { width: 100%; display: flex; justify-content: space-between; }
+.load-actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 16px; }
+#load { display: flex; justify-content: space-between; }
+#source-problems { margin-top: 10px; font-size: 10px; color: var(--muted); }
+#source-problems ul { margin: 6px 0 0; padding-left: 16px; line-height: 1.5; overflow-wrap: anywhere; }
+#runner-applet[inert] { opacity: .45; }
 .import-button { width: 100%; display: flex; align-items: center; justify-content: space-between; text-align: left; font-size: 11px; }
 .import-button span { color: var(--accent); font-size: 16px; }
 details { margin-top: 13px; font-size: 10px; color: #9aadb9; }
 summary { cursor: pointer; line-height: 1.5; }
-#folder-form button { width: 100%; margin-top: 8px; font-size: 11px; }
 .section-divider { margin: 20px 0 18px; height: 1px; background: linear-gradient(90deg, #536976, transparent); }
 .field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 13px; }
 .field-pair label { font-size: 10px; }

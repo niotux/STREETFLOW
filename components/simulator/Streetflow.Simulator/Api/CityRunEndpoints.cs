@@ -13,6 +13,12 @@ public static class CityRunEndpoints
     });
     RouteGroupBuilder runs = app.MapGroup("/api/v1/city-runs");
     runs.MapGet("/", (CityRunCoordinator coordinator, CancellationToken token) => coordinator.ListAsync(token));
+    runs.MapGet("/loaded", async (CityRunCoordinator coordinator, CancellationToken token) => await coordinator.LoadedAsync(token) is { } status ? Results.Ok(status) : Results.NoContent());
+    runs.MapDelete("/loaded", async (CityRunCoordinator coordinator, CancellationToken token) =>
+    {
+      await coordinator.UnloadAsync(token);
+      return Results.NoContent();
+    });
     runs.MapGet("/{id}", (string id, CityRunCoordinator coordinator, CancellationToken token) => coordinator.GetAsync(id, token));
     runs.MapGet("/{id}/snapshot", (string id, CityRunCoordinator coordinator, CancellationToken token) => coordinator.SnapshotAsync(id, token));
     runs.MapGet("/{id}/map", (string id, CityRunCoordinator coordinator, CancellationToken token) => coordinator.MapAsync(id, token));

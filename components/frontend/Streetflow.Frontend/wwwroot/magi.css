@@ -20,8 +20,8 @@ a.component-card:hover { border-color: var(--accent); background: linear-gradien
 .component-nav a[aria-current="page"] { color: var(--accent); }
 .logistics-layout { display: grid; grid-template-columns: 280px minmax(280px, 1fr) 380px; gap: 16px; padding: 20px; height: calc(100dvh - 68px); }
 .control-panel { position: relative; background: linear-gradient(125deg, #243440, #101a23 60%); border: 1px solid #4e626f; min-width: 0; overflow: auto; }
-.control-panel .applet-heading { cursor: default; }
-.control-panel .applet-body { overflow: visible; }
+.control-panel .ui-window-titlebar { cursor: default; touch-action: auto; user-select: auto; }
+.control-panel .ui-window-body { overflow: visible; }
 .control-panel h3 { font-size: 13px; font-weight: 500; margin-top: 0; }
 .control-panel button[type="submit"] { width: 100%; margin-top: 16px; }
 .connection-fields { display: grid; grid-template-columns: 1fr 85px; gap: 10px; }

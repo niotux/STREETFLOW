@@ -44,9 +44,11 @@ services:
       - "127.0.0.1:${SIMULATOR_PORT:-8080}:8080"
     environment:
       Simulator__ConnectionString: "${SIMULATOR_CONNECTION_STRING:-}"
+      Simulator__ProjectsRoot: /projects
     volumes:
       - simulator-data:/app/data
-      - ./experiments/drafts:/app/projects
+      # Project folders and ZIPs on this machine. Change STREETFLOW_PROJECTS_DIR in .env, then run `docker compose up -d simulator`.
+      - ${STREETFLOW_PROJECTS_DIR:-./projects}:/projects:ro
     stop_grace_period: 30s
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/health"]

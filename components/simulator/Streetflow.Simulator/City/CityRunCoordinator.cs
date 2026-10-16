@@ -48,9 +48,49 @@ public sealed partial class CityRunCoordinator(ProjectCatalog catalog, Simulator
     await gate.WaitAsync(token);
     try
     {
-      CityProject selected = catalog.Get(projectId);
+      CityProject selected = await catalog.GetAsync(projectId, token);
       CityRunConfiguration configuration = ResolveConfiguration(selected, request);
+      // Loading replaces the loaded simulation; only one engine runs at a time.
+      if (current is not null && IsActive(current.State))
+      {
+        await FinishAsync("stopped", null);
+      }
+
       return await StartAsync(selected, configuration, request.StartPaused, request.Pacing ?? new Pacing());
+    }
+    finally
+    {
+      gate.Release();
+    }
+  }
+
+  public async Task<CityRunStatus?> LoadedAsync(CancellationToken token)
+  {
+    await gate.WaitAsync(token);
+    try
+    {
+      return current;
+    }
+    finally
+    {
+      gate.Release();
+    }
+  }
+
+  // Unloading stops any traffic and leaves no simulation loaded. Saved runs stay in the archive.
+  public async Task UnloadAsync(CancellationToken token)
+  {
+    await gate.WaitAsync(token);
+    try
+    {
+      if (current is not null && IsActive(current.State))
+      {
+        await FinishAsync("stopped", null);
+      }
+
+      current = null;
+      project = null;
+      snapshot = null;
     }
     finally
     {

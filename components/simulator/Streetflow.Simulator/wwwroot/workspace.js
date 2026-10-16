@@ -1,4 +1,4 @@
-import {createWorkspace} from '/ui/windows.js';
+import {createWorkspace} from '/ui/windows.js?v=shared-ui-1';
 
 export function initializeWorkspace() {
   const workspace = createWorkspace({
