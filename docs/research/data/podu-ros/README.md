@@ -1,6 +1,6 @@
 # Podu Roș source preparation
 
-Status: draft source evidence for a separate Podu Roș project; awaiting task 2 review. These files remain outside the simulator input project.
+Status: source evidence for the Podu Roș projects, including the trained [morning V3 project](../../../../experiments/drafts/podu-ros-neural/README.md). These files remain outside the simulator input project.
 
 ## Verified local study and released data
 

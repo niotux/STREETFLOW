@@ -44,7 +44,7 @@ Folder and ZIP use the same format. Paths are relative and contained inside the 
 }
 ~~~
 
-The project id is just its internal label; name is shown in the UI. It is not a traffic value. Description, attribution, detector reference, and additional signal files are optional. The road network itself defines its road labels. The edge field below refers to exactly one of those road labels so the loader knows which road the traffic belongs to. There is no separate profile ID or city-wide profile selector.
+The project id is just its internal label; name is shown in the UI. It is not a traffic value. Description, attribution, detector reference, and additional files are optional. Additional files may contain signal programs or simple pedestrian flows (`personFlow` with `id`, `begin`, `end`, `period`, and one `walk` with `from` and `to` pedestrian-accessible roads). Pedestrian timing is relative to simulation start. The road network itself defines its road labels. The edge field below refers to exactly one of those road labels so the loader knows which road the traffic belongs to. There is no separate profile ID or city-wide profile selector.
 
 ## Per-edge traffic
 

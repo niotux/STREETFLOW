@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<additional>
+  <!-- Assumed demonstration demand, 30 pedestrians/hour on each crossing, relative to run start. -->
+  <personFlow id="nicolina-crossing" begin="0" end="5400" period="120">
+    <walk from="324962581#0" to="324972230" />
+  </personFlow>
+  <personFlow id="palat-crossing" begin="0" end="5400" period="120">
+    <walk from="305260417#0" to="277230359#0" />
+  </personFlow>
+</additional>

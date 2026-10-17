@@ -1,0 +1,17 @@
+{
+  "format_version": 1,
+  "source_raw_sha256": "cb896f1bdbc2e7e0b1aceaf4cb8900bcd360c9dd97c62d0ad879c6c1f44e1c4c",
+  "source_selected_ids_sha256": "d4719eeb3afc4daf304d5b4333210a7503a770712a90804c2b1a15f3bad48301",
+  "selected_tracks": 5378,
+  "tracks_with_usable_speed_samples": 5377,
+  "usable_centered_samples": 47497,
+  "samples_rejected_above_30_mps": 1,
+  "sample_every_detections": 25,
+  "mean_camera_time_sample_speed_kmh": 19.256784538185798,
+  "median_camera_time_sample_speed_kmh": 20.62121913917152,
+  "fraction_camera_time_samples_at_or_below_0_5_mps": 0.2867549529443965,
+  "mean_of_per_track_mean_speeds_kmh": 27.445437261271884,
+  "median_of_per_track_mean_speeds_kmh": 27.52165925078271,
+  "method": "Every 25th selected-car detection; authors' bottom-center image point and camera calibration; centered displacement over neighboring samples divided by processing timestamp difference; keep projected points within the SUMO map, 0.5\u20135 s intervals, and speeds <=30 m/s. One evening camera view, with tracking and projection uncertainty. Time-sample mean weights long visible/stopped tracks more than per-track mean.",
+  "limitation": "Exploratory camera-derived estimate, not an author-reported ground-truth speed, morning speed, lane mean, full-intersection mean, or car-to-car gap. Released processing timestamps are not independently synchronized to filming time. Do not use to calibrate the morning V3 scenario without validation."
+}

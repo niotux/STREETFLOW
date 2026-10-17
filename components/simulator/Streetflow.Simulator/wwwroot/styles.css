@@ -32,6 +32,8 @@ h1 { margin: 5px 0 0; font-size: 22px; font-weight: 550; letter-spacing: -.025em
 .map-hint span { color: #4f606b; margin: 0 6px; }
 .map-legend { display: flex; flex-wrap: wrap; gap: 12px; position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); font-size: 9px; color: #9aadb9; z-index: 1; pointer-events: none; background: #0b141dd9; padding: 6px 10px; }
 .map-legend span { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.map-legend .pedestrian-toggle { display: flex; align-items: center; gap: 5px; pointer-events: auto; white-space: nowrap; cursor: pointer; }
+.pedestrian-toggle input { width: 12px; height: 12px; margin: 0; accent-color: var(--accent); }
 .map-legend i { display: block; width: 6px; height: 6px; }
 .moving-dot { background: var(--cyan); }
 .stopped-dot { background: #efa957; }

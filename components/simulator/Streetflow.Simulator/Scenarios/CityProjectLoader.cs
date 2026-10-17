@@ -103,12 +103,20 @@ public static partial class CityProjectLoader
     ProjectConnection[] connections = ReadConnections(net, edges, manifest.Network.File);
     HashSet<string> signals = new(StringComparer.Ordinal);
     ValidateSignals(net, manifest.Network.File, signals);
+    HashSet<string> pedestrianFlowIds = new(StringComparer.Ordinal);
     foreach (string additional in manifest.AdditionalFiles!)
     {
       XElement extra = ReadXml(directory, additional, "additional");
       foreach (XElement element in extra.Elements())
       {
-        Require(element.Name == "tlLogic", $"{additional}: additional_files currently support signal programs only");
+        if (element.Name == "personFlow")
+        {
+          ValidatePedestrianFlow(element, edges, pedestrianFlowIds, additional);
+        }
+        else
+        {
+          Require(element.Name == "tlLogic", $"{additional}: additional_files support signal programs and pedestrian flows only");
+        }
       }
 
       ValidateSignals(extra, additional, signals);
@@ -516,7 +524,16 @@ public static partial class CityProjectLoader
         Require(lane.Attribute("allow") is null || lane.Attribute("disallow") is null, $"{file}: lane '{laneId}' must use allow or disallow, not both");
         ValidatePermissions(allow, file, laneId);
         ValidatePermissions(disallow, file, laneId);
-        lanes.Add(new(new(laneId, id, length, speed, shape), index, allow, disallow));
+        bool pedestrianOnly = allow is not null && allow.Length == 1 && allow[0] == "pedestrian";
+        string renderKind = function switch
+        {
+          "crossing" => "crossing",
+          "walkingarea" => "walkingarea",
+          "internal" or "connector" => "junction",
+          _ => pedestrianOnly ? "sidewalk" : "road"
+        };
+        LaneMap map = new(laneId, id, length, speed, shape) { RenderKind = renderKind };
+        lanes.Add(new(map, index, allow, disallow));
       }
 
       Require(lanes.Count > 0, $"{file}: edge '{id}' has no lanes");

@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#090e13">
   <title>Streetflow · Balthasar simulation studio</title>
   <link rel="stylesheet" href="/ui/streetflow-ui.css?v=shared-ui-1">
-  <link rel="stylesheet" href="styles.css?v=projects-folder-1">
-  <script type="module" src="app.js?v=projects-folder-1"></script>
+  <link rel="stylesheet" href="styles.css?v=pedestrian-layer-1">
+  <script type="module" src="app.js?v=podu-map-5"></script>
 </head>
 <body>
   <header class="title-bar ui-app-header">
@@ -26,7 +26,7 @@
       <div class="workspace-heading"><div><span class="eyebrow">LIVE NETWORK / SUMO</span><h1 id="map-label">Your city. In motion.</h1></div><div class="view-actions"><button id="focus-view" type="button" aria-pressed="false">Focus map</button><button id="fit" type="button" aria-label="Fit road network to view">↗ Fit</button></div></div>
       <div id="empty"><span class="empty-icon" aria-hidden="true">⌁</span><span class="eyebrow">THE CITY IS YOUR CANVAS</span><strong>Set the streets in motion.</strong><span>Open Loader to choose a project and load your simulation.</span><button type="button" data-open-applet="loader">Open Loader ↗</button></div>
       <div class="map-hint">Drag to pan <span>/</span> Scroll to zoom</div>
-      <div class="map-legend"><span><i class="moving-dot"></i> Moving</span><span><i class="stopped-dot"></i> Stopped</span><span id="entry-legend" hidden><i class="entry-dot"></i> Entry</span><span id="exit-legend" hidden><i class="exit-dot"></i> Exit</span></div>
+      <div class="map-legend"><span><i class="moving-dot"></i> Moving</span><span><i class="stopped-dot"></i> Stopped</span><label class="pedestrian-toggle"><input id="pedestrian-layer" type="checkbox" checked> Pedestrian layer</label><span id="entry-legend" hidden><i class="entry-dot"></i> Entry</span><span id="exit-legend" hidden><i class="exit-dot"></i> Exit</span></div>
       <div id="terminal-tooltip" class="terminal-tooltip" hidden></div>
       <div class="zoom-controls" aria-label="Map zoom"><button id="zoom-in" type="button" aria-label="Zoom in">+</button><button id="zoom-out" type="button" aria-label="Zoom out">−</button></div>
       <div class="clock"><span id="city-day">CITY TIME</span><strong id="city-clock">—</strong></div>

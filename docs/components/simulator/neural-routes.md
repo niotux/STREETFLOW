@@ -14,7 +14,7 @@ training-report.json     Training/export report, not required at runtime
 ...                     Referenced optional signals, devices, terminals
 ```
 
-The manifest has `format_version: 3` and `neural_model_file`. It must omit non-null `demand_file` and `journey_model_file`. Network, defaults, optional `additional_files`, `traffic_lights_file`, `terminals_file`, and empty reserved detectors retain their existing meaning. V3 routes use whole ordinary roads rather than terminal positions; optional terminals remain display assets.
+The manifest has `format_version: 3` and `neural_model_file`. It must omit non-null `demand_file` and `journey_model_file`. Network, defaults, optional `additional_files`, `traffic_lights_file`, `terminals_file`, and empty reserved detectors retain their existing meaning. Additional files may supply signal programs or simple pedestrian flows; pedestrian routes are separate from the neural vehicle model. V3 routes use whole ordinary roads rather than terminal positions; optional terminals remain display assets.
 
 ```json
 {

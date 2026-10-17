@@ -26,6 +26,7 @@ cp -r experiments/drafts/* projects/
 - `tiny-graph` — small synthetic map using Edge Population (version 1).
 - `four-way-transformer-routes` — the same four-way map using Transformer Routes (version 2); compare 07:30 and 17:00.
 - `four-way-neural-routes` — synthetic version 3 neural model; compare 07:30 and 17:00.
+- `podu-ros-neural` — version 3 morning Nicolina-to-Palat scenario with inferred pedestrian crossings; rates and walking flows are assumptions.
 - `iasi-central-day` — central Iași, aggregate daily curve and estimated road weights.
 - `podu-ros` — local intersection map, evening camera sample and documented estimates.
 

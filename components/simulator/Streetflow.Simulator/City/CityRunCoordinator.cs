@@ -394,7 +394,7 @@ public sealed partial class CityRunCoordinator(ProjectCatalog catalog, Simulator
 
       EngineSnapshot next = await engine.StepAsync(CancellationToken.None);
       liveVehicles = next.ExpectedVehicles;
-      current = current with { GridlockRecoveries = current.GridlockRecoveries + next.Teleports.Length, ArrivedVehicles = current.ArrivedVehicles + next.Arrived.Length };
+      current = current with { GridlockRecoveries = current.GridlockRecoveries + next.Teleports.Length, InsertedVehicles = current.InsertedVehicles + next.Departed.Length, ArrivedVehicles = current.ArrivedVehicles + next.Arrived.Length };
       foreach (string departed in next.Departed)
       {
         pendingEntries.Remove(departed);

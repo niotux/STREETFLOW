@@ -9,8 +9,10 @@ const context = canvas.getContext('2d');
 const vehicleMotion = new VehicleMotion();
 const roadCanvas = document.createElement('canvas');
 const roadContext = roadCanvas.getContext('2d');
+const pedestrianCanvas = document.createElement('canvas');
+const pedestrianContext = pedestrianCanvas.getContext('2d');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-let animationFrame = 0, roadCache = null, signalLayoutDirty = true;
+let animationFrame = 0, roadCache = null, pedestrianCache = null, signalLayoutDirty = true;
 let sources = [], projects = [], selectedProject = null, run = null, network = null, snapshot = null;
 let trafficInput = null;
 let busy = false, generation = 0, initialized = false;
@@ -585,7 +587,9 @@ function drawRoads() {
   roadContext.setTransform(window.devicePixelRatio || 1, 0, 0, window.devicePixelRatio || 1, 0, 0);
   roadContext.lineCap = 'round'; roadContext.lineJoin = 'round';
   for (const lane of network.lanes) {
-    roadContext.strokeStyle = lane.id.startsWith(':') ? '#334959' : '#68899d';
+    const kind = lane.render_kind || (lane.id.startsWith(':') ? 'junction' : 'road');
+    if (kind !== 'junction' && kind !== 'road') continue;
+    roadContext.strokeStyle = kind === 'junction' ? '#334959' : '#68899d';
     roadContext.lineWidth = Math.max(1, Math.min(9, 3.2 * view.scale));
     roadContext.beginPath();
     lane.shape.forEach((point, index) => {
@@ -598,11 +602,41 @@ function drawRoads() {
   roadCache = {network, x: view.x, y: view.y, scale: view.scale};
   signalLayoutDirty = true;
 }
+function drawPedestrians() {
+  const cacheMatches = pedestrianCache && pedestrianCache.network === network && pedestrianCache.x === view.x && pedestrianCache.y === view.y && pedestrianCache.scale === view.scale && pedestrianCanvas.width === canvas.width && pedestrianCanvas.height === canvas.height;
+  if (cacheMatches) return;
+  pedestrianCanvas.width = canvas.width;
+  pedestrianCanvas.height = canvas.height;
+  const ratio = window.devicePixelRatio || 1;
+  pedestrianContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+  pedestrianContext.lineCap = 'round';
+  pedestrianContext.lineJoin = 'round';
+  for (const lane of network.lanes) {
+    const kind = lane.render_kind;
+    if (kind !== 'sidewalk' && kind !== 'walkingarea' && kind !== 'crossing') continue;
+    pedestrianContext.strokeStyle = kind === 'crossing' ? '#e9dabc' : '#62747d';
+    pedestrianContext.lineWidth = kind === 'crossing' ? Math.max(2, Math.min(5, 2.4 * view.scale)) : Math.max(1, Math.min(3, 1.2 * view.scale));
+    pedestrianContext.setLineDash(kind === 'crossing' ? [4, 4] : []);
+    pedestrianContext.beginPath();
+    lane.shape.forEach((point, index) => {
+      const position = screen(point.x, point.y);
+      if (index) pedestrianContext.lineTo(position.x, position.y);
+      else pedestrianContext.moveTo(position.x, position.y);
+    });
+    pedestrianContext.stroke();
+  }
+  pedestrianContext.setLineDash([]);
+  pedestrianCache = {network, x: view.x, y: view.y, scale: view.scale};
+}
 function draw(now = performance.now()) {
   context.clearRect(0, 0, width, height);
   if (!network) return;
   drawRoads();
   context.drawImage(roadCanvas, 0, 0, roadCanvas.width, roadCanvas.height, 0, 0, width, height);
+  if ($('pedestrian-layer').checked) {
+    drawPedestrians();
+    context.drawImage(pedestrianCanvas, 0, 0, pedestrianCanvas.width, pedestrianCanvas.height, 0, 0, width, height);
+  }
   context.lineCap = 'round'; context.lineJoin = 'round';
   drawControlledLanes();
   for (const car of vehicleMotion.sample(now)) {
@@ -622,6 +656,7 @@ function draw(now = performance.now()) {
   drawTerminals();
   drawSignals();
 }
+$('pedestrian-layer').onchange = draw;
 new ResizeObserver(() => {
   const rectangle = canvas.getBoundingClientRect();
   width = rectangle.width; height = rectangle.height;

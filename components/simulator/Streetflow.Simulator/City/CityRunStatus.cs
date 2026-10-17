@@ -6,5 +6,6 @@ public sealed record CityRunStatus(string Id, CityRunConfiguration Configuration
 {
   public string? Warning { get; init; }
   public int GridlockRecoveries { get; init; }
+  public int InsertedVehicles { get; init; }
   public int ArrivedVehicles { get; init; }
 }

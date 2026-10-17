@@ -157,6 +157,42 @@ public sealed class NeuralRoutesTests
     await Command(reopened, saved.Id, "stop");
   }
 
+  [Fact]
+  public async Task PoduRosNeuralExportRunsWithPedestrianCrossingFlows()
+  {
+    await using BackendFactory factory = new();
+    using HttpClient client = factory.CreateClient();
+    string source = Path.Combine(ProjectLoadingTests.Workspace, "experiments", "drafts", "podu-ros-neural");
+    await factory.AddProjectAsync(client, source);
+
+    HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/projects/podu-ros-neural/runs", new CreateCityRunRequest(42, 27000), JsonDefaults.Options);
+    CityRunStatus run = await Status(response);
+    Assert.Equal("paused", run.State);
+    CityRunMap map = (await client.GetFromJsonAsync<CityRunMap>($"/api/v1/city-runs/{run.Id}/map", JsonDefaults.Options))!;
+    int crossings = 0, sidewalks = 0;
+    foreach (LaneMap lane in map.Lanes)
+    {
+      if (lane.RenderKind == "crossing")
+      {
+        crossings++;
+      }
+      if (lane.RenderKind == "sidewalk")
+      {
+        sidewalks++;
+      }
+    }
+    Assert.Equal(73, crossings);
+    Assert.Equal(106, sidewalks);
+    Assert.NotEmpty(map.SignalPoints);
+    run = await Command(client, run.Id, "step", 1000);
+    Assert.Null(run.Failure);
+    Assert.True(run.ArrivedVehicles > 0);
+    Assert.True(run.InsertedVehicles >= run.ArrivedVehicles);
+    Snapshot snapshot = (await client.GetFromJsonAsync<Snapshot>($"/api/v1/city-runs/{run.Id}/snapshot", JsonDefaults.Options))!;
+    Assert.Contains(snapshot.Vehicles, vehicle => vehicle.SpeedMps > 0);
+    await Command(client, run.Id, "stop");
+  }
+
   private static async Task<CityRunStatus> Create(HttpClient client)
   {
     HttpResponseMessage response = await client.PostAsJsonAsync($"/api/v1/projects/{NeuralProjectFixture.ProjectId}/runs", new CreateCityRunRequest(42, 25200), JsonDefaults.Options);
