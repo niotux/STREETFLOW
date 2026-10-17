@@ -9,6 +9,8 @@ The folder path shows the document's role in the project. Work starts under `act
 
 Current active simulator work is under [`active/ideas/simulator/`](active/ideas/simulator/) and [`active/plans/simulator/`](active/plans/simulator/).
 
+The [17–18 October cross-component epic plan](active/plans/2026-10-17-two-day-epics.md) has separate handoffs for Balthasar, Melchior, Casper/TACO, and the route trainer.
+
 ## Component documentation
 
 - [`components/`](components/) contains settled product boundaries, contracts, and implementation documentation.
