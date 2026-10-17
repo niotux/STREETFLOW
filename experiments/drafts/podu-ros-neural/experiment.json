@@ -15,5 +15,6 @@
     "start_time_seconds": 27000,
     "step_seconds": 0.5
   },
-  "neural_model_file": "neural-model.json"
+  "neural_model_file": "neural-model.json",
+  "traffic_lights_file": "traffic-lights.json"
 }

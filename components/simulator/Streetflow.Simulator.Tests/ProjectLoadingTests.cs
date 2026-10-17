@@ -33,6 +33,19 @@ public sealed class ProjectLoadingTests
   }
 
   private static string Draft(string id) => Path.Combine(Workspace, "experiments", "drafts", id);
+
+  [Fact]
+  public void PoduRosNeuralLoadsApproachDetectorsAndDevices()
+  {
+    CityProject project = CityProjectLoader.Load(Draft("podu-ros-neural"));
+    Assert.Equal(24, project.Detectors.Length);
+    Assert.Equal(24, project.TrafficDevices.Length);
+    foreach (ProjectDetector detector in project.Detectors)
+    {
+      Assert.NotEmpty(detector.LaneIds);
+      Assert.Contains(project.TrafficDevices, device => device.Id == detector.DeviceId);
+    }
+  }
   private static async Task<JsonElement> Body(HttpResponseMessage response)
   {
     string text = await response.Content.ReadAsStringAsync();

@@ -135,11 +135,8 @@ public static partial class CityProjectLoader
     {
       ValidateProfiles(demand, edges, manifest.DemandFile!);
     }
-    if (manifest.DetectorsFile is not null)
-    {
-      JsonElement detectors = ReadJson<JsonElement>(directory, manifest.DetectorsFile);
-      Require(detectors.ValueKind == JsonValueKind.Array && detectors.GetArrayLength() == 0, $"{manifest.DetectorsFile}: detectors must be an empty reserved array");
-    }
+    ProjectDetector[] detectors = manifest.DetectorsFile is null ? [] : ReadJson<ProjectDetector[]>(directory, manifest.DetectorsFile);
+    ValidateDetectors(detectors, edges, manifest.DetectorsFile);
 
     ProjectTerminal[] terminals = [];
     if (manifest.TerminalsFile is not null)
@@ -164,7 +161,8 @@ public static partial class CityProjectLoader
     }
 
     ProjectTrafficLights? trafficLights = ReadTrafficLights(directory, manifest, edges, connections);
-    string worldRevision = CalculateWorldRevision(directory, manifest);
+    ValidateDetectorDevices(detectors, trafficLights, manifest.DetectorsFile);
+    string worldRevision = CalculateWorldRevision(directory, manifest, detectors.Length > 0);
     string revision = CalculateRevision(directory, manifest, transformerModel, neuralModel);
     List<string> signalIds = new(signals);
     signalIds.Sort(StringComparer.Ordinal);
@@ -183,6 +181,7 @@ public static partial class CityProjectLoader
       SignalIds = signalIds.ToArray(),
       Revision = revision,
       TrafficLights = trafficLights,
+      Detectors = detectors,
       WorldRevision = worldRevision,
       Terminals = terminals
     };

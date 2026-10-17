@@ -43,7 +43,10 @@ taco.MapGet("/session", () => new TacoSession(store.SessionId, config.WorldId, c
 taco.MapGet("/sessions/{id}/map", (string id) =>
 {
   store.RequireSession(id);
-  return new TacoMap(config.WorldId, config.Revision, "Configured camera coverage", "local_meters", config.Lanes, config.Devices);
+  return new TacoMap(config.WorldId, config.Revision, "Configured camera coverage", "local_meters", config.Lanes, config.Devices)
+  {
+    Detectors = config.Detectors
+  };
 });
 taco.MapGet("/sessions/{id}/devices", (string id) =>
 {
@@ -51,7 +54,15 @@ taco.MapGet("/sessions/{id}/devices", (string id) =>
   return config.Devices.Select(device => new TacoDeviceState(device.Id, "unknown"));
 });
 taco.MapGet("/sessions/{id}/traffic", (string id) => store.Traffic(id, DateTimeOffset.UtcNow));
-taco.MapGet("/capabilities", () => new { traffic = true, signal_control = false, source = "camera" });
+taco.MapGet("/sessions/{id}/queues", (string id) =>
+{
+  TacoTraffic traffic = store.Traffic(id, DateTimeOffset.UtcNow);
+  Dictionary<string, int?> queued = traffic.Lanes.ToDictionary(lane => lane.LaneId, lane => lane.QueuedVehicleCount, StringComparer.Ordinal);
+  int?[][] devices = config.Devices.Select(device => device.LaneIds.Select(lane => queued.GetValueOrDefault(lane)).ToArray()).ToArray();
+  double time = traffic.ObservedAt?.ToUnixTimeMilliseconds() / 1000.0 ?? double.NaN;
+  return Results.Bytes(TacoQueueFrame.Encode(traffic.Sequence, time, traffic.Status != "unavailable", devices), TacoQueueFrame.ContentType);
+});
+taco.MapGet("/capabilities", () => new { traffic = true, queues = true, signal_control = false, source = "camera" });
 taco.MapPut("/sessions/{id}/devices/{deviceId}", (string id, string deviceId) =>
 {
   store.RequireSession(id);

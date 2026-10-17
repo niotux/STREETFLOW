@@ -26,6 +26,9 @@ public sealed class ObservationStore(CasperConfiguration config)
   private readonly Dictionary<string, CameraMapping> cameraByLane = config.Cameras
     .SelectMany(camera => camera.LaneIds.Select(lane => (lane, camera)))
     .ToDictionary(pair => pair.lane, pair => pair.camera, StringComparer.Ordinal);
+  private readonly Dictionary<string, string> detectorByLane = config.Detectors
+    .SelectMany(detector => detector.LaneIds.Select(lane => (lane, detector.Id)))
+    .ToDictionary(pair => pair.lane, pair => pair.Id, StringComparer.Ordinal);
   private readonly Dictionary<string, string[]> devicesByLane = config.Devices
     .SelectMany(device => device.LaneIds.Select(lane => (lane, device.Id)))
     .GroupBy(pair => pair.lane).ToDictionary(group => group.Key,
@@ -124,7 +127,7 @@ public sealed class ObservationStore(CasperConfiguration config)
         string status = unavailable ? "unavailable" : frame!.Status == "partial" ? "partial" : measured!.MeasurementStatus;
         lanes.Add(new(mapping.LaneId, mapping.StreetId, mapping.IntersectionId,
           devicesByLane.GetValueOrDefault(mapping.LaneId) ?? [],
-          camera.Id, frame?.Window.End, age, unavailable ? null : measured!.VisibleVehicleCount,
+          detectorByLane.GetValueOrDefault(mapping.LaneId) ?? camera.Id, frame?.Window.End, age, unavailable ? null : measured!.VisibleVehicleCount,
           unavailable ? null : measured!.CrossedVehicleCount, unavailable ? null : measured!.QueuedVehicleCount,
           unavailable ? null : measured!.MeanSpeedMps, status, frame?.SyntheticDemo == true ? "synthetic_demo" : "camera_image_tracking"));
       }

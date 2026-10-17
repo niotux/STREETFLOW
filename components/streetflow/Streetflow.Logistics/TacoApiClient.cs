@@ -19,6 +19,24 @@ public sealed class TacoApiClient
 
   public Task<TacoSession> SessionAsync(CancellationToken token) => GetAsync<TacoSession>("/api/v1/taco/session", token);
   public Task<TacoDeviceState[]> DevicesAsync(string id, CancellationToken token) => GetAsync<TacoDeviceState[]>(SessionPath(id) + "/devices", token);
+  public async Task<byte[]> QueuesAsync(string id, CancellationToken token)
+  {
+    using HttpRequestMessage request = new(HttpMethod.Get, Address(SessionPath(id) + "/queues"));
+    return await SendAsync(request, token, async (content, cancel) =>
+    {
+      byte[] frame = await content.ReadAsByteArrayAsync(cancel);
+      try
+      {
+        TacoQueueFrame.Decode(frame);
+      }
+      catch (FormatException)
+      {
+        throw new ApiException(502, "invalid_taco_response", "The connected server did not return a taco queue frame");
+      }
+      return frame;
+    });
+  }
+
   public Task<TacoTraffic> TrafficAsync(string id, CancellationToken token) => GetAsync<TacoTraffic>(SessionPath(id) + "/traffic", token);
 
   public async Task<TacoMap> MapAsync(string id, CancellationToken token)
@@ -68,7 +86,11 @@ public sealed class TacoApiClient
     return await SendAsync<T>(request, token);
   }
 
-  private async Task<T> SendAsync<T>(HttpRequestMessage request, CancellationToken token)
+  private Task<T> SendAsync<T>(HttpRequestMessage request, CancellationToken token) =>
+    SendAsync(request, token, async (content, cancel) =>
+      await content.ReadFromJsonAsync<T>(JsonDefaults.Options, cancel) ?? throw new ApiException(502, "invalid_taco_response", "taco returned an empty response"));
+
+  private async Task<T> SendAsync<T>(HttpRequestMessage request, CancellationToken token, Func<HttpContent, CancellationToken, Task<T>> read)
   {
     try
     {
@@ -88,7 +110,7 @@ public sealed class TacoApiClient
         throw new ApiException((int)response.StatusCode, error?.Code ?? "taco_error", error?.Message ?? $"taco returned HTTP {(int)response.StatusCode}");
       }
 
-      return await response.Content.ReadFromJsonAsync<T>(JsonDefaults.Options, token) ?? throw new ApiException(502, "invalid_taco_response", "taco returned an empty response");
+      return await read(response.Content, token);
     }
     catch (HttpRequestException)
     {

@@ -17,7 +17,7 @@ city-project/
   experiment.json        Name and references to the files
   network.net.xml        Directed roads, lanes, connections, and lights
   demand.json            Per-edge traffic profiles and generation settings
-  detectors.json         Optional empty placeholder
+  detectors.json         Optional approach detectors
   README.md              Optional description
 ~~~
 
@@ -123,7 +123,7 @@ Source-paper processing remains outside the application. The project needs only 
 
 The UI selects a project and seed, shows the city, and provides start/pause/resume/step/stop/restart and playback speed. Defaults specify the starting city time and engine step. There is no profile selector: all edge profiles operate together according to the clock.
 
-detectors.json is an empty reserved array with no behavior defined yet. The city runs until stopped. Imported projects and technical state/files use the existing Docker storage.
+detectors.json is an array of approach detectors, each with `id`, `label`, `x`, `y` (local meters), `lane_ids` (ordinary road lanes), and an optional `device_id`. A lane belongs to at most one detector. When `device_id` is set, the device must cover every detector lane. TACO maps publish detectors alongside devices, and traffic names the detector that measured each lane. Queue counts come from each device's controlled lanes; see [TACO queue frames](../contracts/taco.md#queue-frames). An empty array is equivalent to no file and does not change the world revision. The city runs until stopped. Imported projects and technical state/files use the existing Docker storage.
 
 See [the integration tasks](../../archive/experiment-integration-plan.md).
 

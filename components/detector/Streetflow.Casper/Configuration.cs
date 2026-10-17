@@ -9,6 +9,7 @@ public sealed record CasperConfiguration(string WorldId, string Revision, string
   TacoLane[] Lanes, TacoDevice[] Devices, LaneMapping[] LaneMappings, CameraMapping[] Cameras,
   double StaleAfterSeconds = 10, double MaximumWindowSeconds = 30)
 {
+  public TacoDetector[] Detectors { get; init; } = [];
   public static readonly JsonSerializerOptions Json = new()
   {
     PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
@@ -61,5 +62,22 @@ public sealed record CasperConfiguration(string WorldId, string Revision, string
     foreach (TacoDevice device in Devices)
       Require(!string.IsNullOrWhiteSpace(device.Id) && double.IsFinite(device.X) && double.IsFinite(device.Y)
         && device.LaneIds.Length > 0 && device.LaneIds.All(laneIds.Contains), "Invalid stoplight mapping");
+    HashSet<string> detectorIds = new(StringComparer.Ordinal);
+    HashSet<string> detectorLanes = new(StringComparer.Ordinal);
+    foreach (TacoDetector detector in Detectors)
+    {
+      Require(!string.IsNullOrWhiteSpace(detector.Id) && detectorIds.Add(detector.Id)
+        && !string.IsNullOrWhiteSpace(detector.Label) && double.IsFinite(detector.X) && double.IsFinite(detector.Y)
+        && detector.LaneIds is not null && detector.LaneIds.Length > 0, "Invalid detector");
+      foreach (string laneId in detector.LaneIds!)
+      {
+        Require(laneIds.Contains(laneId) && detectorLanes.Add(laneId), "Unknown or overlapping detector lane");
+      }
+      if (detector.DeviceId is not null)
+      {
+        Require(Devices.Any(device => device.Id == detector.DeviceId
+          && detector.LaneIds.All(laneId => device.LaneIds.Contains(laneId))), "Invalid detector device mapping");
+      }
+    }
   }
 }

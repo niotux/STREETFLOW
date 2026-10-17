@@ -1,25 +1,38 @@
 import {initializeWorkspace} from './workspace.js?v=shared-ui-1';
 import {vehicleSettingsXml} from './sumo-settings.js?v=workspace-1';
 import {VehicleMotion} from './vehicle-motion.js?v=motion-2';
-import {signalAppearance, deviceState, deviceDescription, layoutSignalMarkers, controlledLanes, deviceMapStatus} from './signals.js?v=physical-devices-3';
+import {signalAppearance, deviceState, deviceDescription, deviceMapStatus} from './signals.js?v=physical-devices-3';
+import {MapView} from './map-view.js?v=shared-map-1';
 const $ = id => document.getElementById(id);
 const workspace = initializeWorkspace();
 const canvas = $('map');
 const context = canvas.getContext('2d');
 const vehicleMotion = new VehicleMotion();
-const roadCanvas = document.createElement('canvas');
-const roadContext = roadCanvas.getContext('2d');
-const pedestrianCanvas = document.createElement('canvas');
-const pedestrianContext = pedestrianCanvas.getContext('2d');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-let animationFrame = 0, roadCache = null, pedestrianCache = null, signalLayoutDirty = true;
+let animationFrame = 0;
 let sources = [], projects = [], selectedProject = null, run = null, network = null, snapshot = null;
 let trafficInput = null;
 let busy = false, generation = 0, initialized = false;
-let width = 1, height = 1, view = {x: 0, y: 0, scale: 1}, drag = null;
 let terminalGroups = [], selectedTerminal = null;
-let signalMarkers = [], selectedSignal = null, hoveredSignal = null;
+let selectedSignal = null, hoveredSignal = null;
 
+const mapView = new MapView(canvas, {
+  vehicles: now => vehicleMotion.sample(now),
+  deviceStates: () => snapshot?.available ? snapshot.device_states || [] : [],
+  focusedDevice: () => hoveredSignal || selectedSignal,
+  markerActive: device => device.id === selectedSignal?.id || device.id === hoveredSignal?.id,
+  showPedestrians: () => $('pedestrian-layer').checked,
+  afterVehicles: () => drawTerminals(),
+  onPointerDown: () => { $('terminal-tooltip').hidden = true; },
+  onWheel: () => { $('terminal-tooltip').hidden = true; },
+  onHover: event => hoverTerminal(event),
+  onLeave: () => { $('terminal-tooltip').hidden = true; hoveredSignal = null; draw(); },
+  onClick: event => clickMap(event)
+});
+const draw = now => mapView.draw(now);
+const fit = () => mapView.fit();
+function screen(x, y) { return mapView.screen(x, y); }
+function signalAt(event) { return mapView.signalAt(event); }
 function acceptSnapshot(value, animate = run?.state === 'running') {
   snapshot = value;
   const now = performance.now();
@@ -238,11 +251,11 @@ function showEmpty() {
   run = null;
   acceptSnapshot(null);
   network = null;
+  mapView.network = null;
   trafficInput = null;
   selectedSignal = null;
   hoveredSignal = null;
   selectedTerminal = null;
-  signalMarkers = [];
   $('map-label').textContent = 'Your city. In motion.';
   $('snapshot-note').textContent = 'No simulation loaded. Choose a project in Loader.';
   $('attribution').textContent = '';
@@ -264,8 +277,9 @@ function showEmpty() {
 function showMap(map, name) {
   network = map;
   vehicleMotion.setNetwork(map);
+  mapView.network = {lanes: map.lanes, devices: map.traffic_devices || []};
+  mapView.markersDirty = true;
   selectedTerminal = null;
-  signalMarkers = [];
   selectedSignal = null;
   hoveredSignal = null;
   $('signal-choice').replaceChildren(new Option('Choose a physical traffic light', ''));
@@ -405,60 +419,8 @@ for (const button of document.querySelectorAll('[data-speed]')) {
 }
 speedSlider.oninput = () => setSpeed(Number(speedSlider.value), false);
 speedSlider.onchange = () => $('speed').dispatchEvent(new Event('change'));
-$('zoom-in').onclick = () => { view.scale = Math.min(30, view.scale * 1.35); draw(); };
-$('zoom-out').onclick = () => { view.scale = Math.max(0.005, view.scale / 1.35); draw(); };
-function screen(x, y) { return {x: width / 2 + (x - view.x) * view.scale, y: height / 2 - (y - view.y) * view.scale}; }
-function drawSignals() {
-  const size = Math.max(0.72, Math.min(1, view.scale));
-  if (signalLayoutDirty) {
-    signalMarkers = layoutSignalMarkers(network.traffic_devices || [], point => screen(point.x, point.y), width, height, size);
-    signalLayoutDirty = false;
-  }
-  for (const marker of signalMarkers) {
-    context.strokeStyle = '#c9c2b878';
-    context.lineWidth = 1;
-    context.beginPath();
-    context.moveTo(marker.anchor.x, marker.anchor.y);
-    context.lineTo(marker.x, marker.y);
-    context.stroke();
-    context.fillStyle = '#e8dfd1';
-    context.beginPath();
-    context.arc(marker.anchor.x, marker.anchor.y, 2, 0, Math.PI * 2);
-    context.fill();
-  }
-  for (const marker of signalMarkers) {
-    const code = deviceState(marker.point, snapshot?.available ? snapshot.device_states || [] : []);
-    context.fillStyle = '#111214';
-    context.strokeStyle = marker.point.id === selectedSignal?.id || marker.point.id === hoveredSignal?.id ? '#a8e76a' : '#e8dfd1';
-    context.lineWidth = 1.5;
-    context.beginPath();
-    context.roundRect(marker.x - 7 * size, marker.y - 16 * size, 14 * size, 32 * size, 3 * size);
-    context.fill();
-    context.stroke();
-    const lamps = [
-      {color: '#ff5148', lit: code === 'r' || code === 'u'},
-      {color: '#ffcf38', lit: code === 'y' || code === 'Y' || code === 'u'},
-      {color: '#44eb88', lit: code === 'g' || code === 'G' || code === 's'}
-    ];
-    for (let index = 0; index < lamps.length; index++) {
-      const lamp = lamps[index];
-      context.fillStyle = lamp.lit ? lamp.color : '#343638';
-      context.beginPath();
-      context.arc(marker.x, marker.y + (index - 1) * 9 * size, 3.5 * size, 0, Math.PI * 2);
-      context.fill();
-    }
-  }
-}
-function signalAt(event) {
-  const rectangle = canvas.getBoundingClientRect();
-  const x = event.clientX - rectangle.left, y = event.clientY - rectangle.top;
-  let closest = null, distance = 18;
-  for (const marker of signalMarkers) {
-    const next = Math.hypot(marker.x - x, marker.y - y);
-    if (next < distance) { closest = marker; distance = next; }
-  }
-  return closest;
-}
+$('zoom-in').onclick = () => mapView.zoom(1.35);
+$('zoom-out').onclick = () => mapView.zoom(1 / 1.35);
 function selectSignal(device) {
   selectedSignal = device;
   $('signal-choice').value = device?.id || '';
@@ -466,19 +428,6 @@ function selectSignal(device) {
   draw();
 }
 $('signal-choice').onchange = () => selectSignal((network?.traffic_devices || []).find(device => device.id === $('signal-choice').value) || null);
-function drawControlledLanes() {
-  context.strokeStyle = '#a8e76a';
-  context.lineWidth = Math.max(4, Math.min(12, view.scale * 4));
-  for (const lane of controlledLanes(hoveredSignal || selectedSignal, network.lanes)) {
-    context.beginPath();
-    lane.shape.forEach((point, index) => {
-      const position = screen(point.x, point.y);
-      if (index) context.lineTo(position.x, position.y);
-      else context.moveTo(position.x, position.y);
-    });
-    context.stroke();
-  }
-}
 function terminalDescription(terminal) {
   return `${terminal.role === 'entry' ? 'Entry' : 'Exit'} · ${terminal.lane_id}${terminal.label ? ` · ${terminal.label}` : ''}`;
 }
@@ -490,10 +439,8 @@ function selectTerminal(terminal) {
   draw();
 }
 function focusTerminal(terminal) {
-  view.x = terminal.x;
-  view.y = terminal.y;
-  view.scale = Math.max(view.scale, 5);
   selectTerminal(terminal);
+  mapView.focus(terminal.x, terminal.y, 5);
 }
 $('terminal-choice').onchange = () => selectTerminal((network?.terminals || []).find(terminal => terminal.id === $('terminal-choice').value) || null);
 $('terminal-focus').onclick = () => { if (selectedTerminal) focusTerminal(selectedTerminal); };
@@ -501,7 +448,7 @@ function drawTerminals() {
   terminalGroups = [];
   for (const terminal of network.terminals || []) {
     const position = screen(terminal.x, terminal.y);
-    if (position.x < -20 || position.y < -20 || position.x > width + 20 || position.y > height + 20) continue;
+    if (position.x < -20 || position.y < -20 || position.x > mapView.width + 20 || position.y > mapView.height + 20) continue;
     const group = terminalGroups.find(item => item.role === terminal.role && Math.hypot(item.x - position.x, item.y - position.y) < 14);
     if (group) {
       const count = group.terminals.length;
@@ -558,150 +505,28 @@ function hoverTerminal(event) {
     tooltip.hidden = false;
     canvas.style.cursor = 'pointer';
     tooltip.textContent = `${signalAppearance(deviceState(marker.point, snapshot?.available ? snapshot.device_states || [] : [])).label} · ${deviceDescription(marker.point)}`;
-    tooltip.style.left = `${Math.max(8, Math.min(width - 288, marker.x + 14))}px`;
-    tooltip.style.top = `${Math.max(8, Math.min(height - 100, marker.y + 14))}px`;
+    tooltip.style.left = `${Math.max(8, Math.min(mapView.width - 288, marker.x + 14))}px`;
+    tooltip.style.top = `${Math.max(8, Math.min(mapView.height - 100, marker.y + 14))}px`;
     return;
   }
   tooltip.hidden = !group;
   canvas.style.cursor = group ? 'pointer' : 'grab';
   if (!group) return;
   tooltip.textContent = group.terminals.length === 1 ? terminalDescription(group.terminals[0]) : `${group.role === 'entry' ? 'Entry' : 'Exit'} · ${group.terminals.length} lanes · click to zoom`;
-  tooltip.style.left = `${Math.max(8, Math.min(width - Math.min(280, width - 16) - 8, group.x + 14))}px`;
-  tooltip.style.top = `${Math.max(8, Math.min(height - 64, group.y + 14))}px`;
+  tooltip.style.left = `${Math.max(8, Math.min(mapView.width - Math.min(280, mapView.width - 16) - 8, group.x + 14))}px`;
+  tooltip.style.top = `${Math.max(8, Math.min(mapView.height - 64, group.y + 14))}px`;
 }
-function fit() {
-  if (!network?.lanes.length) return;
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  for (const lane of network.lanes) for (const point of lane.shape) {
-    minX = Math.min(minX, point.x); minY = Math.min(minY, point.y);
-    maxX = Math.max(maxX, point.x); maxY = Math.max(maxY, point.y);
-  }
-  view = {x: (minX + maxX) / 2, y: (minY + maxY) / 2, scale: Math.min(width / Math.max(1, maxX - minX), height / Math.max(1, maxY - minY)) * 0.82};
-  draw();
-}
-function drawRoads() {
-  const cacheMatches = roadCache && roadCache.network === network && roadCache.x === view.x && roadCache.y === view.y && roadCache.scale === view.scale && roadCanvas.width === canvas.width && roadCanvas.height === canvas.height;
-  if (cacheMatches) return;
-  roadCanvas.width = canvas.width;
-  roadCanvas.height = canvas.height;
-  roadContext.setTransform(window.devicePixelRatio || 1, 0, 0, window.devicePixelRatio || 1, 0, 0);
-  roadContext.lineCap = 'round'; roadContext.lineJoin = 'round';
-  for (const lane of network.lanes) {
-    const kind = lane.render_kind || (lane.id.startsWith(':') ? 'junction' : 'road');
-    if (kind !== 'junction' && kind !== 'road') continue;
-    roadContext.strokeStyle = kind === 'junction' ? '#334959' : '#68899d';
-    roadContext.lineWidth = Math.max(1, Math.min(9, 3.2 * view.scale));
-    roadContext.beginPath();
-    lane.shape.forEach((point, index) => {
-      const position = screen(point.x, point.y);
-      if (index) roadContext.lineTo(position.x, position.y);
-      else roadContext.moveTo(position.x, position.y);
-    });
-    roadContext.stroke();
-  }
-  roadCache = {network, x: view.x, y: view.y, scale: view.scale};
-  signalLayoutDirty = true;
-}
-function drawPedestrians() {
-  const cacheMatches = pedestrianCache && pedestrianCache.network === network && pedestrianCache.x === view.x && pedestrianCache.y === view.y && pedestrianCache.scale === view.scale && pedestrianCanvas.width === canvas.width && pedestrianCanvas.height === canvas.height;
-  if (cacheMatches) return;
-  pedestrianCanvas.width = canvas.width;
-  pedestrianCanvas.height = canvas.height;
-  const ratio = window.devicePixelRatio || 1;
-  pedestrianContext.setTransform(ratio, 0, 0, ratio, 0, 0);
-  pedestrianContext.lineCap = 'round';
-  pedestrianContext.lineJoin = 'round';
-  for (const lane of network.lanes) {
-    const kind = lane.render_kind;
-    if (kind !== 'sidewalk' && kind !== 'walkingarea' && kind !== 'crossing') continue;
-    pedestrianContext.strokeStyle = kind === 'crossing' ? '#e9dabc' : '#62747d';
-    pedestrianContext.lineWidth = kind === 'crossing' ? Math.max(2, Math.min(5, 2.4 * view.scale)) : Math.max(1, Math.min(3, 1.2 * view.scale));
-    pedestrianContext.setLineDash(kind === 'crossing' ? [4, 4] : []);
-    pedestrianContext.beginPath();
-    lane.shape.forEach((point, index) => {
-      const position = screen(point.x, point.y);
-      if (index) pedestrianContext.lineTo(position.x, position.y);
-      else pedestrianContext.moveTo(position.x, position.y);
-    });
-    pedestrianContext.stroke();
-  }
-  pedestrianContext.setLineDash([]);
-  pedestrianCache = {network, x: view.x, y: view.y, scale: view.scale};
-}
-function draw(now = performance.now()) {
-  context.clearRect(0, 0, width, height);
-  if (!network) return;
-  drawRoads();
-  context.drawImage(roadCanvas, 0, 0, roadCanvas.width, roadCanvas.height, 0, 0, width, height);
-  if ($('pedestrian-layer').checked) {
-    drawPedestrians();
-    context.drawImage(pedestrianCanvas, 0, 0, pedestrianCanvas.width, pedestrianCanvas.height, 0, 0, width, height);
-  }
-  context.lineCap = 'round'; context.lineJoin = 'round';
-  drawControlledLanes();
-  for (const car of vehicleMotion.sample(now)) {
-    const position = screen(car.x, car.y);
-    if (position.x < -20 || position.y < -20 || position.x > width + 20 || position.y > height + 20) continue;
-    const size = Math.max(5, Math.min(15, 4.5 * view.scale));
-    context.save();
-    context.globalAlpha = car.opacity ?? 1;
-    context.translate(position.x, position.y);
-    context.rotate(car.angle * Math.PI / 180);
-    context.fillStyle = car.speed_mps < 0.1 ? '#efa957' : '#6ac9df';
-    context.fillRect(-size * 0.3, -size * 0.5, size * 0.6, size);
-    context.fillStyle = '#e4edf7';
-    context.fillRect(-size * 0.22, -size * 0.35, size * 0.44, Math.max(1, size * 0.13));
-    context.restore();
-  }
-  drawTerminals();
-  drawSignals();
-}
-$('pedestrian-layer').onchange = draw;
-new ResizeObserver(() => {
-  const rectangle = canvas.getBoundingClientRect();
-  width = rectangle.width; height = rectangle.height;
-  const ratio = window.devicePixelRatio || 1;
-  canvas.width = Math.round(width * ratio); canvas.height = Math.round(height * ratio);
-  context.setTransform(ratio, 0, 0, ratio, 0, 0);
-  fit();
-}).observe(canvas);
-$('fit').onclick = fit;
-canvas.onpointerdown = event => { drag = {x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, moved: false}; $('terminal-tooltip').hidden = true; canvas.setPointerCapture(event.pointerId); };
-canvas.onpointermove = event => {
-  if (!drag) { hoverTerminal(event); return; }
-  view.x -= (event.clientX - drag.x) / view.scale;
-  view.y += (event.clientY - drag.y) / view.scale;
-  drag.moved ||= Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 4;
-  drag.x = event.clientX; drag.y = event.clientY; draw();
-};
-canvas.onpointerup = event => {
-  const clicked = drag && !drag.moved;
-  drag = null;
-  if (!clicked) return;
+$('pedestrian-layer').onchange = () => draw();
+$('fit').onclick = () => fit();
+function clickMap(event) {
   const marker = signalAt(event);
   if (marker) { selectSignal(marker.point); return; }
   const group = terminalAt(event);
   if (!group) { selectSignal(null); return; }
   if (group.terminals.length === 1) selectTerminal(group.terminals[0]);
-  else {
-    view.x = group.terminals.reduce((sum, terminal) => sum + terminal.x, 0) / group.terminals.length;
-    view.y = group.terminals.reduce((sum, terminal) => sum + terminal.y, 0) / group.terminals.length;
-    view.scale = Math.min(30, Math.max(view.scale * 2, 5));
-    draw();
-  }
-};
-canvas.onpointercancel = () => { drag = null; };
-canvas.onpointerleave = () => { $('terminal-tooltip').hidden = true; hoveredSignal = null; draw(); };
-canvas.addEventListener('wheel', event => {
-  event.preventDefault();
-  $('terminal-tooltip').hidden = true;
-  const rectangle = canvas.getBoundingClientRect();
-  const x = event.clientX - rectangle.left - width / 2, y = event.clientY - rectangle.top - height / 2;
-  const old = view.scale;
-  view.scale = Math.max(0.005, Math.min(30, old * Math.exp(-event.deltaY * 0.001)));
-  view.x += x / old - x / view.scale; view.y -= y / old - y / view.scale;
-  draw();
-}, {passive: false});
+  else mapView.focus(group.terminals.reduce((sum, terminal) => sum + terminal.x, 0) / group.terminals.length,
+    group.terminals.reduce((sum, terminal) => sum + terminal.y, 0) / group.terminals.length, Math.max(mapView.view.scale * 2, 5));
+}
 async function initialize() {
   await refreshProjects();
   const requested = new URLSearchParams(window.location.search).get('project');

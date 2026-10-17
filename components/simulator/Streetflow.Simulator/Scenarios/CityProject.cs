@@ -23,6 +23,7 @@ public sealed class CityProject
   public required string[] SignalIds { get; init; }
   public required string Revision { get; init; }
   public ProjectTrafficLights? TrafficLights { get; init; }
+  public ProjectDetector[] Detectors { get; init; } = [];
   public string WorldId => TrafficLights?.WorldId ?? Manifest.Id;
   public string WorldRevision { get; init; } = "";
   public TacoDevice[] TrafficDevices => TrafficDeviceMapping.Read(this);

@@ -128,13 +128,18 @@ public static partial class CityProjectLoader
     }
   }
 
-  private static string CalculateWorldRevision(string directory, ProjectManifest manifest)
+  private static string CalculateWorldRevision(string directory, ProjectManifest manifest, bool hasDetectors)
   {
     List<string> inputs = [manifest.Network.File];
     inputs.AddRange(manifest.AdditionalFiles);
     if (manifest.TrafficLightsFile is not null)
     {
       inputs.Add(manifest.TrafficLightsFile);
+    }
+    // An empty detectors file describes the same world as no detectors file.
+    if (hasDetectors)
+    {
+      inputs.Add(manifest.DetectorsFile!);
     }
 
     string content = HashProjectFiles(directory, inputs) + "\0" + (manifest.Network.Attribution ?? "");

@@ -1,1 +1,274 @@
-[]
+[
+  {
+    "id": "detector-01",
+    "label": "Podu Roș approach 01 detector",
+    "x": 359.42,
+    "y": 485.06,
+    "lane_ids": [
+      "1072468318_1",
+      "1072468318_2",
+      "1072468318_3"
+    ],
+    "device_id": "light-01"
+  },
+  {
+    "id": "detector-02",
+    "label": "Bulevardul Regele Mihai I al României approach 02 detector",
+    "x": 344.68,
+    "y": 488.51,
+    "lane_ids": [
+      "165518602#1_1",
+      "165518602#1_2"
+    ],
+    "device_id": "light-02"
+  },
+  {
+    "id": "detector-03",
+    "label": "Bulevardul Țuțora approach 03 detector",
+    "x": 404.46,
+    "y": 455.22,
+    "lane_ids": [
+      "305272857#0_1",
+      "305272857#0_2"
+    ],
+    "device_id": "light-03"
+  },
+  {
+    "id": "detector-04",
+    "label": "Piața Podu Roș approach 04 detector",
+    "x": 396.15,
+    "y": 448.63,
+    "lane_ids": [
+      "324784649#1_1",
+      "324784649#1_2",
+      "324784649#1_3"
+    ],
+    "device_id": "light-04"
+  },
+  {
+    "id": "detector-05",
+    "label": "Bulevardul Socola approach 05 detector",
+    "x": 395.48,
+    "y": 398.69,
+    "lane_ids": [
+      "22776494_1",
+      "22776494_2"
+    ],
+    "device_id": "light-05"
+  },
+  {
+    "id": "detector-06",
+    "label": "Piața Podu Roș approach 06 detector",
+    "x": 383.34,
+    "y": 403.72,
+    "lane_ids": [
+      "325212457#0_1",
+      "325212457#0_2",
+      "325212457#0_3"
+    ],
+    "device_id": "light-06"
+  },
+  {
+    "id": "detector-07",
+    "label": "Strada Palat approach 07 detector",
+    "x": 398.51,
+    "y": 549.51,
+    "lane_ids": [
+      "277230359#1_1",
+      "277230359#1_2",
+      "277230359#1_3",
+      "277230359#1_4"
+    ],
+    "device_id": "light-07"
+  },
+  {
+    "id": "detector-08",
+    "label": "Bulevardul Regele Ferdinand I al României approach 08 detector",
+    "x": 400.91,
+    "y": 537.89,
+    "lane_ids": [
+      "682623766#0_1",
+      "682623766#0_2",
+      "682623766#0_3"
+    ],
+    "device_id": "light-08"
+  },
+  {
+    "id": "detector-09",
+    "label": "Bulevardul Regele Mihai I al României approach 09 detector",
+    "x": 65.47,
+    "y": 672.61,
+    "lane_ids": [
+      "165518602#0_1",
+      "165518602#0_2"
+    ],
+    "device_id": "light-09"
+  },
+  {
+    "id": "detector-10",
+    "label": "Bulevardul Dimitrie Cantemir approach 10 detector",
+    "x": 64.64,
+    "y": 664.5,
+    "lane_ids": [
+      "303755190#2_1",
+      "303755190#2_2",
+      "303755190#2_3"
+    ],
+    "device_id": "light-10"
+  },
+  {
+    "id": "detector-11",
+    "label": "Strada Nicolina approach 11 detector",
+    "x": 337.8,
+    "y": 393.58,
+    "lane_ids": [
+      "1134276130#0_1",
+      "1134276130#0_2"
+    ],
+    "device_id": "light-11"
+  },
+  {
+    "id": "detector-12",
+    "label": "Piața Podu Roș approach 12 detector",
+    "x": 340.53,
+    "y": 408.22,
+    "lane_ids": [
+      "305271348_1",
+      "305271348_2",
+      "305271348_3"
+    ],
+    "device_id": "light-12"
+  },
+  {
+    "id": "detector-13",
+    "label": "Podu Roș approach 13 detector",
+    "x": 351.71,
+    "y": 473.31,
+    "lane_ids": [
+      "1076971041_1",
+      "1076971041_2",
+      "1076971041_3"
+    ],
+    "device_id": "light-13"
+  },
+  {
+    "id": "detector-14",
+    "label": "Piața Podu Roș approach 14 detector",
+    "x": 361.96,
+    "y": 467.06,
+    "lane_ids": [
+      "324962581#0_1",
+      "324962581#0_2",
+      "324962581#0_3"
+    ],
+    "device_id": "light-14"
+  },
+  {
+    "id": "detector-15",
+    "label": "Podu Roș approach 15 detector",
+    "x": 414.42,
+    "y": 521.23,
+    "lane_ids": [
+      "29377424_1",
+      "29377424_2",
+      "29377424_3"
+    ],
+    "device_id": "light-15"
+  },
+  {
+    "id": "detector-16",
+    "label": "Bulevardul Profesor Dimitrie Mangeron approach 16 detector",
+    "x": 425.17,
+    "y": 523.16,
+    "lane_ids": [
+      "305256944#0_1",
+      "305256944#0_2",
+      "305256944#0_3"
+    ],
+    "device_id": "light-16"
+  },
+  {
+    "id": "detector-17",
+    "label": "Strada Palat approach 17 detector",
+    "x": 401.71,
+    "y": 644.29,
+    "lane_ids": [
+      "-1068015153#1_1"
+    ],
+    "device_id": "light-17"
+  },
+  {
+    "id": "detector-18",
+    "label": "Strada Sfântul Lazăr approach 18 detector",
+    "x": 452.41,
+    "y": 642.61,
+    "lane_ids": [
+      "-25368524#1_1",
+      "-25368524#1_2"
+    ],
+    "device_id": "light-18"
+  },
+  {
+    "id": "detector-19",
+    "label": "Strada Sfântul Lazăr approach 19 detector",
+    "x": 451.67,
+    "y": 623.66,
+    "lane_ids": [
+      "22895248_1",
+      "22895248_2"
+    ],
+    "device_id": "light-19"
+  },
+  {
+    "id": "detector-20",
+    "label": "Strada Palat approach 20 detector",
+    "x": 429.22,
+    "y": 596.48,
+    "lane_ids": [
+      "663624561_1"
+    ],
+    "device_id": "light-20"
+  },
+  {
+    "id": "detector-21",
+    "label": "Strada Nicolina approach 21 detector",
+    "x": 175.55,
+    "y": 110.17,
+    "lane_ids": [
+      "1068019512#0_1",
+      "1068019512#0_2"
+    ],
+    "device_id": "light-21"
+  },
+  {
+    "id": "detector-22",
+    "label": "Aleea Rozelor approach 22 detector",
+    "x": 186.61,
+    "y": 114.53,
+    "lane_ids": [
+      "1225444914#0_1"
+    ],
+    "device_id": "light-22"
+  },
+  {
+    "id": "detector-23",
+    "label": "Strada Nicolina approach 23 detector",
+    "x": 171.16,
+    "y": 129.51,
+    "lane_ids": [
+      "305271347_1",
+      "305271347_2"
+    ],
+    "device_id": "light-23"
+  },
+  {
+    "id": "detector-24",
+    "label": "Aleea Rozelor approach 24 detector",
+    "x": 160.16,
+    "y": 124.88,
+    "lane_ids": [
+      "58636262#2_1"
+    ],
+    "device_id": "light-24"
+  }
+]

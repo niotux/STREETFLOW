@@ -9,12 +9,13 @@ Public routes are relative to the configured provider URL and start with `/api/v
 | Request | Result |
 | --- | --- |
 | `GET /api/v1/taco/session` | `{id, world_id, revision, project_id, state}` for the active session |
-| `GET /api/v1/taco/sessions/{id}/map` | `{world_id, revision, attribution, coordinate_system, lanes, devices}` |
+| `GET /api/v1/taco/sessions/{id}/map` | `{world_id, revision, attribution, coordinate_system, lanes, devices, detectors}` |
 | `GET /api/v1/taco/sessions/{id}/devices` | Array of `{id, state}` for configured physical devices |
 | `GET /api/v1/taco/capabilities` | Traffic, signal-control support, and source |
 | `GET /api/v1/taco/sessions/{id}/traffic` | Latest lane counts with street/intersection/stoplight mapping, timestamps, status, and measurement method |
+| `GET /api/v1/taco/sessions/{id}/queues` | Binary queue frame: queued vehicles per controlled lane of every device (see [Queue frames](#queue-frames)) |
 
-Traffic uses shared TacoTraffic/TacoLaneTraffic types. Each response carries session/world/revision, source, time_basis, and sequence. Camera lanes preserve observed_at and age_seconds independently; stale/offline values are null. Camera queue estimates use image motion and dwell. Balthasar city snapshots expose visible lane counts only when complete, with unsupported queue/crossing/speed null and method simulation_lane_snapshot. Street/intersection mapping for those city snapshots remains explicitly unmapped; no camera geometry is inferred.
+Traffic uses shared TacoTraffic/TacoLaneTraffic types. Each response carries session/world/revision, source, time_basis, and sequence. Camera lanes preserve observed_at and age_seconds independently; stale/offline values are null. Camera queue estimates use image motion and dwell. Balthasar city snapshots expose visible lane counts only when complete, with unsupported crossing/speed null and method simulation_lane_snapshot (simulation_detector on detector lanes). Controlled lanes also report queued_vehicle_count, using the same approach count as the binary frame. Street/intersection mapping for those city snapshots remains explicitly unmapped; no camera geometry is inferred.
 
 Casper advertises signal_control=false and returns unknown device states. Physical commands return 501 until a controller adapter exists. Synthetic camera demo data uses measurement_method=synthetic_demo and is labelled in both frontends.
 
@@ -22,9 +23,26 @@ This rename changes public routes from /api/v1/tlc to /api/v1/taco, .NET Tlc typ
 
 With no active session, discovery returns null identity fields and `state: "none"`. The simulator exposes running and paused city sessions. `project_id` is explanatory simulator context; commands and map pairing use session ID, world ID, and infrastructure revision.
 
-Lanes contain `id` and `shape: [{x,y}]`. Devices contain `id`, `label`, `x`, `y`, and `lane_ids`. Coordinates in the current provider are local metres. Devices include only authored physical controls: no theoretical movement list, SUMO controller IDs, or link indices are included in their records.
+TACO covers vehicle traffic only: sidewalks, crossings and walking areas are not published in maps or traffic. Lanes contain `id`, `shape: [{x,y}]`, and `upstream_lane_id` when exactly one lane feeds them (null otherwise); a queue extends back along that chain. Devices contain `id`, `label`, `x`, `y`, and `lane_ids`. Coordinates in the current provider are local metres. Devices include only authored physical controls: no theoretical movement list, SUMO controller IDs, or link indices are included in their records.
 
 The current map inventory is static for a configuration revision. Device state is dynamic. States are `off`, `red`, `red-yellow`, `yellow`, and `green`. `mixed` means mapped lamps currently disagree; `unknown` means their actual state could not be resolved. A configured device always produces one map marker and one state record, regardless of its number of mapped movements or lanes.
+
+## Queue frames
+
+`GET /api/v1/taco/sessions/{id}/queues` returns `application/vnd.streetflow.taco-queues`, a little-endian binary frame small enough to poll several times a second:
+
+| Field | Type |
+| --- | --- |
+| magic | 4 bytes, `TQ01` |
+| sequence | int64 |
+| time | float64; simulation seconds (simulator) or Unix seconds (Casper); NaN when unknown |
+| available | uint8, 0 or 1 |
+| device count | uint16, in the map's `devices` order |
+| per device | uint8 lane count, then one uint16 vehicle count per lane in that device's `lane_ids` order; `0xFFFF` means unknown |
+
+Positions are not sent; the frame only makes sense with the map of the same session and revision. `TacoQueueFrame` in the contracts project encodes and decodes it.
+
+The simulator counts every vehicle on each controlled lane's approach, moving or stopped: from the stop line backwards along `upstream_lane_id`, up to 250 m. Casper reports its camera queue estimate for each lane.
 
 ## Commands
 
@@ -52,7 +70,7 @@ The Logistics backend checks the provider's active session every 1.5 seconds, in
 
 The Logistics page also refreshes its session identity and device states every 1.5 seconds, including when no session is selected. It follows new sessions automatically and reuses its own bounded map cache for the same provider/world/revision. A changed world, revision, or provider invalidates the old view before new commands are enabled. Map geometry is not fetched every frame. Provider failure disables commands; recovery is retried automatically.
 
-Logistics browser requests use `/melchior-api/session` and `/melchior-api/sessions/{id}/{map|devices}` through the frontend proxy. The Logistics service exposes the equivalent `/api/v1/...` paths and forwards device commands. It does not load SUMO XML or own a separately authored map.
+Logistics browser requests use `/melchior-api/session` and `/melchior-api/sessions/{id}/{map|devices|traffic|queues}` through the frontend proxy. Melchior polls queue frames every 250 ms and draws each queued vehicle behind its stop line, using the same map renderer and vehicle drawing as Balthasar; it has no other source of vehicle positions. The Logistics service exposes the equivalent `/api/v1/...` paths and forwards device commands. It does not load SUMO XML or own a separately authored map.
 
 `Logistics__DiscoveryIntervalMilliseconds` defaults to 1500. Cached maps are in memory; saved provider addresses remain on the Logistics data volume. PostgreSQL is not part of this control path.
 

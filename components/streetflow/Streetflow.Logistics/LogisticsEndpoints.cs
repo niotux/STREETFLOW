@@ -13,6 +13,8 @@ public static class LogisticsEndpoints
     api.MapGet("/session", (TacoApiClient client, CancellationToken token) => client.SessionAsync(token));
     api.MapGet("/sessions/{id}/map", (string id, TacoApiClient client, CancellationToken token) => client.MapAsync(id, token));
     api.MapGet("/sessions/{id}/devices", (string id, TacoApiClient client, CancellationToken token) => client.DevicesAsync(id, token));
+    api.MapGet("/sessions/{id}/queues", async (string id, TacoApiClient client, CancellationToken token) =>
+      Results.Bytes(await client.QueuesAsync(id, token), TacoQueueFrame.ContentType));
     api.MapGet("/sessions/{id}/traffic", (string id, TacoApiClient client, CancellationToken token) => client.TrafficAsync(id, token));
     api.MapPut("/sessions/{id}/devices/{deviceId}", (string id, string deviceId, TacoDeviceCommand request, TacoApiClient client, CancellationToken token) => client.ControlAsync(id, deviceId, request, token));
   }

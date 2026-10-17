@@ -1,14 +1,35 @@
-import {signalAppearance, deviceState, deviceDescription, layoutSignalMarkers, controlledLanes, deviceMapStatus} from '/balthasar/signals.js?v=physical-devices-3';
+import {signalAppearance, deviceState, deviceDescription, controlledLanes, deviceMapStatus} from '/balthasar/signals.js?v=physical-devices-3';
+import {MapView, queuedVehicles} from '/balthasar/map-view.js?v=shared-map-1';
 
 const $ = id => document.getElementById(id);
 const canvas = $('map');
-const context = canvas.getContext('2d');
 const actions = [['off', 'Off'], ['red', 'Red'], ['red-yellow', 'Red + yellow'], ['green', 'Green'], ['yellow', 'Yellow']];
 let session = null, network = null, states = [], provider = '';
-let traffic = null;
+let traffic = null, queues = null, laneById = new Map();
 let cachedMap = null, cachedProvider = '';
-let busy = false, polling = false, available = false, epoch = 0;
-let width = 1, height = 1, view = {x: 0, y: 0, scale: 1}, markers = [], drag = null, hoveredDevice = null;
+let busy = false, polling = false, queuePolling = false, available = false, epoch = 0;
+let hoveredDevice = null;
+
+const mapView = new MapView(canvas, {
+  vehicles: () => queuedCars(),
+  deviceStates: () => available ? states : [],
+  focusedDevice: () => hoveredDevice || selectedDevice(),
+  highlightedLanes: device => queuePath(device),
+  markerActive: device => device.id === $('controller').value || device.id === hoveredDevice?.id,
+  onHover: event => {
+    const next = mapView.signalAt(event)?.point || null;
+    canvas.style.cursor = next ? 'pointer' : 'grab';
+    if (hoveredDevice !== next) { hoveredDevice = next; draw(); }
+    renderMapDetail();
+  },
+  onLeave: () => { hoveredDevice = null; renderMapDetail(); draw(); },
+  onClick: event => {
+    if (busy) return;
+    const marker = mapView.signalAt(event);
+    if (marker) { $('signal-filter').value = ''; fillDevices(marker.point.id); draw(); }
+  }
+});
+const draw = () => mapView.draw();
 
 async function api(path, method = 'GET', body) {
   const response = await fetch(`/melchior-api${path}`, {
@@ -20,6 +41,75 @@ async function api(path, method = 'GET', body) {
   const data = await response.json();
   if (!response.ok) throw new Error(data.message || `Request failed (${response.status})`);
   return data;
+}
+
+// TACO queue frame (little-endian): "TQ01", int64 sequence, float64 time, uint8 available, uint16 devices,
+// then per device a uint8 lane count and one uint16 queued count per lane (0xFFFF = unknown).
+function decodeQueues(buffer) {
+  const data = new DataView(buffer);
+  if (buffer.byteLength < 23 || String.fromCharCode(...new Uint8Array(buffer, 0, 4)) !== 'TQ01') throw new Error('The provider returned an invalid queue frame');
+  const devices = [];
+  let offset = 23;
+  for (let device = 0, count = data.getUint16(21, true); device < count; device++) {
+    const lanes = [];
+    for (let lane = 0, total = data.getUint8(offset++); lane < total; lane++, offset += 2) {
+      const value = data.getUint16(offset, true);
+      lanes.push(value === 0xffff ? null : value);
+    }
+    devices.push(lanes);
+  }
+  return {sequence: Number(data.getBigInt64(4, true)), available: data.getUint8(20) === 1, devices};
+}
+
+// Queue counts index the map's devices and their lane_ids in order; a frame for another map is ignored.
+function queueCounts(device) {
+  const index = network?.devices.indexOf(device) ?? -1;
+  const counts = queues?.available ? queues.devices[index] : null;
+  return counts && counts.length === device.lane_ids.length ? counts : null;
+}
+
+function queuedCars() {
+  const cars = [];
+  for (const device of network?.devices || []) {
+    const counts = queueCounts(device);
+    if (!counts) continue;
+    device.lane_ids.forEach((id, index) => {
+      const lane = laneById.get(id);
+      if (lane && counts[index]) cars.push(...queuedVehicles(lane, counts[index], laneById));
+    });
+  }
+  return cars;
+}
+
+// The selected light's controlled lanes, extended upstream far enough to sit under its counted cars.
+function queuePath(device) {
+  if (!device) return [];
+  const counts = queueCounts(device) || [];
+  const result = [];
+  device.lane_ids.forEach((id, index) => {
+    let lane = laneById.get(id), remaining = (counts[index] || 0) * 7.5;
+    const seen = new Set();
+    while (lane && !seen.has(lane.id)) {
+      seen.add(lane.id);
+      result.push(lane);
+      remaining -= laneLength(lane);
+      if (remaining <= 0) break;
+      lane = lane.upstream_lane_id ? laneById.get(lane.upstream_lane_id) : null;
+    }
+  });
+  return result.length ? result : controlledLanes(device, network.lanes);
+}
+
+function laneLength(lane) {
+  let total = 0;
+  for (let index = 1; index < lane.shape.length; index++) total += Math.hypot(lane.shape[index].x - lane.shape[index - 1].x, lane.shape[index].y - lane.shape[index - 1].y);
+  return total;
+}
+
+function queueSummary(device) {
+  const counts = queueCounts(device);
+  if (!counts) return 'Queues unavailable';
+  return `On approach ${counts.reduce((sum, count) => sum + (count ?? 0), 0)} · ` + device.lane_ids.map((id, index) => `${id}: ${counts[index] ?? '?'}`).join(', ');
 }
 
 function showError(error) {
@@ -72,11 +162,19 @@ async function perform(work) {
   }
 }
 
+function setNetwork(map) {
+  network = map;
+  laneById = new Map((map?.lanes || []).map(lane => [lane.id, lane]));
+  queues = null;
+  if (map) mapView.setNetwork({lanes: map.lanes, devices: map.devices});
+  else { mapView.network = null; draw(); }
+}
+
 function clearSession() {
   traffic = null;
   $('traffic-summary').textContent = 'Waiting for traffic measurements.';
   session = null;
-  network = null;
+  setNetwork(null);
   states = [];
   available = false;
   $('map-label').textContent = 'Waiting for an active world.';
@@ -86,7 +184,6 @@ function clearSession() {
   hoveredDevice = null;
   $('run-note').textContent = 'No active session. In Balthasar, choose a project in Loader and click Load.';
   fillDevices();
-  draw();
 }
 
 function sameWorld(map, next) {
@@ -104,15 +201,14 @@ async function loadSession(next, version) {
   cachedMap = map;
   cachedProvider = provider;
   session = next;
-  network = map;
   states = live;
   available = true;
+  setNetwork(map);
   $('map-label').textContent = map.world_id;
   $('map-empty').hidden = map.lanes.length > 0 || map.devices.length > 0;
   $('run').replaceChildren(new Option(`${next.project_id || next.world_id} · ${next.state}`, next.id));
   $('run-note').textContent = 'Following the provider’s active session automatically. Map loads only when its world or configuration changes.';
   fillDevices();
-  fit();
 }
 
 async function refreshSession(version) {
@@ -154,6 +250,28 @@ async function refreshSession(version) {
   renderTraffic();
   connected(true, network.devices.length ? 'taco connected · devices mapped' : 'taco connected · no mapped lights');
   updateControls();
+}
+
+// Queue frames are small and binary, so they refresh much faster than the session and map.
+async function pollQueues() {
+  if (queuePolling || !session?.id || !network) return;
+  queuePolling = true;
+  const target = session.id, map = network;
+  try {
+    const response = await fetch(`/melchior-api/sessions/${encodeURIComponent(target)}/queues`, {signal: AbortSignal.timeout(2000)});
+    if (!response.ok) throw new Error(`Queue request failed (${response.status})`);
+    const frame = decodeQueues(await response.arrayBuffer());
+    if (session?.id !== target || network !== map) return;
+    if (frame.devices.length !== map.devices.length) { queues = null; return; }
+    queues = frame;
+  } catch {
+    if (session?.id === target) queues = null;
+  } finally {
+    queuePolling = false;
+    renderTraffic();
+    renderMapDetail();
+    draw();
+  }
 }
 
 function fillDevices(preferred = $('controller').value) {
@@ -201,10 +319,10 @@ function renderController() {
 function renderMapDetail() {
   let detail = 'Waiting for an active simulation.';
   if (network) {
-    detail = 'Select or hover a physical light to highlight its controlled incoming lanes.';
+    detail = 'Vehicles on each light’s approach, as counted by taco. Select or hover a light to highlight its lanes and vehicles.';
     if (!network.devices.length) detail = 'Roads loaded. Physical traffic lights need a project mapping before they can appear here.';
     const device = hoveredDevice || selectedDevice();
-    if (device) detail = `${signalAppearance(available ? deviceState(device, states) : undefined).label} · ${deviceDescription(device)} · highlighted incoming lanes`;
+    if (device) detail = `${signalAppearance(available ? deviceState(device, states) : undefined).label} · ${device.label} · ${queueSummary(device)}`;
   }
   $('map-detail').textContent = detail;
 }
@@ -246,7 +364,8 @@ function renderTraffic() {
   if (!lanes?.length) { $('traffic-summary').textContent = 'Traffic measurements unavailable.'; return; }
   const total = field => lanes.every(lane => lane[field] !== null) ? lanes.reduce((sum, lane) => sum + lane[field], 0) : 'Unavailable';
   const demo = lanes.some(lane => lane.measurement_method === 'synthetic_demo');
-  $('traffic-summary').textContent = `${demo ? 'SYNTHETIC DEMO · ' : ''}Visible: ${total('visible_vehicle_count')} · Estimated queue: ${total('queued_vehicle_count')} · ${traffic.status}`;
+  $('traffic-summary').textContent = `${demo ? 'SYNTHETIC DEMO · ' : ''}Visible: ${total('visible_vehicle_count')} · Estimated queue: ${total('queued_vehicle_count')} · ${traffic.status}`
+    + (device ? ` · ${queueSummary(device)}` : '');
 }
 
 $('connection-form').onsubmit = event => {
@@ -269,123 +388,7 @@ $('controller-enabled').onchange = event => {
   const device = selectedDevice();
   if (device) perform(() => command(device.id, event.target.checked ? 'on' : 'off'));
 };
-
-function screen(point) {
-  return {x: width / 2 + (point.x - view.x) * view.scale, y: height / 2 - (point.y - view.y) * view.scale};
-}
-
-function fit() {
-  if (!network) return;
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  const include = point => {
-    minX = Math.min(minX, point.x); minY = Math.min(minY, point.y);
-    maxX = Math.max(maxX, point.x); maxY = Math.max(maxY, point.y);
-  };
-  for (const lane of network.lanes) lane.shape.forEach(include);
-  network.devices.forEach(include);
-  if (Number.isFinite(minX)) view = {x: (minX + maxX) / 2, y: (minY + maxY) / 2, scale: Math.min(width / Math.max(1, maxX - minX), height / Math.max(1, maxY - minY)) * .8};
-  draw();
-}
-
-function draw() {
-  context.clearRect(0, 0, width, height);
-  markers = [];
-  if (!network) return;
-  context.lineCap = 'round';
-  context.lineJoin = 'round';
-  context.strokeStyle = '#68899d';
-  context.lineWidth = Math.max(1, Math.min(7, view.scale * 3));
-  for (const lane of network.lanes) {
-    context.beginPath();
-    lane.shape.forEach((point, index) => {
-      const position = screen(point);
-      if (index) context.lineTo(position.x, position.y);
-      else context.moveTo(position.x, position.y);
-    });
-    context.stroke();
-  }
-  context.strokeStyle = '#a8e76a';
-  context.lineWidth = Math.max(4, Math.min(10, view.scale * 4));
-  for (const lane of controlledLanes(hoveredDevice || selectedDevice(), network.lanes)) {
-    context.beginPath();
-    lane.shape.forEach((point, index) => {
-      const position = screen(point);
-      if (index) context.lineTo(position.x, position.y);
-      else context.moveTo(position.x, position.y);
-    });
-    context.stroke();
-  }
-  markers = layoutSignalMarkers(network.devices, screen, width, height, .85);
-  for (const marker of markers) {
-    const code = available ? deviceState(marker.point, states) : undefined;
-    context.strokeStyle = marker.point.id === $('controller').value || marker.point.id === hoveredDevice?.id ? '#a8e76a' : '#7f9ba9';
-    context.lineWidth = 1;
-    context.beginPath();
-    context.moveTo(marker.anchor.x, marker.anchor.y);
-    context.lineTo(marker.x, marker.y);
-    context.stroke();
-    context.fillStyle = '#111214';
-    context.beginPath();
-    context.roundRect(marker.x - 6, marker.y - 14, 12, 28, 3);
-    context.fill();
-    context.stroke();
-    const lamps = [['r', '#ff5148'], ['y', '#ffcf38'], ['G', '#44eb88']];
-    lamps.forEach(([lamp, color], index) => {
-      context.fillStyle = code === lamp || code === 'u' && index < 2 ? color : '#343638';
-      context.beginPath();
-      context.arc(marker.x, marker.y + (index - 1) * 8, 3, 0, Math.PI * 2);
-      context.fill();
-    });
-  }
-}
-
-function markerAt(event) {
-  const rectangle = canvas.getBoundingClientRect();
-  return markers.find(marker => Math.abs(marker.x - (event.clientX - rectangle.left)) < 12 && Math.abs(marker.y - (event.clientY - rectangle.top)) < 19);
-}
-
-new ResizeObserver(() => {
-  const rectangle = canvas.getBoundingClientRect();
-  width = rectangle.width; height = rectangle.height;
-  const ratio = window.devicePixelRatio || 1;
-  canvas.width = Math.round(width * ratio); canvas.height = Math.round(height * ratio);
-  context.setTransform(ratio, 0, 0, ratio, 0, 0);
-  fit();
-}).observe(canvas);
-$('fit').onclick = fit;
-canvas.onpointerdown = event => { drag = {x: event.clientX, y: event.clientY, moved: false}; canvas.setPointerCapture(event.pointerId); };
-canvas.onpointermove = event => {
-  if (!drag) {
-    const marker = markerAt(event);
-    const nextHover = marker?.point || null;
-    if (hoveredDevice !== nextHover) { hoveredDevice = nextHover; draw(); }
-    renderMapDetail();
-    return;
-  }
-  const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
-  drag.moved ||= Math.hypot(dx, dy) > 3;
-  view.x -= dx / view.scale; view.y += dy / view.scale;
-  drag.x = event.clientX; drag.y = event.clientY;
-  draw();
-};
-canvas.onpointerup = event => {
-  const clicked = drag && !drag.moved;
-  drag = null;
-  if (!clicked || busy) return;
-  const marker = markerAt(event);
-  if (marker) { $('signal-filter').value = ''; fillDevices(marker.point.id); draw(); }
-};
-canvas.onpointercancel = () => { drag = null; };
-canvas.onpointerleave = () => { hoveredDevice = null; renderMapDetail(); draw(); };
-canvas.addEventListener('wheel', event => {
-  event.preventDefault();
-  const rectangle = canvas.getBoundingClientRect();
-  const x = event.clientX - rectangle.left - width / 2, y = event.clientY - rectangle.top - height / 2;
-  const old = view.scale;
-  view.scale = Math.max(.005, Math.min(30, old * Math.exp(-event.deltaY * .001)));
-  view.x += x / old - x / view.scale; view.y -= y / old - y / view.scale;
-  draw();
-}, {passive: false});
+$('fit').onclick = () => mapView.fit();
 
 function displayConnection(address) {
   const target = new URL(address);
@@ -401,3 +404,4 @@ await perform(async () => {
   await refreshSession(epoch);
 });
 setInterval(poll, 1500);
+setInterval(pollQueues, 250);
