@@ -1,16 +1,7 @@
 :root { --cyan: var(--ui-signal); }
 body { margin: 0; overflow: hidden; }
-.title-bar { height: 68px; }
 
-.applet-launchers { display: flex; gap: 4px; height: 100%; align-items: center; }
-.applet-launchers button > span { margin-right: 8px; color: var(--ui-accent); font-size: 16px; }
-.header-status { display: flex; align-items: center; gap: 16px; }
-#reset-layout { font-size: 22px; padding: 2px 8px; background: transparent; }
-#connection { color: var(--muted); font: 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; white-space: nowrap; padding: 4px 8px; border: 1px solid var(--ui-control-border); }
-#connection::before { content: ''; height: 8px; width: 8px; background: var(--ui-alert); box-shadow: 0 0 8px var(--ui-alert); animation: ui-blink 1s steps(1) infinite; }
-#connection[data-connected="true"] { color: var(--ui-signal); border-color: color-mix(in srgb, var(--ui-signal) 40%, transparent); }
-#connection[data-connected="true"]::before { background: var(--ui-signal); box-shadow: 0 0 10px var(--ui-signal); animation: none; }
-.workspace { position: relative; height: calc(100dvh - 68px); overflow: hidden; }
+.workspace { position: relative; height: calc(100dvh - var(--ui-taskbar-height)); overflow: hidden; }
 #map-wrap { position: absolute; inset: 0 0 32px; overflow: hidden; background:
   radial-gradient(ellipse at 55% 45%, color-mix(in srgb, var(--ui-accent) 9%, transparent), transparent 70%),
   linear-gradient(var(--ui-grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--ui-grid-line) 1px, transparent 1px),
@@ -115,23 +106,9 @@ dialog::backdrop { background: #000c; }
 .import-choice strong { font-size: 14px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 5px; color: var(--accent); }
 .import-choice span { font-size: 11px; color: var(--muted); }
 @media (max-width: 1000px) {
-  .title-bar { padding: 0 16px; gap: 12px; }
-  .applet-launchers button { padding: 10px; }
-  .applet-launchers button > span { margin-right: 5px; }
-  .brand { font-size: 16px; }
-  .header-status { gap: 8px; }
-  #connection { font-size: 9px; }
   .ui-window-category { display: none; }
 }
 @media (max-width: 680px) {
-  .title-bar { height: 102px; padding: 10px 12px 48px; gap: 6px; }
-  .brand small { font-size: 7px; }
-  .brand-mark { width: 25px; height: 28px; font-size: 27px; }
-  .applet-launchers { position: absolute; bottom: 0; left: 0; right: 0; height: 42px; border-top: 1px solid var(--ui-border); justify-content: center; gap: 4px; }
-  .applet-launchers button { padding: 8px 10px; font-size: 11px; }
-  .header-status { margin-left: auto; }
-  #connection { max-width: 85px; white-space: normal; font-size: 8px; }
-  .workspace { height: calc(100dvh - 102px); }
   #applet-layer { inset: 80px 8px 62px; }
   .workspace-heading { left: 12px; right: 12px; padding-right: 0; top: 14px; }
   .workspace-heading h1 { font-size: 16px; max-width: 48vw; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }

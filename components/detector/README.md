@@ -2,7 +2,27 @@
 
 Camera → Pi detection/tracking → Casper → TACO → Melchior.
 
-The Pi processes video locally and sends small JSON measurements, never footage, images, licence plates, or track IDs. Casper is a .NET 10 service that maps camera lanes to streets, intersections, and stoplights. The Python worker supports USB indices, RTSP, and recorded files. No paid inference API, accelerator, message broker, or database is required.
+The worker processes video locally and sends small JSON measurements without footage, licence plates, or track IDs. An optional local-demo preview sends one bounded annotated JPEG at a time to Casper; it is disabled in the base stack. Casper is a .NET 10 service that maps camera lanes to streets, intersections, and stoplights. The Python worker supports USB indices, RTSP, and recorded files. No paid inference API, accelerator, message broker, or database is required.
+
+## Try the sample video
+
+Start Docker Desktop, then run this from the repository root:
+
+```sh
+./scripts/casper-demo.sh start
+```
+
+Open **http://localhost:8090/casper/**. The map shows the sample traffic light and its camera. Click either icon to see the camera picture and detected car counts. The 16-second clip repeats automatically. In that camera’s details, choose **Adjust this camera’s counting area** to drag a box over the road and press **Save changes**. Use **Back to device map** to return, or the Streetflow logo at the top left to leave Casper. You do not need to edit JSON, find a snapshot, name a revision, or enter a token.
+
+The video is included at `assets/casper-demo/cars-night-960.mp4`. It is a resized copy of [Cars Passing by at Night](https://commons.wikimedia.org/wiki/File:Cars_Passing_by_at_Night.webm) by Maximilian Schönherr, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). The launcher downloads the official YOLOX Nano model on first use into ignored `.data/casper-demo/`, creates a private demo token, and copies inputs into Docker Desktop volumes. It uses the `desktop-linux` Docker context and does not require Docker Desktop to share this worktree for file mounts. Docker images and volumes are stored in Docker Desktop, not the default Docker context.
+
+To stop the demo:
+
+```sh
+./scripts/casper-demo.sh stop
+```
+
+The saved counting area stays in the demo volume for the next start. The clip is an illustration, not a verified traffic count. Melchior continues using the simulator by default.
 
 ## Demo without hardware
 
@@ -35,13 +55,13 @@ dotnet run --project components/frontend/Streetflow.Frontend
 
 Open http://localhost:8090/casper/. The two synthetic vehicles become queued after the dwell time; their data is marked **SYNTHETIC DEMO**. In Melchior, connect to http://localhost, port 8082. Select North stoplight to see its counts. Light controls remain disabled because Casper has no physical controller adapter.
 
-Or, with the token set:
+Or start the ordinary Compose stack, including Casper, without a camera token:
 
 ```sh
-docker --context desktop-linux compose --profile cameras up --build -d --wait
+docker --context desktop-linux compose up --build -d --wait
 ```
 
-Containerized Melchior connects to http://casper, port 8080. The normal stack still runs without the camera profile or token. The camera profile fails at Casper startup if the token is empty. Compose binds Casper to localhost; remote Pis need an explicitly configured private-network endpoint or authenticated TLS reverse proxy.
+Containerized Melchior still defaults to the simulator. Casper starts without a token and shows unavailable camera data until a worker is configured; camera writes require the configured token. Compose binds Casper to localhost; remote Pis need an explicitly configured private-network endpoint or authenticated TLS reverse proxy.
 
 ## Real camera
 
@@ -57,7 +77,7 @@ curl -L --fail -o .data/models/yolox_nano.onnx \
 
 The adapter uses [official YOLOX Nano ONNX weights](https://github.com/Megvii-BaseDetection/YOLOX/tree/main/demo/ONNXRuntime), OpenCV DNN, COCO output [1,N,85], and BGR preprocessing. YOLOX publishes its code under [Apache 2.0](https://github.com/Megvii-BaseDetection/YOLOX/blob/main/LICENSE). Tiny at the same input size is an optional larger alternative. Official raw exports are decoded by default; --decoded is only for models already exporting decoded boxes.
 
-Copy the example camera JSON for each Pi. Open http://localhost:8090/casper/calibration.html, load a camera snapshot and its JSON, draw the visible lane polygons and counting lines, and download the updated configuration. Images remain in the browser. Line endpoint order determines the counted direction. Coordinates are normalized; a new camera crop/position requires recalibration. Update detector_config_revision on Casper and the worker together.
+Copy the example camera JSON for each Pi. Open http://localhost:8090/casper/calibration.html, load a camera snapshot and its JSON, draw the visible lane polygons and counting lines, and download the updated configuration. Outside the opt-in local preview, images remain in the browser. Line endpoint order determines the counted direction. Coordinates are normalized; a new camera crop/position requires recalibration. A worker using `--fetch-calibration` gets the saved revision from Casper; otherwise update `detector_config_revision` on Casper and the worker together.
 
 ```sh
 .venv/bin/python components/detector/camera/worker.py \
@@ -87,13 +107,16 @@ Stale/outage lanes return unavailable/null counts with original timestamps and a
 | --- | --- |
 | GET /health | Service health |
 | POST /api/v1/cameras/{id}/observations | Authenticated camera ingestion |
+| GET/PUT /api/v1/cameras/{id}/calibration | Authenticated, camera-specific view calibration |
+| GET /api/v1/cameras | Camera IDs, observation/preview age and status, sequence, and revision |
+| GET/POST /api/v1/cameras/{id}/preview | Latest in-memory JPEG; POST authenticated and enabled only for local demo |
 | GET /api/v1/taco/session | Casper session/world/revision |
 | GET /api/v1/taco/capabilities | Traffic supported; signal control unavailable |
 | GET /api/v1/taco/sessions/{id}/map | Configured lanes/stoplights |
 | GET /api/v1/taco/sessions/{id}/devices | Unknown lamp states |
 | GET /api/v1/taco/sessions/{id}/traffic | Counts by lane, street, intersection, stoplight |
 
-Ingestion uses Authorization: Bearer CAMERA_TOKEN and a 64 KiB body limit. Physical control returns 501. Read endpoints assume a trusted network, like the existing manual-control stack; protect the network and terminate TLS before remote deployment.
+Ingestion and calibration writes use Authorization: Bearer CAMERA_TOKEN. The request body limit is 256 KiB, and the preview JPEG limit is 256 KiB. Physical control returns 501. Read endpoints assume a trusted network, like the existing manual-control stack; protect the network and terminate TLS before remote deployment.
 
 Melchior forwards traffic through GET /api/v1/sessions/{id}/traffic and the frontend through /melchior-api/sessions/{id}/traffic. Casper's page uses /casper-api.
 

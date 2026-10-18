@@ -63,10 +63,53 @@ def utc(seconds):
 
 
 class ApiTests(unittest.TestCase):
+    def test_two_cameras_have_independent_lane_freshness(self):
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            config = json.loads((ROOT / "components/detector/examples/configuration.json").read_text())
+            config["cameras"][0]["view_calibration_file"] = str(ROOT / "components/detector/examples/camera.json")
+            config["stale_after_seconds"] = 2
+            config["lanes"].append({"id": "south-1", "shape": [{"x": 20, "y": 100}, {"x": 20, "y": 0}]})
+            config["lane_mappings"].append({"lane_id": "south-1", "street_id": "south-street",
+                                             "intersection_id": "junction-1", "approach_id": "southbound"})
+            config["cameras"].append({"id": "pi-02", "intersection_id": "junction-1",
+                                      "token_environment": "SECOND_CAMERA_TOKEN", "lane_ids": ["south-1"]})
+            path = directory / "configuration.json"
+            path.write_text(json.dumps(config))
+            with (directory / "service.log").open("w+") as log:
+                service, base = start_service("components/detector/Streetflow.Casper", free_port(), {
+                    "Casper__ConfigurationFile": str(path), "CASPER_DEMO_CAMERA_TOKEN": "first-token",
+                    "SECOND_CAMERA_TOKEN": "second-token"}, log)
+                try:
+                    session = request(base, "/api/v1/taco/session")[1]["id"]
+                    now = time.time()
+                    frame = {"schema_version": "1", "source": "camera", "time_basis": "utc",
+                             "session_id": "camera-one", "sequence": 1, "network_revision": "network-1",
+                             "detector_config_revision": "camera-1", "detector_id": "pi-01",
+                             "intersection_id": "junction-1", "window": {"start": utc(now - 0.8), "end": utc(now - 0.5)},
+                             "status": "ok", "lanes": [{"lane_id": "north-1", "approach_id": "northbound",
+                             "visible_vehicle_count": 1, "crossed_vehicle_count": 0, "queued_vehicle_count": 0,
+                             "mean_speed_mps": None, "measurement_status": "ok"}]}
+                    self.assertEqual(request(base, "/api/v1/cameras/pi-01/observations", frame, token="first-token")[0], 200)
+                    traffic = request(base, "/api/v1/taco/sessions/" + session + "/traffic")[1]
+                    self.assertEqual(traffic["lanes"][0]["visible_vehicle_count"], 1)
+                    self.assertIsNone(traffic["lanes"][1]["visible_vehicle_count"])
+                    second = copy.deepcopy(frame)
+                    second.update(session_id="camera-two", detector_id="pi-02")
+                    second["lanes"][0].update(lane_id="south-1", approach_id="southbound", visible_vehicle_count=2)
+                    self.assertEqual(request(base, "/api/v1/cameras/pi-02/observations", second, token="second-token")[0], 200)
+                    traffic = request(base, "/api/v1/taco/sessions/" + session + "/traffic")[1]
+                    self.assertEqual([lane["visible_vehicle_count"] for lane in traffic["lanes"]], [1, 2])
+                    self.assertEqual(request(base, "/api/v1/cameras/pi-02/observations", second, token="first-token")[0], 401)
+                finally:
+                    service.terminate()
+                    service.wait(timeout=5)
+
     def test_pi_to_casper_to_melchior_and_validation(self):
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
             config = json.loads((ROOT / "components/detector/examples/configuration.json").read_text())
+            config["cameras"][0]["view_calibration_file"] = str(ROOT / "components/detector/examples/camera.json")
             config["stale_after_seconds"] = 3
             path = directory / "configuration.json"
             path.write_text(json.dumps(config))
@@ -74,7 +117,8 @@ class ApiTests(unittest.TestCase):
             with (directory / "services.log").open("w+") as log:
                 try:
                     casper, base = start_service("components/detector/Streetflow.Casper", free_port(),
-                        {"Casper__ConfigurationFile": str(path), "CASPER_DEMO_CAMERA_TOKEN": "test-camera-token"}, log)
+                        {"Casper__ConfigurationFile": str(path), "Casper__CalibrationDirectory": str(directory / "calibrations"),
+                         "Casper__EnablePreview": "true", "CASPER_DEMO_CAMERA_TOKEN": "test-camera-token"}, log)
                     processes.append(casper)
                     session = request(base, "/api/v1/taco/session")[1]
                     route = "/api/v1/taco/sessions/" + session["id"]
@@ -100,6 +144,7 @@ class ApiTests(unittest.TestCase):
                     frame["window"] = {"start": utc(now - 2), "end": utc(now - 1)}
                     self.assertEqual(post(frame)[0], 200)
                     self.assertTrue(post(frame)[1]["duplicate"])
+                    self.assertEqual(request(base, "/api/v1/cameras")[1][0]["measurement"]["sequence"], 2)
                     changed = copy.deepcopy(frame)
                     changed["lanes"][0]["visible_vehicle_count"] = 5
                     self.assertEqual(post(changed)[0], 409)
@@ -135,8 +180,25 @@ class ApiTests(unittest.TestCase):
                     processes.append(frontend)
                     self.assertEqual(request(frontend_base, "/casper-api/sessions/" + session["id"] + "/traffic")[1]["lanes"][0]["queued_vehicle_count"], 3)
                     self.assertEqual(request(frontend_base, "/melchior-api/sessions/" + session["id"] + "/traffic")[1]["lanes"][0]["queued_vehicle_count"], 3)
+                    calibration_path = "/casper-camera-api/pi-01/calibration"
+                    self.assertEqual(request(frontend_base, calibration_path)[0], 401)
+                    initial = request(frontend_base, calibration_path, token="test-camera-token")
+                    self.assertEqual(initial[0], 200)
+                    self.assertEqual(initial[1]["lanes"][0]["lane_id"], "north-1")
+                    jpeg = b"\xff\xd8preview\xff\xd9"
+                    preview_request = urllib.request.Request(base + "/api/v1/cameras/pi-01/preview", jpeg,
+                        {"Authorization": "Bearer test-camera-token", "Content-Type": "image/jpeg",
+                         "X-Observed-At": utc(time.time()), "X-Calibration-Revision": "camera-1",
+                         "X-Measurement-Status": "partial"}, method="POST")
+                    with urllib.request.urlopen(preview_request) as response:
+                        self.assertEqual(response.status, 200)
+                    with urllib.request.urlopen(frontend_base + "/casper-camera-api/pi-01/preview") as response:
+                        self.assertEqual(response.read(), jpeg)
+                    self.assertEqual(request(base, "/api/v1/cameras")[1][0]["preview_status"], "partial")
                     with urllib.request.urlopen(frontend_base + "/casper/") as page:
-                        self.assertIn(b"Street observations", page.read())
+                        content = page.read()
+                        self.assertIn(b'aria-label="Map of traffic lights and cameras"', content)
+                        self.assertIn(b'id="camera-view"', content)
                     # Outage is explicit null, even before the staleness deadline.
                     frame["sequence"] = 3
                     frame["window"] = {"start": utc(now - 1), "end": utc(now)}
@@ -175,6 +237,12 @@ class ApiTests(unittest.TestCase):
                     processes.append(simulator)
                     self.assertIsNone(request(simulator_base, "/api/v1/taco/session")[1]["id"])
                     self.assertTrue(request(simulator_base, "/api/v1/taco/capabilities")[1]["signal_control"])
+                    revised = copy.deepcopy(initial[1])
+                    revised["detector_config_revision"] = "camera-2"
+                    revised["lanes"][0]["polygon"][0] = [0.1, 0.1]
+                    self.assertEqual(request(frontend_base, calibration_path, revised, "PUT", "test-camera-token")[0], 200)
+                    self.assertEqual(request(base, "/api/v1/cameras/pi-01/observations", frame, token="test-camera-token")[0], 409)
+                    self.assertEqual(request(base, "/api/v1/cameras")[1][0]["calibration_revision"], "camera-2")
                 except Exception:
                     log.flush()
                     log.seek(0)

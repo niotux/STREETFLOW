@@ -1,4 +1,4 @@
-import {initializeWorkspace} from './workspace.js?v=shared-ui-1';
+import {initializeWorkspace} from './workspace.js?v=shared-ui-2';
 import {vehicleSettingsXml} from './sumo-settings.js?v=workspace-1';
 import {VehicleMotion} from './vehicle-motion.js?v=motion-2';
 import {signalAppearance, deviceState, deviceDescription, deviceMapStatus} from './signals.js?v=physical-devices-3';

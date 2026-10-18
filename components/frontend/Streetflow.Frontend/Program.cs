@@ -23,4 +23,5 @@ app.MapGet("/legacy-inspector.html", () => Results.Redirect("/balthasar/legacy-i
 app.Map("/api/v1/{**path}", (HttpContext context, ApiProxy proxy) => proxy.SimulatorAsync(context));
 app.Map("/melchior-api/{**path}", (HttpContext context, ApiProxy proxy) => proxy.LogisticsAsync(context));
 app.Map("/casper-api/{**path}", (HttpContext context, ApiProxy proxy) => proxy.CasperAsync(context));
+app.Map("/casper-camera-api/{**path}", (HttpContext context, ApiProxy proxy) => proxy.CasperCameraAsync(context));
 await app.RunAsync();

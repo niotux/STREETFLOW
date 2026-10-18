@@ -1,0 +1,29 @@
+services:
+  frontend:
+    environment:
+      Frontend__DemoCameraToken: "${CASPER_DEMO_CAMERA_TOKEN:?Start with scripts/casper-demo.sh}"
+  simulator:
+    volumes: !override
+      - simulator-data:/app/data
+      - demo-projects:/projects:ro
+  casper:
+    volumes: !override
+      - demo-config:/config:ro
+      - casper-data:/app/data
+  camera-demo:
+    volumes: !override
+      - demo-config:/config:ro
+      - demo-video:/video:ro
+      - demo-model:/model:ro
+    command: ["--config", "/config/camera.json", "--casper", "http://casper:8080", "--source", "/video/source", "--model", "/model/model.onnx", "--fetch-calibration", "--preview", "--loop-video"]
+volumes:
+  demo-projects:
+  demo-config:
+    external: true
+    name: streetflow-casper-easy_demo-config
+  demo-video:
+    external: true
+    name: streetflow-casper-easy_demo-video
+  demo-model:
+    external: true
+    name: streetflow-casper-easy_demo-model

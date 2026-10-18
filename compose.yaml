@@ -37,7 +37,6 @@ services:
       timeout: 3s
       retries: 20
   casper:
-    profiles: [cameras]
     build:
       context: .
       target: casper
@@ -45,9 +44,12 @@ services:
       - "127.0.0.1:${CASPER_PORT:-8082}:8080"
     environment:
       Casper__ConfigurationFile: /config/configuration.json
+      Casper__CalibrationDirectory: /app/data/calibrations
       CASPER_DEMO_CAMERA_TOKEN: "${CASPER_DEMO_CAMERA_TOKEN:-}"
     volumes:
       - ${CASPER_CONFIG_FILE:-./components/detector/examples/configuration.json}:/config/configuration.json:ro
+      - ./components/detector/examples/camera.json:/config/camera.json:ro
+      - casper-data:/app/data
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/health"]
       interval: 5s
@@ -91,3 +93,4 @@ volumes:
   simulator-data:
   postgres-data:
   logistics-data:
+  casper-data:

@@ -1,10 +1,11 @@
-import {createWorkspace} from '/ui/windows.js?v=shared-ui-1';
+import {createWorkspace} from '/ui/windows.js?v=shared-ui-2';
 
 export function initializeWorkspace() {
   const workspace = createWorkspace({
     root: document.getElementById('studio'),
     layer: document.getElementById('applet-layer'),
     storageKey: 'streetflow.workspace.v1',
+    taskbar: document.getElementById('taskbar'),
     launchers: document.querySelectorAll('[data-open-applet]'),
     resetButton: document.getElementById('reset-layout'),
     focusButton: document.getElementById('focus-view'),
@@ -21,7 +22,7 @@ export function initializeWorkspace() {
     }
   });
   for (const content of document.querySelectorAll('[data-applet]')) {
-    workspace.registerApplet({id: content.dataset.applet, title: content.dataset.title, category: content.dataset.category, content});
+    workspace.registerApplet({id: content.dataset.applet, title: content.dataset.title, category: content.dataset.category, icon: content.dataset.icon, content});
   }
   return workspace;
 }

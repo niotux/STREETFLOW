@@ -12,7 +12,7 @@ public sealed class RequestError(int status, string code, string message) : Exce
 }
 
 // Bounded latest-state storage: one frame and at most 16 retired session IDs per configured camera.
-public sealed class ObservationStore(CasperConfiguration config)
+public sealed class ObservationStore(CasperConfiguration config, CameraViewStore views)
 {
   private sealed class CameraState
   {
@@ -86,7 +86,7 @@ public sealed class ObservationStore(CasperConfiguration config)
     }
     Require(f.SchemaVersion == "1" && f.Source == "camera" && f.TimeBasis == "utc", "Expected schema 1 UTC camera observations");
     Require(!string.IsNullOrWhiteSpace(f.SessionId) && f.SessionId.Length <= 128 && f.Sequence > 0, "Invalid producer session/sequence");
-    if (f.NetworkRevision != config.Revision || f.DetectorConfigRevision != config.DetectorConfigRevision)
+    if (f.NetworkRevision != config.Revision || f.DetectorConfigRevision != views.Revision(camera.Id))
       throw new RequestError(409, "changed_configuration", "Camera network/calibration revisions do not match Casper");
     Require(f.DetectorId == camera.Id && f.IntersectionId == camera.IntersectionId, "Camera identity does not match configuration");
     Require(f.Window is not null && f.Window.Start.Offset == TimeSpan.Zero && f.Window.End.Offset == TimeSpan.Zero
@@ -136,6 +136,25 @@ public sealed class ObservationStore(CasperConfiguration config)
       // Each lane keeps its actual observation time; this response does not invent a simultaneous sample.
       return new(SessionId, config.WorldId, config.Revision, "camera", "utc", sequence,
         lanes.Max(x => x.ObservedAt), null, overall, lanes.ToArray());
+    }
+  }
+
+  public CameraMeasurementStatus CameraStatus(string id, DateTimeOffset now)
+  {
+    if (!camerasById.ContainsKey(id))
+    {
+      throw new RequestError(404, "unknown_camera", "Unknown camera");
+    }
+    lock (gate)
+    {
+      CameraObservation? frame = states[id].Frame;
+      if (frame is null)
+      {
+        return new CameraMeasurementStatus("unavailable", null, null, null);
+      }
+      double age = Math.Max(0, (now - frame.Window.End).TotalSeconds);
+      string status = age > config.StaleAfterSeconds ? "unavailable" : frame.Status;
+      return new CameraMeasurementStatus(status, age, frame.Sequence, frame.Window.End);
     }
   }
 

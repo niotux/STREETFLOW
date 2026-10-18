@@ -5,22 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#050201">
   <title>Streetflow · Melchior logistics</title>
-  <link rel="stylesheet" href="/ui/streetflow-ui.css?v=nerv-1">
-  <link rel="stylesheet" href="/balthasar/styles.css?v=nerv-1">
-  <link rel="stylesheet" href="/magi.css?v=nerv-1">
-  <script type="module" src="/melchior/app.js?v=adaptive-signals-1"></script>
+  <link rel="stylesheet" href="/ui/streetflow-ui.css?v=taskbar-1">
+  <link rel="stylesheet" href="/balthasar/styles.css?v=taskbar-1">
+  <link rel="stylesheet" href="/magi.css?v=taskbar-1">
+  <script type="module" src="/melchior/app.js?v=taskbar-1"></script>
 </head>
 <body class="magi-page">
-  <header class="title-bar ui-app-header">
-    <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">≋</span><span>STREETFLOW<small>MELCHIOR / LOGISTICS CONTROL</small></span></a>
-    <nav class="component-nav" aria-label="MAGI components"><a href="/">MAGI</a><a href="/melchior/" aria-current="page">Melchior</a><a href="/balthasar/">Balthasar ↗</a></nav>
-    <span id="connection" role="status" data-connected="false">Connecting…</span>
+  <header class="ui-taskbar">
+    <a class="ui-taskbar-logo" href="/" title="MAGI component selection"><img src="/ui/streetflow-logo.png" alt="Streetflow"></a>
+    <nav id="taskbar" class="ui-taskbar-tasks" aria-label="Windows"></nav>
+    <div class="ui-taskbar-end"><button id="reset-layout" type="button" title="Restore default window positions" aria-label="Reset window layout">⊞</button><span id="connection" class="ui-connection" role="status" data-connected="false">Connecting…</span><span class="ui-taskbar-component">Melchior</span></div>
   </header>
-  <div id="error" class="logistics-error" role="alert" hidden></div>
-  <main class="logistics-layout">
-    <section class="control-panel" aria-labelledby="connection-title">
-      <div class="ui-window-titlebar"><span class="ui-window-number">01</span><h2 id="connection-title">Connection</h2><span class="ui-window-category">TACO</span></div>
-      <div class="ui-window-body">
+  <main id="melchior-workspace" class="workspace" aria-label="Logistics workspace">
+    <div class="network-panel" aria-label="Traffic light network">
+      <canvas id="map" aria-label="Road network and traffic lights. Drag to pan, scroll to zoom, or select a traffic light."></canvas>
+      <div class="workspace-heading"><div><span id="network-mode" class="eyebrow">CONNECTED NETWORK / AUTOMATIC</span><h1 id="map-label">Waiting for a city.</h1></div><div class="view-actions"><button id="focus-view" type="button" aria-pressed="false">Focus map</button><button id="fit" type="button" disabled>↗ Fit</button></div></div>
+      <div id="map-empty"><span class="empty-icon" aria-hidden="true">◎</span><strong>Your lights. Your controls.</strong><span>The provider supplies the active map and its configured physical devices.</span></div>
+      <div id="map-detail">Select a traffic light to open its controller.</div>
+    </div>
+    <div id="error" role="alert" hidden></div>
+    <div id="applet-layer">
+      <section class="melchior-applet" data-applet="connection" data-icon="⇄" data-title="Connection" data-category="TACO">
         <form id="connection-form">
           <label for="target-host">Server address</label><input id="target-host" type="url" required placeholder="http://localhost" aria-describedby="connection-help">
           <div class="connection-fields"><div><label for="target-port">Port</label><input id="target-port" type="number" required min="1" max="65535" placeholder="8080"></div></div>
@@ -45,17 +50,8 @@
         </form>
         <span class="eyebrow">MANUAL CONTROL</span><p class="status-note">Turn off automatic cycling to control an individual light. Manual lights hold their state. On enables at red; off restores road priority.</p>
         <p class="applet-note">Commands affect the selected physical device and all its mapped movements. Highlighted roads show its controlled incoming lanes.</p>
-      </div>
-    </section>
-    <section class="network-panel" aria-label="Traffic light network">
-      <canvas id="map" aria-label="Road network and traffic lights. Drag to pan, scroll to zoom, or select a traffic light."></canvas>
-      <div class="workspace-heading"><div><span id="network-mode" class="eyebrow">CONNECTED NETWORK / AUTOMATIC</span><h1 id="map-label">Waiting for a city.</h1></div><div class="view-actions"><button id="fit" type="button" disabled>↗ Fit</button></div></div>
-      <div id="map-empty"><span class="empty-icon" aria-hidden="true">◎</span><strong>Your lights. Your controls.</strong><span>The provider supplies the active map and its configured physical devices.</span></div>
-      <div id="map-detail">Select a traffic light to open its controller.</div>
-    </section>
-    <section class="control-panel signals-panel" aria-labelledby="signals-title">
-      <div class="ui-window-titlebar"><span class="ui-window-number">02</span><h2 id="signals-title">Traffic lights</h2><span class="ui-window-category">SWITCHBOARD</span></div>
-      <div class="ui-window-body">
+      </section>
+      <section class="melchior-applet" data-applet="signals" data-icon="◎" data-title="Traffic lights" data-category="SWITCHBOARD">
         <label for="signal-filter">Find a device</label><input id="signal-filter" class="signal-filter" type="search" placeholder="Device name or lane ID">
         <label for="controller">Physical device</label><select id="controller" disabled><option value="">No physical devices configured</option></select>
         <p id="signal-summary" class="status-note" role="status">Select a run to begin.</p>
@@ -69,8 +65,9 @@
           <p id="command-status" class="command-status" role="status" aria-live="polite"></p>
           <div id="movements" class="movement-list"></div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
+    <div id="workspace-announcement" class="ui-visually-hidden" role="status" aria-live="polite"></div>
   </main>
 </body>
 </html>

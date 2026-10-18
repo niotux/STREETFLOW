@@ -3,8 +3,6 @@ using Streetflow.Traffic.Contracts;
 
 namespace Streetflow.Casper;
 
-public sealed record LaneMapping(string LaneId, string StreetId, string IntersectionId, string ApproachId);
-public sealed record CameraMapping(string Id, string IntersectionId, string TokenEnvironment, string[] LaneIds);
 public sealed record CasperConfiguration(string WorldId, string Revision, string DetectorConfigRevision,
   TacoLane[] Lanes, TacoDevice[] Devices, LaneMapping[] LaneMappings, CameraMapping[] Cameras,
   double StaleAfterSeconds = 10, double MaximumWindowSeconds = 30)
@@ -51,8 +49,7 @@ public sealed record CasperConfiguration(string WorldId, string Revision, string
     foreach (CameraMapping camera in Cameras)
     {
       Require(!string.IsNullOrWhiteSpace(camera.Id) && camera.LaneIds.Length > 0, "Invalid camera");
-      Require(!string.IsNullOrWhiteSpace(camera.TokenEnvironment)
-        && !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(camera.TokenEnvironment)), "Missing camera token environment variable");
+      Require(!string.IsNullOrWhiteSpace(camera.TokenEnvironment), "Missing camera token environment variable name");
       foreach (string lane in camera.LaneIds)
         Require(laneIds.Contains(lane) && assigned.Add(lane)
           && LaneMappings.Single(x => x.LaneId == lane).IntersectionId == camera.IntersectionId,

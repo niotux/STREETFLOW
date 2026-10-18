@@ -4,7 +4,7 @@ The separate .NET 10 frontend serves plain HTML, CSS, and JavaScript. It opens o
 
 - **Melchior** (`/melchior/`): manual traffic light controls and saved taco connection settings.
 - **Balthasar** (`/balthasar/`): the existing simulator studio, including Runner, Loader, Analyzer, SUMO, and the legacy inspector.
-- **Casper** (`/casper/`): camera counts and queue estimates by street/lane/stoplight, freshness, and a browser calibration editor at `/casper/calibration.html`.
+- **Casper** (`/casper/`): a map of traffic-light and camera devices. Select a device to see its counts and camera picture; open the counting-area editor from that camera.
 
 ## Run
 
@@ -22,7 +22,9 @@ dotnet run --project components/frontend/Streetflow.Frontend
 
 Defaults are frontend port 8090, simulator port 8080, and logistics port 8081. Configure `Frontend__SimulatorBaseUrl` and `Frontend__LogisticsBaseUrl` for other backend addresses; use `--urls` or `URLS` to change the listener.
 
-Casper defaults to port 8082; configure `Frontend__CasperBaseUrl`. Use the optional Compose `cameras` profile and [camera setup guide](../detector/README.md). The frontend proxies `/casper-api/*` to Casper's `/api/v1/taco/*`. Melchior also displays traffic for its selected stoplight when connected to a TACO traffic provider.
+Casper defaults to port 8082; configure `Frontend__CasperBaseUrl`. Casper starts in the ordinary Compose stack; the optional real-video worker is described in the [camera setup guide](../detector/README.md). The frontend proxies `/casper-api/*` to Casper's `/api/v1/taco/*` and `/casper-camera-api/*` to Casper's camera endpoints. Melchior also displays traffic for its selected stoplight when connected to a TACO traffic provider.
+
+For a ready-to-run camera example, start Docker Desktop and run `./scripts/casper-demo.sh start` from the repository root, then open `http://localhost:8090/casper/`. The sample video is included, and the launcher prepares the model and camera settings. Use `./scripts/casper-demo.sh stop` to stop it. The demo uses port 8090 by default, so stop any other frontend using that port first.
 
 ## Source and requests
 

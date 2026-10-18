@@ -1,25 +1,22 @@
 services:
-  simulator:
-    restart: unless-stopped
-  frontend:
-    restart: unless-stopped
-  logistics:
-    restart: unless-stopped
   casper:
-    restart: unless-stopped
-  camera-demo:
-    profiles: [cameras]
-    image: python:3.12-slim
-    restart: unless-stopped
-    user: "65534:65534"
-    read_only: true
     environment:
-      CASPER_DEMO_CAMERA_TOKEN: "${CASPER_DEMO_CAMERA_TOKEN:?Set the camera token in .env}"
-      PYTHONDONTWRITEBYTECODE: "1"
+      Casper__EnablePreview: "true"
+      CASPER_DEMO_CAMERA_TOKEN: "${CASPER_DEMO_CAMERA_TOKEN:?Set CASPER_DEMO_CAMERA_TOKEN in .env}"
+  camera-demo:
+    profiles: [camera-demo]
+    build:
+      context: ./components/detector/camera
+    init: true
+    read_only: true
+    user: "65534:65534"
+    environment:
+      CASPER_DEMO_CAMERA_TOKEN: "${CASPER_DEMO_CAMERA_TOKEN:?Set CASPER_DEMO_CAMERA_TOKEN in .env}"
     volumes:
-      - ./components/detector/camera:/camera:ro
       - ./components/detector/examples/camera.json:/config/camera.json:ro
-    command: ["python", "/camera/worker.py", "--config", "/config/camera.json", "--casper", "http://casper:8080", "--demo"]
+      - ${CAMERA_DEMO_VIDEO:?Set CAMERA_DEMO_VIDEO in .env}:/video/source:ro
+      - ${CAMERA_DEMO_MODEL:?Set CAMERA_DEMO_MODEL in .env}:/model/model.onnx:ro
+    command: ["--config", "/config/camera.json", "--casper", "http://casper:8080", "--source", "/video/source", "--model", "/model/model.onnx", "--fetch-calibration", "--preview"]
     depends_on:
       casper:
         condition: service_healthy

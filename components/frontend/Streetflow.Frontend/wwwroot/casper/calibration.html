@@ -1,12 +1,29 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#050201"><title>Casper · Camera calibration</title><link rel="stylesheet" href="/ui/streetflow-ui.css?v=nerv-1"><link rel="stylesheet" href="/magi.css?v=nerv-1"><link rel="stylesheet" href="/casper/style.css?v=nerv-1">
-<script type="module" src="/casper/calibration.js"></script></head>
-<body class="magi-page"><main class="casper-layout"><a href="/casper/">← Casper</a><div class="casper-intro"><h1>Map what this camera sees.</h1></div>
-<p>Load a camera snapshot and its camera.json. Click the visible lane boundary, finish the polygon, then draw a counting line. Vehicles crossing from the line’s negative side to its positive side are counted; reverse its endpoints to reverse direction. Images stay in this browser.</p>
-<div class="calibration-tools"><label>Camera snapshot<input id="image-file" type="file" accept="image/*"></label><label>Camera configuration<input id="config-file" type="file" accept=".json"></label><label>Lane<select id="lane"></select></label>
-<button id="polygon">Draw polygon</button><button id="finish">Finish polygon</button><button id="line">Draw counting line</button><button id="reverse">Reverse direction</button><button id="download">Download camera.json</button></div>
-<p id="feedback" role="status">Load both files to begin. Revise the calibration revision in Casper and camera configuration together.</p>
-<canvas id="calibration-canvas" width="1280" height="720"></canvas>
-<h2>Camera configuration</h2><textarea id="config-json" spellcheck="false" aria-label="Camera configuration JSON"></textarea><div class="calibration-tools"><button id="apply">Apply JSON edits</button></div>
-</main></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#050201"><title>Casper · Set up camera view</title>
+  <link rel="stylesheet" href="/ui/streetflow-ui.css?v=taskbar-1"><link rel="stylesheet" href="/magi.css?v=taskbar-1"><link rel="stylesheet" href="/casper/style.css?v=taskbar-1">
+  <script type="module" src="/casper/calibration.js?v=easy-1"></script>
+</head>
+<body class="magi-page calibration-page">
+  <header class="ui-taskbar">
+    <a class="ui-taskbar-logo" href="/" title="MAGI component selection"><img src="/ui/streetflow-logo.png" alt="Streetflow"></a>
+    <div class="ui-taskbar-end"><span class="ui-taskbar-component">Casper</span></div>
+  </header>
+  <main class="casper-layout">
+    <nav class="casper-crumbs" aria-label="Page navigation"><a id="back-map" href="/casper/">← Back to device map</a></nav>
+    <div class="casper-intro"><h1>Set this camera’s counting area</h1></div>
+    <p class="casper-note">The bright outline marks where cars are counted. To change it, drag a box over the road in the picture, then press Save changes.</p>
+    <div class="calibration-tools">
+      <label>Camera <select id="camera"></select></label>
+      <button id="refresh-picture" type="button">Refresh picture</button>
+      <button id="start-over" type="button">Start over</button>
+      <button id="save-camera" type="button">Save changes</button>
+    </div>
+    <p id="feedback" role="status">Loading camera…</p>
+    <canvas id="calibration-canvas" width="960" height="540" aria-label="Camera picture and counting area"></canvas>
+    <p class="casper-note">The camera picks up saved changes automatically. Start over restores the last saved area.</p>
+  </main>
+</body>
+</html>

@@ -4,15 +4,19 @@ using Streetflow.Traffic.Contracts;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 string path = builder.Configuration["Casper:ConfigurationFile"] ?? "configuration.json";
-CasperConfiguration config = CasperConfiguration.Load(Path.GetFullPath(path, builder.Environment.ContentRootPath));
-builder.WebHost.ConfigureKestrel(server => server.Limits.MaxRequestBodySize = 64 * 1024);
+string configurationPath = Path.GetFullPath(path, builder.Environment.ContentRootPath);
+CasperConfiguration config = CasperConfiguration.Load(configurationPath);
+string calibrationDirectory = builder.Configuration["Casper:CalibrationDirectory"] ?? Path.Combine(builder.Environment.ContentRootPath, "data", "calibrations");
+bool previewEnabled = builder.Configuration.GetValue("Casper:EnablePreview", false);
+builder.WebHost.ConfigureKestrel(server => server.Limits.MaxRequestBodySize = 256 * 1024);
 builder.Services.ConfigureHttpJsonOptions(json =>
 {
   json.SerializerOptions.PropertyNamingPolicy = CasperConfiguration.Json.PropertyNamingPolicy;
   json.SerializerOptions.UnmappedMemberHandling = CasperConfiguration.Json.UnmappedMemberHandling;
   json.SerializerOptions.RespectRequiredConstructorParameters = true;
 });
-ObservationStore store = new(config);
+CameraViewStore views = new(config, configurationPath, calibrationDirectory);
+ObservationStore store = new(config, views);
 WebApplication app = builder.Build();
 app.Use(async (context, next) =>
 {
@@ -32,11 +36,45 @@ app.Use(async (context, next) =>
   }
 });
 app.MapGet("/health", () => new { status = "ok", component = "Casper", cameras = config.Cameras.Length });
+app.MapGet("/api/v1/cameras", () => views.Cameras(DateTimeOffset.UtcNow, store));
+app.MapGet("/api/v1/cameras/{id}/calibration", (string id, HttpContext context) => views.Get(id, Bearer(context)));
+app.MapPut("/api/v1/cameras/{id}/calibration", (string id, CameraViewCalibration view, HttpContext context) => views.Save(id, Bearer(context), view));
+app.MapPost("/api/v1/cameras/{id}/preview", async (string id, HttpContext context) =>
+{
+  if (!previewEnabled)
+  {
+    throw new RequestError(404, "preview_disabled", "Camera preview is disabled");
+  }
+  if (context.Request.ContentType != "image/jpeg")
+  {
+    throw new RequestError(415, "invalid_preview", "Expected image/jpeg");
+  }
+  if (!DateTimeOffset.TryParse(context.Request.Headers["X-Observed-At"], out DateTimeOffset observedAt))
+  {
+    throw new RequestError(400, "invalid_preview", "Missing UTC preview time");
+  }
+  using MemoryStream buffer = new();
+  await context.Request.Body.CopyToAsync(buffer);
+  views.PutPreview(id, Bearer(context), context.Request.Headers["X-Calibration-Revision"],
+    context.Request.Headers["X-Measurement-Status"], observedAt, buffer.ToArray());
+  return Results.Ok();
+});
+app.MapGet("/api/v1/cameras/{id}/preview", (string id) =>
+{
+  if (!previewEnabled)
+  {
+    throw new RequestError(404, "preview_disabled", "Camera preview is disabled");
+  }
+  CameraPreview? preview = views.Preview(id);
+  if (preview is null)
+  {
+    return Results.NotFound();
+  }
+  return Results.Bytes(preview.Image, "image/jpeg");
+});
 app.MapPost("/api/v1/cameras/{id}/observations", (string id, CameraObservation frame, HttpContext context) =>
 {
-  string authorization = context.Request.Headers.Authorization.ToString();
-  string? token = authorization.StartsWith("Bearer ", StringComparison.Ordinal) ? authorization[7..] : null;
-  return store.Ingest(id, token, frame, DateTimeOffset.UtcNow);
+  return store.Ingest(id, Bearer(context), frame, DateTimeOffset.UtcNow);
 });
 RouteGroupBuilder taco = app.MapGroup("/api/v1/taco");
 taco.MapGet("/session", () => new TacoSession(store.SessionId, config.WorldId, config.Revision, null, "running"));
@@ -69,3 +107,9 @@ taco.MapPut("/sessions/{id}/devices/{deviceId}", (string id, string deviceId) =>
   throw new RequestError(501, "signal_control_unavailable", "Casper measures traffic; no physical signal controller is installed");
 });
 await app.RunAsync();
+
+static string? Bearer(HttpContext context)
+{
+  string authorization = context.Request.Headers.Authorization.ToString();
+  return authorization.StartsWith("Bearer ", StringComparison.Ordinal) ? authorization[7..] : null;
+}

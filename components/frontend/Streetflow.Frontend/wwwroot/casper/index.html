@@ -2,27 +2,48 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#050201"><title>Streetflow · Casper</title>
-  <link rel="stylesheet" href="/ui/streetflow-ui.css?v=nerv-1">
-  <link rel="stylesheet" href="/balthasar/styles.css?v=nerv-1"><link rel="stylesheet" href="/magi.css?v=nerv-1">
-  <link rel="stylesheet" href="/casper/style.css?v=nerv-1"><script type="module" src="/casper/app.js"></script>
+  <meta name="theme-color" content="#050201"><title>Streetflow · Casper devices</title>
+  <link rel="stylesheet" href="/ui/streetflow-ui.css?v=taskbar-1">
+  <link rel="stylesheet" href="/magi.css?v=taskbar-1">
+  <link rel="stylesheet" href="/casper/style.css?v=taskbar-1">
+  <script type="module" src="/casper/app.js?v=taskbar-1"></script>
 </head>
 <body class="magi-page">
-  <header class="title-bar ui-app-header">
-    <a class="brand" href="/"><span class="brand-mark">≋</span><span>STREETFLOW<small>CASPER / CAMERA OBSERVATIONS</small></span></a>
-    <nav class="component-nav" aria-label="MAGI components"><a href="/">MAGI</a><a href="/melchior/">Melchior ↗</a><a href="/balthasar/">Balthasar ↗</a></nav>
-    <span id="connection" role="status">Connecting…</span>
+  <header class="ui-taskbar">
+    <a class="ui-taskbar-logo" href="/" title="MAGI component selection"><img src="/ui/streetflow-logo.png" alt="Streetflow"></a>
+    <nav id="taskbar" class="ui-taskbar-tasks" aria-label="Windows"></nav>
+    <div class="ui-taskbar-end"><button id="reset-layout" type="button" title="Restore default window positions" aria-label="Reset window layout">⊞</button><span id="connection" class="ui-connection" role="status" data-connected="false">Connecting…</span><span class="ui-taskbar-component">Casper</span></div>
   </header>
-  <main class="casper-layout">
-    <section class="casper-intro"><div><span class="eyebrow">THE EYES ON THE STREET</span><h1>Every queue has a place.</h1><p>Measurements from camera workers, organized by street and stoplight. Counts cover the configured camera region.</p></div><a href="/casper/calibration.html">Calibrate a camera ↗</a></section>
-    <div id="error" role="alert" hidden></div>
-    <section class="casper-summary" aria-label="Network summary"><div><span>WORLD</span><strong id="world">—</strong></div><div><span>VISIBLE VEHICLES</span><strong id="visible">—</strong></div><div><span>ESTIMATED QUEUE</span><strong id="queued">—</strong></div><div><span>AVAILABLE LANES</span><strong id="coverage">—</strong></div></section>
-    <section class="casper-panel">
-      <div class="ui-window-titlebar"><span class="ui-window-number">01</span><h2>Street observations</h2><span class="ui-window-category">TACO</span></div>
-      <div class="table-scroll"><table><thead><tr><th>Street / lane</th><th>Intersection</th><th>Stoplight</th><th>Camera</th><th>Visible</th><th>Queued</th><th>Crossings / window</th><th>Age</th><th>Status</th></tr></thead><tbody id="lanes"></tbody></table></div>
-      <p class="casper-note" id="note">Waiting for camera measurements.</p>
-    </section>
-    <p class="casper-note">Queued vehicles are estimated from image motion and dwell time. Physical speed is unavailable until calibrated. Casper supplies measurements; physical light control requires a controller adapter.</p>
+  <main id="casper-workspace" class="casper-workspace" aria-label="Casper device workspace">
+    <div id="map-wrap" class="casper-map-panel" aria-label="Map of traffic lights and cameras">
+      <canvas id="map" aria-label="Road map with traffic-light and camera icons. Click an icon to see its device. Drag to move the map; scroll to zoom."></canvas>
+      <div class="casper-map-heading"><div><span class="eyebrow">CASPER / DEVICES</span><h1 id="map-title">Loading device map…</h1></div><div class="casper-map-actions"><button id="focus-view" type="button" aria-pressed="false">Focus map</button><button id="fit-map" type="button">Fit map</button></div></div>
+      <div class="casper-map-legend"><span><i class="legend-light" aria-hidden="true"></i> Traffic light</span><span><i class="legend-camera" aria-hidden="true"></i> Camera detector</span></div>
+      <p id="map-hint" class="casper-map-hint">Select a traffic light or camera on the map.</p>
+    </div>
+    <div id="applet-layer">
+      <section id="devices-applet" class="casper-applet" data-applet="devices" data-icon="◎" data-title="Devices" data-category="CASPER">
+        <p id="error" role="alert" hidden></p>
+        <p class="casper-device-help">Choose a traffic light or camera on the map or in this list.</p>
+        <div id="device-list" class="casper-device-list"></div>
+      </section>
+      <section id="camera-applet" class="casper-applet" data-applet="camera" data-icon="◉" data-title="Camera view" data-category="LIVE">
+        <div class="casper-selected-device">
+          <span id="device-kind" class="eyebrow">NO DEVICE SELECTED</span>
+          <h2 id="device-heading">Choose a device</h2>
+          <p id="device-info">Traffic-light icons and camera icons appear on the map.</p>
+          <div id="device-counts" class="casper-counts" hidden></div>
+          <div id="camera-choices" class="casper-camera-choices" hidden></div>
+          <div id="camera-view" hidden>
+            <p id="preview-status" role="status">Waiting for a camera picture.</p>
+            <img id="preview-image" alt="Current camera picture with detected cars" hidden>
+            <a id="adjust-camera" class="casper-action" href="#">Adjust this camera’s counting area</a>
+          </div>
+        </div>
+      </section>
+    </div>
+    <footer class="casper-footer">Sample video: <a href="https://commons.wikimedia.org/wiki/File:Cars_Passing_by_at_Night.webm">Maximilian Schönherr / Wikimedia Commons</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Resized for this demo; counts are estimates.</footer>
+    <div id="workspace-announcement" class="ui-visually-hidden" role="status" aria-live="polite"></div>
   </main>
 </body>
 </html>

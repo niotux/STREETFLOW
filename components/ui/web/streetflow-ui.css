@@ -99,7 +99,7 @@ a { color: var(--ui-accent); }
 .eyebrow { display: block; color: var(--ui-muted); font: 10px var(--ui-mono); letter-spacing: .18em; text-transform: uppercase; }
 .eyebrow::before { content: '| '; color: var(--ui-accent); }
 
-/* Header: warning-band console strip. */
+/* Legacy header, still used by route-trainer. Components use .ui-taskbar below. */
 .ui-app-header {
   position: relative; z-index: 100; display: flex; align-items: center; justify-content: space-between; gap: 24px;
   min-height: 68px; padding: 0 24px;
@@ -124,6 +124,48 @@ a { color: var(--ui-accent); }
 .ui-launchers > button { position: relative; background: transparent; border-color: var(--ui-control-border); color: var(--ui-muted); }
 .ui-launchers > button[aria-pressed="true"] { color: var(--ui-accent-ink); background: var(--ui-accent); border-color: var(--accent-bright); font-weight: 700; }
 .ui-launchers > button[aria-pressed="true"] > span { color: var(--ui-accent-ink) !important; }
+
+/* Taskbar: the one top bar every component uses. Logo | applet tasks | status, component name.
+   windows.js fills .ui-taskbar-tasks with one task per registered applet. */
+:root { --ui-taskbar-height: 60px; }
+.ui-taskbar {
+  position: relative; z-index: 100; display: flex; align-items: center; gap: 20px;
+  height: var(--ui-taskbar-height); padding: 0 16px;
+  background: linear-gradient(180deg, var(--ui-header-start), var(--ui-header-end));
+  border-bottom: 2px solid var(--ui-accent);
+  box-shadow: 0 2px 18px color-mix(in srgb, var(--ui-accent) 25%, transparent);
+}
+.ui-taskbar-logo { display: block; flex: none; height: 40px; }
+.ui-taskbar-logo img { display: block; height: 100%; width: auto; }
+.ui-taskbar-tasks { display: flex; align-items: center; gap: 4px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.ui-task { display: flex; flex: none; align-items: stretch; border: 1px solid var(--ui-control-border); color: var(--ui-muted); }
+.ui-task button { border: 0; background: transparent; color: inherit; }
+.ui-task-open { gap: 8px; }
+.ui-task-icon { color: var(--ui-accent); font-size: 15px; }
+.ui-task-close { padding: 0 8px; font-size: 16px; border-left: 1px solid var(--ui-control-border) !important; }
+.ui-task-close:hover:not(:disabled) { color: var(--ui-alert); border-color: var(--ui-alert); box-shadow: none; }
+.ui-task[data-open="true"] { color: var(--ui-text); border-color: var(--ui-border); }
+.ui-task[data-front="true"] { color: var(--ui-accent-ink); background: var(--ui-accent); border-color: var(--accent-bright); font-weight: 700; }
+.ui-task[data-front="true"] .ui-task-icon { color: var(--ui-accent-ink); }
+.ui-task[data-front="true"] button:hover { color: var(--ui-accent-ink); background: var(--accent-bright); }
+.ui-task[data-front="true"] .ui-task-close { border-left-color: color-mix(in srgb, var(--ui-accent-ink) 40%, transparent) !important; }
+.ui-taskbar-end { display: flex; align-items: center; gap: 12px; margin-left: auto; flex: none; }
+.ui-taskbar-end > button { font-size: 20px; padding: 2px 8px; background: transparent; }
+.ui-taskbar-component { color: var(--ui-text); font-size: 20px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; text-shadow: 0 0 10px var(--ui-glow); }
+/* Status lamp: blinking red until the page marks it data-connected="true". */
+.ui-connection { color: var(--ui-muted); font: 11px var(--ui-mono); letter-spacing: .12em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; white-space: nowrap; padding: 4px 8px; border: 1px solid var(--ui-control-border); }
+.ui-connection::before { content: ''; flex: none; height: 8px; width: 8px; background: var(--ui-alert); box-shadow: 0 0 8px var(--ui-alert); animation: ui-blink 1s steps(1) infinite; }
+.ui-connection[data-connected="true"] { color: var(--ui-signal); border-color: color-mix(in srgb, var(--ui-signal) 40%, transparent); }
+.ui-connection[data-connected="true"]::before { background: var(--ui-signal); box-shadow: 0 0 10px var(--ui-signal); animation: none; }
+@media (max-width: 680px) {
+  :root { --ui-taskbar-height: 100px; }
+  .ui-taskbar { flex-wrap: wrap; align-content: center; gap: 8px 12px; padding: 8px 12px; }
+  .ui-taskbar-logo { height: 32px; }
+  .ui-taskbar-tasks { order: 3; flex: 1 0 100%; }
+  .ui-task-open { padding: 7px 9px; font-size: 11px; }
+  .ui-taskbar-component { font-size: 15px; }
+  .ui-connection { font-size: 9px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+}
 
 /* Windows: bracketed console panels. */
 .ui-window-layer { pointer-events: none; }

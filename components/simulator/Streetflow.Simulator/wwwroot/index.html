@@ -5,20 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#050201">
   <title>Streetflow · Balthasar simulation studio</title>
-  <link rel="stylesheet" href="/ui/streetflow-ui.css?v=nerv-1">
-  <link rel="stylesheet" href="styles.css?v=nerv-1">
-  <script type="module" src="app.js?v=nerv-1"></script>
+  <link rel="stylesheet" href="/ui/streetflow-ui.css?v=taskbar-1">
+  <link rel="stylesheet" href="styles.css?v=taskbar-1">
+  <script type="module" src="app.js?v=taskbar-1"></script>
 </head>
 <body>
-  <header class="title-bar ui-app-header">
-    <a class="brand" href="/" title="MAGI component selection"><span class="brand-mark" aria-hidden="true">≋</span><span>STREETFLOW<small>BALTHASAR / SIMULATION STUDIO</small></span></a>
-    <nav class="applet-launchers ui-launchers" aria-label="Applets">
-      <button type="button" data-open-applet="runner" aria-controls="runner-applet" aria-pressed="true"><span aria-hidden="true">▷</span> Runner</button>
-      <button type="button" data-open-applet="loader" aria-controls="loader-applet" aria-pressed="true"><span aria-hidden="true">↥</span> Loader</button>
-      <button type="button" data-open-applet="analyzer" aria-controls="analyzer-applet" aria-pressed="false"><span aria-hidden="true">▥</span> Analyzer</button>
-      <button type="button" data-open-applet="sumo" aria-controls="sumo-applet" aria-pressed="false"><span aria-hidden="true">⚙</span> SUMO</button>
-    </nav>
-    <div class="header-status"><span id="connection" role="status" data-connected="false">Connecting…</span><button id="reset-layout" type="button" title="Restore default window positions" aria-label="Reset window layout">⊞</button></div>
+  <header class="ui-taskbar">
+    <a class="ui-taskbar-logo" href="/" title="MAGI component selection"><img src="/ui/streetflow-logo.png" alt="Streetflow"></a>
+    <nav id="taskbar" class="ui-taskbar-tasks" aria-label="Windows"></nav>
+    <div class="ui-taskbar-end"><button id="reset-layout" type="button" title="Restore default window positions" aria-label="Reset window layout">⊞</button><span id="connection" class="ui-connection" role="status" data-connected="false">Connecting…</span><span class="ui-taskbar-component">Balthasar</span></div>
   </header>
   <main id="studio" class="workspace" aria-label="Simulation workspace">
     <div id="map-wrap">
@@ -33,7 +28,7 @@
     </div>
     <div id="error" role="alert" hidden></div>
     <div id="applet-layer">
-      <section id="runner-applet" class="applet-body" data-applet="runner" data-title="Runner" data-category="PLAYBACK">
+      <section id="runner-applet" class="applet-body" data-applet="runner" data-icon="▷" data-title="Runner" data-category="PLAYBACK">
           <div class="runner-status"><span id="state" role="status">No project loaded</span><span class="live-label">ENGINE</span></div>
           <div class="transport"><button id="start" class="primary" type="button" disabled><span aria-hidden="true">▶</span> Start</button><button id="step" type="button" title="Pause traffic to advance one simulation step" disabled>Step ⏵</button><button id="stop" type="button" disabled>Stop ■</button></div>
           <div class="secondary-transport"><button id="toggle" type="button" disabled>Pause</button><button id="restart" type="button" disabled title="Reload the saved simulation from the beginning, paused">Reset run ↺</button></div>
@@ -44,7 +39,7 @@
           <p id="speed-help" class="muted">Playback changes the clock rate, not vehicle driving speed.</p>
           <p id="run-note" class="applet-note">Load a project in Loader to use Runner.</p>
         </section>
-      <section id="loader-applet" class="applet-body" data-applet="loader" data-title="Loader" data-category="PREPARATION">
+      <section id="loader-applet" class="applet-body" data-applet="loader" data-icon="↥" data-title="Loader" data-category="PREPARATION">
           <span class="eyebrow">01 / CHOOSE A PROJECT</span>
           <label for="project">Projects folder</label><select id="project"><option value="">No projects found</option></select>
           <p id="project-note" class="muted">Put project folders or .zip files in the projects folder, then refresh.</p>
@@ -56,7 +51,7 @@
           <p id="signal-note" class="applet-note" role="status">Select a project to inspect its traffic lights.</p>
           <a class="legacy-link" href="legacy-inspector.html">Scenario inspector ↗</a>
         </section>
-      <section id="analyzer-applet" class="applet-body" data-applet="analyzer" data-title="Analyzer" data-category="TELEMETRY">
+      <section id="analyzer-applet" class="applet-body" data-applet="analyzer" data-icon="▥" data-title="Analyzer" data-category="TELEMETRY">
           <span class="eyebrow">CURRENT SIMULATION</span>
           <div class="telemetry"><div class="metric"><span>ACTIVE VEHICLES</span><strong id="vehicle-count">—</strong><small>On the network</small></div><div class="metric"><span>MAPPED LANES</span><strong id="lane-count">—</strong><small>Road network</small></div><div class="metric"><span>ARRIVED</span><strong id="arrived-count">—</strong><small>Completed journeys</small></div><div class="metric"><span>PENDING</span><strong id="pending-count">—</strong><small>Waiting to enter</small></div></div>
           <dl class="readings"><div><dt>Playback target</dt><dd id="playback-value">1×</dd></div><div><dt>Elapsed simulation</dt><dd id="elapsed-value">—</dd></div><div><dt>Arrival backlog</dt><dd id="backlog-value">—</dd></div><div><dt>Gridlock recoveries</dt><dd id="recovery-value">—</dd></div></dl>
@@ -64,7 +59,7 @@
           <div id="terminal-inspector" class="terminal-inspector" hidden><label for="terminal-choice" id="terminal-label">Lane terminals</label><select id="terminal-choice"><option value="">Choose a lane terminal</option></select><button id="terminal-focus" type="button" disabled>Show lane ↗</button><span id="terminal-detail" role="status">Hover a terminal to inspect it. Click a numbered group to zoom.</span></div>
           <p class="applet-note">Live counters from the simulator. Estimates and road preferences are not measured traffic densities.</p>
         </section>
-      <section id="sumo-applet" class="applet-body" data-applet="sumo" data-title="SUMO" data-category="TRAFFIC MODEL">
+      <section id="sumo-applet" class="applet-body" data-applet="sumo" data-icon="⚙" data-title="SUMO" data-category="TRAFFIC MODEL">
           <span class="eyebrow">ENGINE / APPLIED WHEN LOADING</span>
           <label for="step-seconds">Simulation step <span class="unit">seconds</span></label><input id="step-seconds" type="number" min="0.05" max="5" step="0.05" value="0.5" required>
           <dl class="readings"><div><dt>Lane speed limits</dt><dd id="road-speed-value">—</dd></div><div><dt>Requested arrivals</dt><dd id="demand-value">—</dd></div><div><dt>Signals</dt><dd>External control</dd></div></dl>

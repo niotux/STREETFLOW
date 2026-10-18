@@ -1,5 +1,6 @@
 import {signalAppearance, deviceState, deviceDescription, controlledLanes, deviceMapStatus} from '/balthasar/signals.js?v=physical-devices-3';
 import {MapView, queuedVehicles} from '/balthasar/map-view.js?v=nerv-1';
+import {createWorkspace} from '/ui/windows.js?v=shared-ui-2';
 
 const $ = id => document.getElementById(id);
 const canvas = $('map');
@@ -11,6 +12,27 @@ let busy = false, polling = false, queuePolling = false, available = false, epoc
 let hoveredDevice = null;
 let signalMode = null;
 let policyDirty = false;
+
+const workspace = createWorkspace({
+  root: $('melchior-workspace'),
+  layer: $('applet-layer'),
+  storageKey: 'streetflow.melchior.workspace.v1',
+  taskbar: $('taskbar'),
+  resetButton: $('reset-layout'),
+  focusButton: $('focus-view'),
+  announcement: $('workspace-announcement'),
+  stackedMedia: '(max-width: 760px)',
+  initialLayout(name, size) {
+    const width = name === 'connection' ? 320 : 384;
+    return {
+      rectangle: {x: name === 'connection' ? 0 : size.width - width, y: 0, width, height: size.height},
+      open: true
+    };
+  }
+});
+for (const content of document.querySelectorAll('[data-applet]')) {
+  workspace.registerApplet({id: content.dataset.applet, title: content.dataset.title, category: content.dataset.category, icon: content.dataset.icon, content});
+}
 
 const mapView = new MapView(canvas, {
   vehicles: () => queuedCars(),

@@ -14,6 +14,12 @@ public sealed class ApiProxy
   public Task SimulatorAsync(HttpContext context) => ForwardAsync(context, options.SimulatorBaseUrl, context.Request.Path.Value!);
   public Task CasperAsync(HttpContext context) => ForwardAsync(context, options.CasperBaseUrl,
     "/api/v1/taco" + context.Request.Path.Value!["/casper-api".Length..]);
+  public Task CasperCameraAsync(HttpContext context)
+  {
+    string path = "/api/v1/cameras" + context.Request.Path.Value!["/casper-camera-api".Length..];
+    bool demoCalibration = path.EndsWith("/calibration", StringComparison.Ordinal) && !string.IsNullOrEmpty(options.DemoCameraToken);
+    return ForwardAsync(context, options.CasperBaseUrl, path, true, demoCalibration);
+  }
 
   public Task LogisticsAsync(HttpContext context)
   {
@@ -21,10 +27,18 @@ public sealed class ApiProxy
     return ForwardAsync(context, options.LogisticsBaseUrl, path);
   }
 
-  private async Task ForwardAsync(HttpContext context, string baseUrl, string path)
+  private async Task ForwardAsync(HttpContext context, string baseUrl, string path, bool forwardAuthorization = false, bool demoCalibration = false)
   {
     string address = baseUrl.TrimEnd('/') + path + context.Request.QueryString;
     using HttpRequestMessage request = new(new HttpMethod(context.Request.Method), address);
+    if (demoCalibration)
+    {
+      request.Headers.TryAddWithoutValidation("Authorization", "Bearer " + options.DemoCameraToken);
+    }
+    else if (forwardAuthorization && context.Request.Headers.TryGetValue("Authorization", out var authorization))
+    {
+      request.Headers.TryAddWithoutValidation("Authorization", authorization.ToString());
+    }
     bool hasBody = context.Request.ContentLength > 0 || context.Request.Headers.ContainsKey("Transfer-Encoding");
     if (hasBody)
     {

@@ -33,7 +33,7 @@ function createWindow(applet, number) {
   close.type = 'button';
   close.textContent = '×';
   close.setAttribute('aria-label', `Close ${applet.title}`);
-  close.title = `Close ${applet.title}; reopen it from the toolbar`;
+  close.title = `Close ${applet.title}; reopen it from the taskbar`;
   tools.append(close);
   heading.append(index, title, category, tools);
   const body = document.createElement('div');
@@ -53,8 +53,34 @@ function createWindow(applet, number) {
   return {element, heading, close, handle};
 }
 
-// Apps supply content, initial placement and launchers. This module owns window chrome and behavior.
-export function createWorkspace({root, layer, storageKey, initialLayout, launchers = [], resetButton, focusButton, announcement, stackedMedia, onLayoutChange = () => {}}) {
+function createTask(applet) {
+  const task = document.createElement('div');
+  task.className = 'ui-task';
+  const open = document.createElement('button');
+  open.type = 'button';
+  open.className = 'ui-task-open';
+  if (applet.icon) {
+    const icon = document.createElement('span');
+    icon.className = 'ui-task-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = applet.icon;
+    open.append(icon);
+  }
+  open.append(applet.title);
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'ui-task-close';
+  close.textContent = '×';
+  close.setAttribute('aria-label', `Close ${applet.title}`);
+  close.title = `Close ${applet.title}`;
+  task.append(open, close);
+  return {task, taskOpen: open, taskClose: close};
+}
+
+// Apps supply content and initial placement. This module owns window chrome, behavior and the taskbar:
+// every registered applet gets a task in `taskbar` that opens or focuses its window and has × to close it.
+// `launchers` are extra in-page buttons with data-open-applet that only open a window.
+export function createWorkspace({root, layer, storageKey, initialLayout, taskbar, launchers = [], resetButton, focusButton, announcement, stackedMedia, onLayoutChange = () => {}}) {
   const windows = new Map();
   const saved = readLayout(storageKey);
   const media = stackedMedia ? window.matchMedia(stackedMedia) : null;
@@ -66,7 +92,7 @@ export function createWorkspace({root, layer, storageKey, initialLayout, launche
   preview.setAttribute('aria-hidden', 'true');
   layer.append(preview);
   layer.classList.add('ui-window-layer');
-  let order = 10, gesture = null, focused = false, destroyed = false;
+  let order = 10, gesture = null, focused = false, destroyed = false, front = null;
   const listeners = [];
 
   function listen(target, name, handler) {
@@ -87,6 +113,12 @@ export function createWorkspace({root, layer, storageKey, initialLayout, launche
       applyRectangle(item.element, item.state.rectangle);
     }
     item.element.hidden = !item.state.open;
+    const visible = item.state.open && !focused;
+    item.task.dataset.open = String(visible);
+    item.task.dataset.front = String(visible && front === item);
+    item.taskOpen.setAttribute('aria-pressed', String(visible));
+    item.taskOpen.title = visible ? `Focus ${item.title}` : `Open ${item.title}`;
+    item.taskClose.hidden = !visible;
     for (const launcher of launchers) {
       if (launcher.dataset.openApplet === item.id) {
         launcher.setAttribute('aria-pressed', String(item.state.open && !focused));
@@ -101,7 +133,11 @@ export function createWorkspace({root, layer, storageKey, initialLayout, launche
     catch { /* Window controls remain usable without browser storage. */ }
   }
   function foreground(item) {
-    for (const other of windows.values()) other.element.dataset.front = String(other === item);
+    front = item;
+    for (const other of windows.values()) {
+      other.element.dataset.front = String(other === item);
+      other.task.dataset.front = String(other === item && other.state.open && !focused);
+    }
     item.element.style.zIndex = ++order;
   }
   function focusMap(value) {
@@ -132,12 +168,11 @@ export function createWorkspace({root, layer, storageKey, initialLayout, launche
     const item = windows.get(id);
     if (!item) return;
     item.state.open = false;
+    if (front === item) front = null;
     render(item);
     save();
-    for (const launcher of launchers) {
-      if (launcher.dataset.openApplet === id) {launcher.focus({preventScroll: true}); break;}
-    }
-    announce(`${item.title} closed. Reopen it from the toolbar.`);
+    item.taskOpen.focus({preventScroll: true});
+    announce(`${item.title} closed. Reopen it from the taskbar.`);
   }
   function neighbors(item) {
     const result = [];
@@ -201,9 +236,13 @@ export function createWorkspace({root, layer, storageKey, initialLayout, launche
   function registerApplet(applet) {
     if (destroyed || windows.has(applet.id)) throw new Error(`Cannot register applet ${applet.id}`);
     const chrome = createWindow(applet, windows.size + 1);
-    const item = {...applet, ...chrome, state: restoreWindowState(saved[applet.id], defaults(applet.id), bounds())};
+    const item = {...applet, ...chrome, ...createTask(applet), state: restoreWindowState(saved[applet.id], defaults(applet.id), bounds())};
+    item.taskOpen.setAttribute('aria-controls', item.element.id);
     windows.set(applet.id, item);
     layer.append(item.element);
+    taskbar?.append(item.task);
+    listen(item.taskOpen, 'click', () => show(item.id));
+    listen(item.taskClose, 'click', () => hide(item.id));
     listen(item.element, 'pointerdown', () => foreground(item));
     listen(item.element, 'focusin', () => foreground(item));
     listen(item.close, 'click', () => hide(item.id));
@@ -258,7 +297,7 @@ export function createWorkspace({root, layer, storageKey, initialLayout, launche
     destroy() {
       finish(true); destroyed = true; observer.disconnect();
       for (const remove of listeners) remove();
-      for (const item of windows.values()) {item.content.remove(); item.footer?.remove(); item.element.remove();}
+      for (const item of windows.values()) {item.content.remove(); item.footer?.remove(); item.element.remove(); item.task.remove();}
       preview.remove(); windows.clear();
     }
   };

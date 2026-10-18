@@ -50,5 +50,6 @@ ENTRYPOINT ["dotnet", "Streetflow.Frontend.dll"]
 
 FROM web-runtime AS casper
 COPY --from=build /out-casper/ ./
+RUN mkdir -p /app/data && chown -R app:app /app/data
 USER app
 ENTRYPOINT ["dotnet", "Streetflow.Casper.dll"]

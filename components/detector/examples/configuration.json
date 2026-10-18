@@ -8,5 +8,5 @@
   "devices": [{"id": "north-light", "label": "North stoplight", "x": 0, "y": 0, "lane_ids": ["north-1"]}],
   "detectors": [{"id": "north-detector", "label": "North approach detector", "x": 0, "y": 0, "lane_ids": ["north-1"], "device_id": "north-light"}],
   "lane_mappings": [{"lane_id": "north-1", "street_id": "north-street", "intersection_id": "junction-1", "approach_id": "northbound"}],
-  "cameras": [{"id": "pi-01", "intersection_id": "junction-1", "token_environment": "CASPER_DEMO_CAMERA_TOKEN", "lane_ids": ["north-1"]}]
+  "cameras": [{"id": "pi-01", "intersection_id": "junction-1", "token_environment": "CASPER_DEMO_CAMERA_TOKEN", "lane_ids": ["north-1"], "view_calibration_file": "camera.json"}]
 }

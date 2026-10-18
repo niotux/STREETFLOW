@@ -17,6 +17,27 @@ td small{display:block;color:var(--ui-muted);margin-top:6px}.casper-note{font-si
 [data-status=ok]{color:var(--ui-signal)}[data-status=partial]{color:var(--ui-caution)}[data-status=unavailable],#error{color:var(--ui-alert)}
 #error{padding:18px;background:color-mix(in srgb,var(--ui-alert) 15%,#000);border:1px solid var(--ui-alert);margin-bottom:20px;font-family:var(--mono)}
 .calibration-tools{display:flex;gap:14px;flex-wrap:wrap;align-items:end;margin:20px 0}.calibration-tools label{display:grid;gap:8px}
-#calibration-canvas{width:100%;max-height:65vh;object-fit:contain;background:#000;border:1px solid var(--ui-border);cursor:crosshair}
-#config-json{width:100%;min-height:240px;box-sizing:border-box;background:var(--ui-field);color:var(--ui-signal);padding:14px;border:1px solid var(--ui-border);font-family:var(--mono)}
+.calibration-page .casper-note,.calibration-page #feedback{font-size:16px;line-height:1.5}.calibration-page .calibration-tools button,.calibration-page .calibration-tools select{font-size:16px;min-height:44px}
+.casper-crumbs{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:22px}.casper-crumbs a{color:var(--ui-accent);font-size:16px}
+#calibration-canvas{width:100%;max-width:1100px;height:auto;background:#000;border:1px solid var(--ui-border);cursor:crosshair;touch-action:none}
+.camera-preview{margin-bottom:24px}.camera-preview-body{display:grid;gap:12px;padding:18px}.camera-preview-body label{display:flex;gap:12px;align-items:center}.camera-preview-body img{display:block;width:min(100%,960px);height:auto;background:#000}.camera-preview-body img[hidden]{display:none}
+.camera-details{display:block}.camera-details summary{cursor:pointer;padding:18px;color:var(--ui-accent);font-weight:600}.camera-details summary:hover{background:color-mix(in srgb,var(--ui-accent) 8%,transparent)}
 @media(max-width:800px){.casper-summary{grid-template-columns:repeat(2,1fr)}.casper-intro{align-items:start;flex-direction:column}.casper-layout{padding:24px 14px}}
+
+.magi-page:has(.casper-workspace){overflow:hidden}
+.casper-workspace{position:relative;height:calc(100dvh - var(--ui-taskbar-height));overflow:hidden}
+.casper-map-panel{position:absolute;inset:0 0 32px;overflow:hidden;background:linear-gradient(var(--ui-grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--ui-grid-line) 1px,transparent 1px),var(--ui-background);background-size:24px 24px}
+.casper-map-panel canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;touch-action:none}
+.casper-map-heading{position:absolute;top:20px;left:24px;right:24px;display:flex;justify-content:space-between;align-items:start;gap:15px;pointer-events:none}
+.casper-map-heading h1{margin:6px 0;font-size:clamp(22px,3vw,36px);text-transform:uppercase;letter-spacing:.06em;text-shadow:0 0 12px #000}
+.casper-map-actions{display:flex;gap:8px;pointer-events:auto}.casper-map-actions button{white-space:nowrap}
+.casper-map-legend,.casper-map-hint{position:absolute;bottom:46px;background:#000d;border:1px solid var(--ui-control-border);padding:10px 13px;font-size:14px;color:var(--ui-text);pointer-events:none}
+.casper-map-legend{left:24px;display:flex;gap:20px;flex-wrap:wrap}.casper-map-hint{right:24px;max-width:280px;margin:0}
+.casper-map-legend span{display:flex;align-items:center;gap:8px}.casper-map-legend i{display:inline-block;width:13px;height:18px;border:2px solid var(--ui-accent);border-radius:3px}.casper-map-legend .legend-light::after{content:'●';display:block;text-align:center;color:#ff5148;font-size:11px;line-height:14px}.casper-map-legend .legend-camera{width:19px;height:13px;border-color:#73dacb}.casper-map-legend .legend-camera::after{content:'◉';display:block;text-align:center;color:#73dacb;line-height:9px}
+#applet-layer{position:absolute;inset:82px 16px 86px;pointer-events:none}
+.casper-applet{min-width:0}.casper-device-help,.casper-selected-device p{color:var(--ui-text);font-size:15px;line-height:1.5}
+.casper-device-list{display:grid;gap:8px;margin:18px 0}.casper-device-list button{text-align:left;min-height:44px;font-size:14px}.casper-device-list button[aria-pressed=true]{border-color:var(--ui-signal);color:var(--ui-signal)}
+.casper-selected-device h2{margin:8px 0;font-size:25px}.casper-counts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}.casper-counts>div{background:#000;padding:14px;border:1px solid var(--ui-border)}.casper-counts span{display:block;color:var(--ui-muted);font-size:13px}.casper-counts strong{display:block;color:var(--ui-signal);font:32px var(--mono);margin-top:7px}
+.casper-camera-choices{display:grid;gap:8px;margin:12px 0}.casper-camera-choices button{text-align:left}.casper-selected-device img{display:block;width:100%;height:auto;margin:10px 0 16px;background:#000}.casper-selected-device img[hidden]{display:none}.casper-action{display:block;padding:12px;border:1px solid var(--ui-accent);color:var(--ui-accent);text-align:center;text-decoration:none;font-size:14px}.casper-action:hover{background:var(--ui-accent);color:var(--ui-accent-ink)}
+.casper-footer{position:absolute;bottom:0;left:0;right:0;min-height:32px;padding:8px 20px;box-sizing:border-box;border-top:1px solid var(--ui-border);background:var(--ui-surface);color:var(--ui-muted);font-size:11px}.casper-footer a{color:var(--ui-accent)}
+@media(max-width:760px){.magi-page:has(.casper-workspace){overflow:auto}.casper-workspace{height:auto;min-height:calc(100dvh - var(--ui-taskbar-height));overflow:visible}.casper-map-panel{position:relative;inset:auto;height:440px}.casper-map-heading{top:16px;left:14px;right:14px}.casper-map-heading h1{font-size:19px}.casper-map-legend{left:14px;bottom:12px;font-size:11px}.casper-map-hint{display:none}#applet-layer{inset:auto;position:relative}.casper-footer{position:relative}}
