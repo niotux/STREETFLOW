@@ -1,5 +1,5 @@
 import {signalAppearance, deviceState, deviceDescription, controlledLanes, deviceMapStatus} from '/balthasar/signals.js?v=physical-devices-3';
-import {MapView, queuedVehicles} from '/balthasar/map-view.js?v=shared-map-1';
+import {MapView, queuedVehicles} from '/balthasar/map-view.js?v=nerv-1';
 
 const $ = id => document.getElementById(id);
 const canvas = $('map');
@@ -9,6 +9,8 @@ let traffic = null, queues = null, laneById = new Map();
 let cachedMap = null, cachedProvider = '';
 let busy = false, polling = false, queuePolling = false, available = false, epoch = 0;
 let hoveredDevice = null;
+let signalMode = null;
+let policyDirty = false;
 
 const mapView = new MapView(canvas, {
   vehicles: () => queuedCars(),
@@ -131,7 +133,26 @@ function selectedState() {
 }
 
 function updateControls() {
-  const disabled = busy || !available || !session?.id || !selectedDevice() || selectedState() === 'unknown';
+  const disabled = busy || !available || !session?.id || !selectedDevice() || selectedState() === 'unknown' || signalMode?.mode === 'automatic';
+  $('automatic-signals').disabled = busy || !available || !session?.id || !signalMode?.automatic_supported;
+  $('automatic-signals').checked = signalMode?.mode === 'automatic';
+  $('adaptive-settings').querySelectorAll('input, button').forEach(element => {
+    element.disabled = busy || !available || !session?.id || !signalMode?.adaptive_supported;
+  });
+  if (!policyDirty) {
+    const policy = signalMode?.policy;
+    $('prevent-spillback').checked = policy?.prevent_spillback ?? true;
+    $('demand-weighting').checked = policy?.weight_demand ?? true;
+    $('signal-multiplier').value = policy?.multiplier ?? '';
+  }
+  $('automatic-status').textContent = !session?.id ? 'Load a simulation to start automatic signals.'
+    : !available ? 'Signal control is unavailable.'
+    : !signalMode?.automatic_supported ? 'This provider has no automatic signal timing.'
+    : signalMode.mode === 'automatic' ? signalMode.adaptive_supported
+      ? 'Automatic · downstream capacity checks and demand weights run with simulation time.'
+      : 'Automatic · lights follow the project’s timing plans. Pausing the simulation pauses the lights.'
+    : 'Manual · lights hold their current state. Enable automatic cycling to resume the timing plans.';
+  $('network-mode').textContent = signalMode?.mode === 'automatic' ? 'CONNECTED NETWORK / AUTOMATIC' : 'CONNECTED NETWORK / MANUAL';
   $('connection-form').querySelector('button').disabled = busy;
   $('target-host').disabled = busy;
   $('target-port').disabled = busy;
@@ -176,6 +197,8 @@ function clearSession() {
   session = null;
   setNetwork(null);
   states = [];
+  signalMode = null;
+  policyDirty = false;
   available = false;
   $('map-label').textContent = 'Waiting for an active world.';
   $('map-empty').hidden = false;
@@ -195,13 +218,14 @@ async function loadSession(next, version) {
   clearSession();
   updateControls();
   const path = `/sessions/${encodeURIComponent(next.id)}`;
-  const [map, live] = await Promise.all([reuse ? Promise.resolve(cachedMap) : api(`${path}/map`), api(`${path}/devices`)]);
+  const [map, live, mode] = await Promise.all([reuse ? Promise.resolve(cachedMap) : api(`${path}/map`), api(`${path}/devices`), api(`${path}/signal-mode`)]);
   if (version !== epoch) return;
   if (map.world_id !== next.world_id || map.revision !== next.revision) throw new Error('World changed while loading. Retrying discovery.');
   cachedMap = map;
   cachedProvider = provider;
   session = next;
   states = live;
+  signalMode = mode;
   available = true;
   setNetwork(map);
   $('map-label').textContent = map.world_id;
@@ -230,10 +254,11 @@ async function refreshSession(version) {
   if (changed) {
     await loadSession(next, version);
   } else {
-    const live = await api(`/sessions/${encodeURIComponent(next.id)}/devices`);
+    const [live, mode] = await Promise.all([api(`/sessions/${encodeURIComponent(next.id)}/devices`), api(`/sessions/${encodeURIComponent(next.id)}/signal-mode`)]);
     if (version !== epoch) return;
     session = next;
     states = live;
+    signalMode = mode;
     available = true;
     $('run').selectedOptions[0].textContent = `${next.project_id || next.world_id} · ${next.state}`;
     renderController();
@@ -288,6 +313,13 @@ function renderController() {
   renderTraffic();
   const device = selectedDevice();
   const state = selectedState();
+  const adaptive = signalMode?.adaptive_devices?.find(item => item.id === device?.id);
+  $('adaptive-summary').textContent = adaptive && signalMode.mode === 'automatic'
+    ? `${adaptive.queue_buffer ? `Queue buffer · about ${adaptive.capacity_vehicles} cars` : 'Standard approach'} · road ahead ${Math.round(adaptive.downstream_occupancy * 100)}% occupied`
+      + (adaptive.blocked_movements ? ` · ${adaptive.blocked_movements} blocked turn(s) held red` : '')
+      + ` · ${adaptive.rush_hour ? 'Rush-hour' : 'Off-peak'} k=${adaptive.multiplier.toFixed(2)}` : '';
+  $('adaptive-groups').textContent = adaptive && signalMode.mode === 'automatic'
+    ? `A: ${adaptive.group_a || 'No vehicle group'} · serviceable demand ${adaptive.demand_a.toFixed(0)} · green ${adaptive.green_a_seconds.toFixed(1)}s. B: ${adaptive.group_b || 'No vehicle group'} · serviceable demand ${adaptive.demand_b.toFixed(0)} · green ${adaptive.green_b_seconds.toFixed(1)}s.` : '';
   $('switchboard').hidden = !device;
   $('signal-summary').textContent = network ? deviceMapStatus(network.devices) : 'Waiting for an active world. Load a simulation in Balthasar’s Loader.';
   if (network && !available) $('signal-summary').textContent += ' Live states are unavailable; controls are disabled.';
@@ -387,6 +419,36 @@ $('signal-filter').oninput = () => { fillDevices(); draw(); };
 $('controller-enabled').onchange = event => {
   const device = selectedDevice();
   if (device) perform(() => command(device.id, event.target.checked ? 'on' : 'off'));
+};
+$('automatic-signals').onchange = event => {
+  const automatic = event.target.checked;
+  perform(async () => {
+    const target = session;
+    if (!target?.id) throw new Error('Load a simulation before changing signal control.');
+    signalMode = await api(`/sessions/${encodeURIComponent(target.id)}/signal-mode`, 'PUT', {
+      mode: automatic ? 'automatic' : 'manual', world_id: target.world_id, revision: target.revision, policy: signalMode?.policy
+    });
+    states = await api(`/sessions/${encodeURIComponent(target.id)}/devices`);
+  });
+};
+$('adaptive-settings').oninput = () => { policyDirty = true; };
+$('adaptive-settings').onsubmit = event => {
+  event.preventDefault();
+  perform(async () => {
+    const target = session;
+    if (!target?.id) throw new Error('Load a simulation before changing traffic rules.');
+    const value = $('signal-multiplier').value;
+    const policy = {
+      prevent_spillback: $('prevent-spillback').checked,
+      weight_demand: $('demand-weighting').checked,
+      multiplier: value === '' ? null : Number(value)
+    };
+    signalMode = await api(`/sessions/${encodeURIComponent(target.id)}/signal-mode`, 'PUT', {
+      mode: signalMode.mode, world_id: target.world_id, revision: target.revision, policy
+    });
+    policyDirty = false;
+    states = await api(`/sessions/${encodeURIComponent(target.id)}/devices`);
+  });
 };
 $('fit').onclick = () => mapView.fit();
 

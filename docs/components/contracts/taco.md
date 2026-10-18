@@ -60,17 +60,25 @@ All three fields are required. Supported actions are `on`, `off`, `red`, `red-ye
 
 The provider resolves each device's private bindings and applies the change to all mapped movements together. Session, world, and revision checks prevent a command composed for an old map from controlling a new scenario, including scenarios with identical device names. No public command accepts `link_index`.
 
-The simulator serializes writes/readback with engine steps. Once a write begins, it completes even if the HTTP caller disconnects. A caller with an interrupted response should read device state before retrying. Commands set explicit states and do not advance the simulation clock. There are no automatic phase cycles or clearance timings in this manual-control contract.
+The simulator serializes writes/readback with engine steps. Once a write begins, it completes even if the HTTP caller disconnects. A caller with an interrupted response should read device state before retrying. Commands set explicit states and do not advance the simulation clock. Individual device commands are accepted only in manual mode. In automatic mode they return 409 `automatic_control_active`; switch modes explicitly before changing individual lamps.
 
 Errors use `{code, message}`. Invalid commands return 400, unknown devices/sessions return 404, and stopped sessions or mismatched world revisions return 409. Logistics preserves provider errors and reports connectivity failures as 502/504.
 
+## Automatic timing mode
+
+Optional `GET /api/v1/taco/sessions/{id}/signal-mode` returns `{mode, automatic_supported}`. Modes are `manual` or `automatic`. Providers without this endpoint are treated as unsupported by Melchior; no automatic commands are sent.
+
+`PUT /api/v1/taco/sessions/{id}/signal-mode` accepts `{mode, world_id, revision}`. Identity validation and serialization with engine steps match device commands. Repeating the current mode is idempotent and does not restart the cycle. Automatic mode runs the project's selected programs on simulation time, retaining their movement-level states and clearance phases. Manual mode freezes every controller's current state. Restarted simulator sessions initially start off; Melchior discovers the new session and enables automatic timing again. Raw technical signal writes also require manual mode.
+
+The simulator advertises `automatic_signals: true` in capabilities; actual per-project support is reported by `signal-mode`. Casper provides observations and no physical control adapter, so Melchior leaves it alone. Supported static simulation plans can execute Melchior’s spillback and A/B-weighting policy. This is not surveyed field timing.
+
 ## Logistics discovery and caching
 
-The Logistics backend checks the provider's active session every 1.5 seconds, including while its page is closed. It loads a changed world's map and keeps one bounded cached map keyed by provider URL, world ID, and revision. New sessions on unchanged infrastructure reuse it. Traffic-weight changes alone do not require geometry transfer.
+The Logistics backend checks the provider's active session every 1.5 seconds, including while its page is closed. It loads a changed world's map and keeps one bounded cached map keyed by provider URL, world ID, and revision. New sessions on unchanged infrastructure reuse it. The backend enables automatic timing once for each supported session. A manual choice is retained for that process/session and is not overwritten by the discovery loop; discovery retries failed activations. Traffic-weight changes alone do not require geometry transfer.
 
 The Logistics page also refreshes its session identity and device states every 1.5 seconds, including when no session is selected. It follows new sessions automatically and reuses its own bounded map cache for the same provider/world/revision. A changed world, revision, or provider invalidates the old view before new commands are enabled. Map geometry is not fetched every frame. Provider failure disables commands; recovery is retried automatically.
 
-Logistics browser requests use `/melchior-api/session` and `/melchior-api/sessions/{id}/{map|devices|traffic|queues}` through the frontend proxy. Melchior polls queue frames every 250 ms and draws each queued vehicle behind its stop line, using the same map renderer and vehicle drawing as Balthasar; it has no other source of vehicle positions. The Logistics service exposes the equivalent `/api/v1/...` paths and forwards device commands. It does not load SUMO XML or own a separately authored map.
+Logistics browser requests use `/melchior-api/session` and `/melchior-api/sessions/{id}/{map|devices|traffic|queues|signal-mode}` through the frontend proxy. Melchior polls queue frames every 250 ms and draws each queued vehicle behind its stop line, using the same map renderer and vehicle drawing as Balthasar; it has no other source of vehicle positions. The Logistics service exposes the equivalent `/api/v1/...` paths and forwards device commands. It does not load SUMO XML or own a separately authored map.
 
 `Logistics__DiscoveryIntervalMilliseconds` defaults to 1500. Cached maps are in memory; saved provider addresses remain on the Logistics data volume. PostgreSQL is not part of this control path.
 
@@ -79,3 +87,9 @@ Logistics browser requests use `/melchior-api/session` and `/melchior-api/sessio
 The former taco integration used simulator `/city-runs/.../signals` endpoints and raw signal indices. Logistics now uses `/taco/.../devices` exclusively. Technical city-run signal endpoints remain for existing simulator diagnostics and tests; they are not the physical-device taco surface.
 
 Both project formats accept [physical-device mappings](../simulator/traffic-light-devices.md). Projects without mappings still provide their roads but publish no inferred hardware. Edit the registered project folder, refresh from disk, and load a new simulation to apply a mapping. Saved run snapshots are preserved.
+
+## Adaptive simulation policy
+
+`signal-mode` additionally returns `adaptive_supported`, `policy`, and `adaptive_devices`. Mode PUT accepts an optional `policy` with `prevent_spillback`, `weight_demand`, and nullable `multiplier`. An override must be finite and within [0.2, 1.8]; null derives k from stable A/B demand groups. Revision/session validation precedes any policy change. Policy changes do not reset the current cycle or bypass clearance stages.
+
+The provider prepares static selected programs and indexed road-storage topology once on load. It executes the revision-bound policy on simulation steps, independent of HTTP discovery cadence. The selected device’s diagnostics expose storage capacity, queue-buffer eligibility, downstream occupancy, blocked movements, A/B labels and demand scores, effective k, rush-hour status and green budgets. No private SUMO bindings are published. See [Melchior rules](../../../components/streetflow/README.md#downstream-protection-and-ab-weighting) for thresholds and allocation details.

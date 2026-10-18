@@ -22,6 +22,10 @@ public sealed class SumoEngine : IAsyncDisposable
   private Task? stdoutCopy;
   private StreamWriter? log;
   private string[] signalIds = [];
+  private string[] signalPrograms = [];
+  public IReadOnlyDictionary<string, string> SignalPrograms => signalIds.Zip(signalPrograms).ToDictionary(pair => pair.First, pair => pair.Second, StringComparer.Ordinal);
+  public bool AutomaticSignalsSupported => signalIds.Length > 0 && signalPrograms.Length == signalIds.Length
+    && signalPrograms.All(program => !string.IsNullOrEmpty(program) && program is not "off" and not "online");
   private CountingLine[] countingLines = [];
   public int? ProcessId
   {
@@ -75,6 +79,13 @@ public sealed class SumoEngine : IAsyncDisposable
     signalIds = project.SignalIds;
     countingLines = [];
     string version = await LaunchAsync(info, directory, port, options.EngineTimeoutSeconds, token);
+    // Capture SUMO's selected programs, including additional-file overrides, before
+    // switching to external control. No simulation step or vehicle has run yet.
+    signalPrograms = await connection!.GetSignalProgramsAsync(signalIds, token);
+    foreach (string signalId in signalIds)
+    {
+      await connection.SetSignalProgramAsync(signalId, "off", token);
+    }
     connection!.MaximumDynamicRoutes = configuration.NeuralLimits?.MaximumDynamicRoutes ?? configuration.TransformerLimits?.MaximumDynamicRoutes ?? options.MaximumDynamicRoutes;
     return version;
   }
@@ -98,6 +109,14 @@ public sealed class SumoEngine : IAsyncDisposable
   public Task<SignalState[]> GetSignalsAsync(CancellationToken token) => connection!.GetSignalsAsync(signalIds, token);
 
   public Task SetSignalStateAsync(string signalId, string state, CancellationToken token) => connection!.SetSignalStateAsync(signalId, state, token);
+
+  public async Task EnableAutomaticSignalsAsync(CancellationToken token)
+  {
+    for (int index = 0; index < signalIds.Length; index++)
+    {
+      await connection!.SetSignalProgramAsync(signalIds[index], signalPrograms[index], token);
+    }
+  }
 
   public Task<EngineSnapshot> StepAsync(CancellationToken token)
   {
@@ -190,11 +209,6 @@ public sealed class SumoEngine : IAsyncDisposable
     AddArgument(info, "--remote-port", port.ToString(CultureInfo.InvariantCulture));
     AddArgument(info, "--seed", config.Seed.ToString(CultureInfo.InvariantCulture));
     AddArgument(info, "--step-length", config.StepSeconds.ToString(CultureInfo.InvariantCulture));
-    if (city)
-    {
-      AddArgument(info, "--tls.all-off", "true");
-    }
-
     if (!city)
     {
       AddArgument(info, "--time-to-teleport", "-1");

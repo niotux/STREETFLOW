@@ -15,6 +15,7 @@ options.ConnectionFile = Path.GetFullPath(options.ConnectionFile, builder.Enviro
 builder.Services.AddSingleton(options);
 builder.Services.AddSingleton<ConnectionStore>();
 builder.Services.AddSingleton<TacoMapCache>();
+builder.Services.AddSingleton<SignalAutomation>();
 builder.Services.AddHostedService<WorldDiscoveryService>();
 builder.Services.AddHttpClient<TacoApiClient>(client => client.Timeout = TimeSpan.FromSeconds(options.RequestTimeoutSeconds));
 builder.Services.ConfigureHttpJsonOptions(json =>

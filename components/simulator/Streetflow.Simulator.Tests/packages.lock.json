@@ -446,6 +446,13 @@
           "xunit.extensibility.core": "[2.9.3]"
         }
       },
+      "streetflow.logistics": {
+        "type": "Project",
+        "dependencies": {
+          "Microsoft.AspNetCore.OpenApi": "[10.0.12, )",
+          "Streetflow.Traffic.Contracts": "[1.0.0, )"
+        }
+      },
       "streetflow.simulator": {
         "type": "Project",
         "dependencies": {

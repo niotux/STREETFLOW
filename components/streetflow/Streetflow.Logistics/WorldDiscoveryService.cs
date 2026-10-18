@@ -2,7 +2,7 @@ using Streetflow.Traffic.Contracts;
 
 namespace Streetflow.Logistics;
 
-public sealed class WorldDiscoveryService(IServiceScopeFactory scopes, ConnectionStore connections, LogisticsOptions options, ILogger<WorldDiscoveryService> logger) : BackgroundService
+public sealed class WorldDiscoveryService(IServiceScopeFactory scopes, ConnectionStore connections, SignalAutomation automation, LogisticsOptions options, ILogger<WorldDiscoveryService> logger) : BackgroundService
 {
   protected override async Task ExecuteAsync(CancellationToken stoppingToken)
   {
@@ -27,6 +27,8 @@ public sealed class WorldDiscoveryService(IServiceScopeFactory scopes, Connectio
         {
           await client.MapAsync(current.Id, stoppingToken);
         }
+
+        await automation.DiscoverAsync(client, current, stoppingToken);
 
         previous = current;
         previousProvider = provider;

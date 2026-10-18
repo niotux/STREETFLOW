@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "components/frontend/Streetflow.Frontend", "--urls", "http://localhost:8095"],
+      "port": 8095
+    }
+  ]
+}

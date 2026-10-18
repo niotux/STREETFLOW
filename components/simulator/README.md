@@ -96,7 +96,7 @@ Logistics now uses the [physical-device taco](../../docs/components/contracts/ta
 
 ## External signal control
 
-New city runs start with **all traffic lights off**, using SUMO's underlying priority rules (`--tls.all-off true`). Embedded and additional timing programs do not run automatically. Run configuration records `signal_control_mode: "external-v1"`. The legacy scenario inspector retains its scenario programs.
+New city runs initially start with **all traffic lights off**, using SUMO’s underlying priority rules. On discovery, Melchior enables the project’s selected timing programs through TACO. Without Melchior, lights remain off until explicitly controlled. Automatic mode preserves the project’s full signal phases and follows simulation time; manual mode holds current states and permits individual device commands. Run configuration records `signal_control_mode: "external-v1"`. The legacy scenario inspector retains its scenario programs.
 
 - `GET /api/v1/city-runs/{id}/signals` returns current controller IDs and SUMO state strings, including before the first step.
 - `PUT /api/v1/city-runs/{id}/signals/{signalId}` accepts `{"action":"green","link_index":0}`. Find controller IDs and movement indices in `/map` → `signal_points`, or in a light's hover details.

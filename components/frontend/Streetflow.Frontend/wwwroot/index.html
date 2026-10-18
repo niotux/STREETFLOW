@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#090e13">
+  <meta name="theme-color" content="#050201">
   <title>Streetflow · MAGI</title>
-  <link rel="stylesheet" href="/ui/streetflow-ui.css?v=shared-ui-1">
-  <link rel="stylesheet" href="/balthasar/styles.css">
-  <link rel="stylesheet" href="/magi.css?v=shared-ui-1">
+  <link rel="stylesheet" href="/ui/streetflow-ui.css?v=nerv-1">
+  <link rel="stylesheet" href="/balthasar/styles.css?v=nerv-1">
+  <link rel="stylesheet" href="/magi.css?v=nerv-1">
 </head>
 <body class="magi-page">
   <header class="title-bar ui-app-header">
@@ -16,21 +16,39 @@
   </header>
   <main class="landing">
     <div class="landing-intro"><span class="eyebrow">MAGI SYSTEM / 01</span><h1>Choose your station.</h1><p>Simulate the streets. Control the lights. Build what comes next.</p></div>
-    <div class="component-grid">
-      <a class="component-card melchior-card" href="/melchior/">
-        <div class="card-top"><span class="eyebrow">01 / LOGISTICS</span><span class="component-status">AVAILABLE</span></div>
-        <div class="component-symbol" aria-hidden="true">◎</div><h2>MELCHIOR</h2><p>The traffic light control station. Connect a city and take manual control of each movement.</p><span class="card-link">Open logistics <span aria-hidden="true">↗</span></span>
-      </a>
-      <a class="component-card balthasar-card" href="/balthasar/">
-        <div class="card-top"><span class="eyebrow">02 / SIMULATOR</span><span class="component-status">AVAILABLE</span></div>
-        <div class="component-symbol" aria-hidden="true">⌁</div><h2>BALTHASAR</h2><p>Your city in motion. Load a road network, run traffic, and inspect the simulation.</p><span class="card-link">Open simulator <span aria-hidden="true">↗</span></span>
-      </a>
-      <a class="component-card" href="/casper/">
-        <div class="card-top"><span class="eyebrow">03 / CAMERA DATA</span><span class="component-status">AVAILABLE</span></div>
-        <div class="component-symbol" aria-hidden="true">◈</div><h2>CASPER</h2><p>The eyes on the street. Camera counts, queues, and coverage by street and stoplight.</p><span class="card-link">Open camera data <span aria-hidden="true">↗</span></span>
-      </a>
+    <div class="magi-console">
+      <section class="time-display" aria-label="Active time display">
+        <div class="time-display-head"><span>ACTIVE TIME DISPLAY:</span></div>
+        <div class="time-display-body">
+          <strong id="active-time" class="time-digits">--:--:--<small>.---</small></strong>
+          <span class="time-tag">EXTERNAL</span>
+        </div>
+        <div class="time-modes" aria-hidden="true"><span>STOP</span><span>SLOW</span><span class="lit">NORMAL</span><span>RACING</span></div>
+        <dl class="magi-readout">
+          <div><dt>CODE</dt><dd>239</dd></div><div><dt>FILE</dt><dd>MAGI_SYS</dd></div><div><dt>EXTENSION</dt><dd>2010</dd></div><div><dt>EX_MODE</dt><dd>ON</dd></div><div><dt>PRIORITY</dt><dd>A</dd></div>
+        </dl>
+      </section>
+      <section class="magi-diagram-frame" aria-label="MAGI components">
+        <div class="magi-diagram-head"><span class="magi-diagram-title">RESOLUTION</span><span class="eyebrow">SELECT A COMPONENT</span></div>
+        <nav class="magi-diagram">
+          <span class="magi-link magi-link-v" aria-hidden="true"></span><span class="magi-link magi-link-h" aria-hidden="true"></span>
+          <a class="magi-unit magi-balthasar" href="/balthasar/"><span class="magi-verdict" aria-hidden="true">APPROVED</span><strong>BALTHASAR · 2</strong><span class="magi-role">SIMULATOR</span><p>Your city in motion. Load a road network, run traffic, and inspect the simulation.</p></a>
+          <a class="magi-unit magi-casper" href="/casper/"><span class="magi-verdict" aria-hidden="true">APPROVED</span><strong>CASPER · 3</strong><span class="magi-role">CAMERA DATA</span><p>The eyes on the street. Camera counts, queues, and coverage by street and stoplight.</p></a>
+          <a class="magi-unit magi-melchior" href="/melchior/"><span class="magi-verdict" aria-hidden="true">APPROVED</span><strong>MELCHIOR · 1</strong><span class="magi-role">LOGISTICS</span><p>The traffic light control station. Connect a city and take manual control of each movement.</p></a>
+          <span class="magi-core" aria-hidden="true">MAGI</span>
+        </nav>
+      </section>
     </div>
     <footer class="landing-footer"><span>STREETFLOW / MAGI</span><span>Manual control · Development station</span></footer>
   </main>
+  <script>
+    const clock = document.getElementById('active-time');
+    const pad = (value, size = 2) => String(value).padStart(size, '0');
+    (function tick() {
+      const now = new Date();
+      clock.innerHTML = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}<small>.${pad(now.getMilliseconds(), 3)}</small>`;
+      requestAnimationFrame(tick);
+    })();
+  </script>
 </body>
 </html>

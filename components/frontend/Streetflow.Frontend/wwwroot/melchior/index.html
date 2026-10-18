@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#090e13">
+  <meta name="theme-color" content="#050201">
   <title>Streetflow · Melchior logistics</title>
-  <link rel="stylesheet" href="/ui/streetflow-ui.css?v=shared-ui-1">
-  <link rel="stylesheet" href="/balthasar/styles.css">
-  <link rel="stylesheet" href="/magi.css?v=shared-ui-1">
-  <script type="module" src="/melchior/app.js?v=shared-map-2"></script>
+  <link rel="stylesheet" href="/ui/streetflow-ui.css?v=nerv-1">
+  <link rel="stylesheet" href="/balthasar/styles.css?v=nerv-1">
+  <link rel="stylesheet" href="/magi.css?v=nerv-1">
+  <script type="module" src="/melchior/app.js?v=adaptive-signals-1"></script>
 </head>
 <body class="magi-page">
   <header class="title-bar ui-app-header">
@@ -32,13 +32,24 @@
         <button id="refresh-runs" type="button">Refresh connection ↻</button>
         <p id="run-note" class="status-note">The active world appears automatically when the provider loads it.</p>
         <div class="section-divider"></div>
-        <span class="eyebrow">MANUAL CONTROL</span><p class="status-note">Each change is sent immediately. Lights hold their state until another command or a run restart. On enables at red; off restores road priority.</p>
+        <div class="controller-toolbar"><input id="automatic-signals" type="checkbox" role="switch" disabled><label for="automatic-signals">Automatic light cycling</label></div>
+        <p id="automatic-status" class="status-note" role="status">Load a simulation to start automatic signals.</p>
+        <form id="adaptive-settings">
+          <div class="controller-toolbar"><input id="prevent-spillback" type="checkbox" checked><label for="prevent-spillback">Hold red when the exit is full</label></div>
+          <p class="status-note">Long approaches with room to store queues wait for space beyond the junction.</p>
+          <div class="controller-toolbar"><input id="demand-weighting" type="checkbox" checked><label for="demand-weighting">Weight rush-hour green time</label></div>
+          <label for="signal-multiplier">Multiplier k · 0.2–1.8</label>
+          <input id="signal-multiplier" type="number" min="0.2" max="1.8" step="0.01" placeholder="Auto from demand">
+          <p class="status-note">Leave blank to follow demand. Above 1 favors A; below 1 favors B. Rush hours: 07:00–09:00 and 16:00–19:00.</p>
+          <button type="submit">Apply traffic rules</button>
+        </form>
+        <span class="eyebrow">MANUAL CONTROL</span><p class="status-note">Turn off automatic cycling to control an individual light. Manual lights hold their state. On enables at red; off restores road priority.</p>
         <p class="applet-note">Commands affect the selected physical device and all its mapped movements. Highlighted roads show its controlled incoming lanes.</p>
       </div>
     </section>
     <section class="network-panel" aria-label="Traffic light network">
       <canvas id="map" aria-label="Road network and traffic lights. Drag to pan, scroll to zoom, or select a traffic light."></canvas>
-      <div class="workspace-heading"><div><span class="eyebrow">CONNECTED NETWORK / MANUAL</span><h1 id="map-label">Waiting for a city.</h1></div><div class="view-actions"><button id="fit" type="button" disabled>↗ Fit</button></div></div>
+      <div class="workspace-heading"><div><span id="network-mode" class="eyebrow">CONNECTED NETWORK / AUTOMATIC</span><h1 id="map-label">Waiting for a city.</h1></div><div class="view-actions"><button id="fit" type="button" disabled>↗ Fit</button></div></div>
       <div id="map-empty"><span class="empty-icon" aria-hidden="true">◎</span><strong>Your lights. Your controls.</strong><span>The provider supplies the active map and its configured physical devices.</span></div>
       <div id="map-detail">Select a traffic light to open its controller.</div>
     </section>
@@ -49,6 +60,8 @@
         <label for="controller">Physical device</label><select id="controller" disabled><option value="">No physical devices configured</option></select>
         <p id="signal-summary" class="status-note" role="status">Select a run to begin.</p>
         <p id="traffic-summary" class="status-note" role="status">Waiting for traffic measurements.</p>
+        <p id="adaptive-summary" class="status-note" role="status"></p>
+        <p id="adaptive-groups" class="status-note"></p>
         <div id="switchboard" hidden>
           <div class="controller-toolbar"><input id="controller-enabled" type="checkbox" role="switch"><label for="controller-enabled">Device enabled</label></div>
           <div id="controller-state" class="signal-state"></div>

@@ -10,6 +10,7 @@ internal enum TraCiVariable : byte
   LaneId = 0x51,
   LanePosition = 0x56,
   TrafficLightState = 0x20,
+  TrafficLightProgram = 0x29,
   InductionLoopVehicleData = 0x17,
   SimulationTime = 0x66,
   DepartedVehicleIds = 0x74,

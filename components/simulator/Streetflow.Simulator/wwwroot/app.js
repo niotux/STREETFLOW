@@ -2,7 +2,7 @@ import {initializeWorkspace} from './workspace.js?v=shared-ui-1';
 import {vehicleSettingsXml} from './sumo-settings.js?v=workspace-1';
 import {VehicleMotion} from './vehicle-motion.js?v=motion-2';
 import {signalAppearance, deviceState, deviceDescription, deviceMapStatus} from './signals.js?v=physical-devices-3';
-import {MapView} from './map-view.js?v=shared-map-1';
+import {MapView} from './map-view.js?v=nerv-1';
 const $ = id => document.getElementById(id);
 const workspace = initializeWorkspace();
 const canvas = $('map');

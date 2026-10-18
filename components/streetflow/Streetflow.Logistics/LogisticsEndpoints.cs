@@ -6,13 +6,15 @@ public static class LogisticsEndpoints
 {
   public static void MapLogisticsApi(this WebApplication app)
   {
-    app.MapGet("/health", () => new HealthResponse("ok", "Melchior", "manual"));
+    app.MapGet("/health", () => new HealthResponse("ok", "Melchior", "automatic-ready"));
     RouteGroupBuilder api = app.MapGroup("/api/v1");
     api.MapGet("/connection", (ConnectionStore connections) => connections.Get());
     api.MapPut("/connection", (TacoConnection request, ConnectionStore connections, CancellationToken token) => connections.SaveAsync(request, token));
     api.MapGet("/session", (TacoApiClient client, CancellationToken token) => client.SessionAsync(token));
     api.MapGet("/sessions/{id}/map", (string id, TacoApiClient client, CancellationToken token) => client.MapAsync(id, token));
     api.MapGet("/sessions/{id}/devices", (string id, TacoApiClient client, CancellationToken token) => client.DevicesAsync(id, token));
+    api.MapGet("/sessions/{id}/signal-mode", (string id, TacoApiClient client, CancellationToken token) => client.SignalModeAsync(id, token));
+    api.MapPut("/sessions/{id}/signal-mode", (string id, TacoSignalModeCommand request, TacoApiClient client, SignalAutomation automation, CancellationToken token) => automation.SetAsync(id, request, client, token));
     api.MapGet("/sessions/{id}/queues", async (string id, TacoApiClient client, CancellationToken token) =>
       Results.Bytes(await client.QueuesAsync(id, token), TacoQueueFrame.ContentType));
     api.MapGet("/sessions/{id}/traffic", (string id, TacoApiClient client, CancellationToken token) => client.TrafficAsync(id, token));

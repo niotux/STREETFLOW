@@ -180,6 +180,7 @@ public sealed partial class CityRunCoordinator
       }
 
       ProjectTrafficDevice device = FindDevice(deviceId);
+      RequireManualSignals();
       SignalState signal = FindSignal(device.SignalId);
       string off = prioritySignalStates[device.SignalId];
       char[] state = signal.State.ToCharArray();

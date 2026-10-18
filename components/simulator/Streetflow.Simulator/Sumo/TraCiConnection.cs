@@ -171,6 +171,29 @@ public sealed class TraCiConnection : IDisposable
     ReadStatus(response, (byte)TraCiCommandId.SetTrafficLight);
   }
 
+  public async Task<string[]> GetSignalProgramsAsync(string[] signalIds, CancellationToken token)
+  {
+    List<string> programs = [];
+    foreach (string[] ids in signalIds.Chunk(TraCiProtocol.QueryBatchSize))
+    {
+      programs.AddRange(await GetAsync(ids.Select(id => new TraCiQuery(TraCiDomain.TrafficLight, TraCiVariable.TrafficLightProgram, id)).ToArray(),
+        static response => response.ReadStringValue(), token));
+    }
+    return programs.ToArray();
+  }
+
+  public async Task SetSignalProgramAsync(string signalId, string program, CancellationToken token)
+  {
+    byte[] body = Encode(writer =>
+    {
+      writer.Byte(0x23); // TraCI setProgram (the getter uses 0x29).
+      writer.String(signalId);
+      WriteTypedString(writer, program);
+    });
+    WireReader response = await SendAsync([new TraCiCommand((byte)TraCiCommandId.SetTrafficLight, body)], token);
+    ReadStatus(response, (byte)TraCiCommandId.SetTrafficLight);
+  }
+
   private async Task<LineCrossing[]> GetCrossingsAsync(CountingLine[] lines, CancellationToken token)
   {
     List<LineCrossing> crossings = new();

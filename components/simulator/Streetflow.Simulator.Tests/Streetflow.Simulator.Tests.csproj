@@ -17,6 +17,7 @@
   <ItemGroup>
     <Using Include="Xunit" />
     <ProjectReference Include="../Streetflow.Simulator/Streetflow.Simulator.csproj" />
+    <ProjectReference Include="../../streetflow/Streetflow.Logistics/Streetflow.Logistics.csproj" Aliases="logistics" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.12" />
   </ItemGroup>
 

@@ -27,6 +27,7 @@ public sealed partial class CityRunCoordinator
     try
     {
       RequireSignalRun(id);
+      RequireManualSignals();
       if (!prioritySignalStates.TryGetValue(signalId, out string? offState))
       {
         throw new ApiException(404, "unknown_signal", $"Unknown signal controller '{signalId}'");

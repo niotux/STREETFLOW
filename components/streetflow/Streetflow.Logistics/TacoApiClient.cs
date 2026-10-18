@@ -19,6 +19,31 @@ public sealed class TacoApiClient
 
   public Task<TacoSession> SessionAsync(CancellationToken token) => GetAsync<TacoSession>("/api/v1/taco/session", token);
   public Task<TacoDeviceState[]> DevicesAsync(string id, CancellationToken token) => GetAsync<TacoDeviceState[]>(SessionPath(id) + "/devices", token);
+
+  public async Task<TacoSignalMode> SignalModeAsync(string id, CancellationToken token)
+  {
+    try
+    {
+      return await GetAsync<TacoSignalMode>(SessionPath(id) + "/signal-mode", token);
+    }
+    catch (ApiException exception) when (exception.StatusCode is 404 or 501)
+    {
+      return new TacoSignalMode("unavailable", false);
+    }
+  }
+
+  public async Task<TacoSignalMode> SetSignalModeAsync(string id, TacoSignalModeCommand command, CancellationToken token)
+  {
+    if (command.Policy?.Multiplier is double k && (!double.IsFinite(k) || k < .2 || k > 1.8))
+      throw new ApiException(400, "invalid_signal_multiplier", "Multiplier k must be between 0.2 and 1.8, or null for automatic demand weighting");
+    if (command.Mode is not "automatic" and not "manual" || string.IsNullOrWhiteSpace(command.WorldId) || string.IsNullOrWhiteSpace(command.Revision))
+    {
+      throw new ApiException(400, "invalid_signal_mode", "mode must be automatic or manual; world_id and revision are required");
+    }
+    using HttpRequestMessage request = new(HttpMethod.Put, Address(SessionPath(id) + "/signal-mode"));
+    request.Content = JsonContent.Create(command, options: JsonDefaults.Options);
+    return await SendAsync<TacoSignalMode>(request, token);
+  }
   public async Task<byte[]> QueuesAsync(string id, CancellationToken token)
   {
     using HttpRequestMessage request = new(HttpMethod.Get, Address(SessionPath(id) + "/queues"));

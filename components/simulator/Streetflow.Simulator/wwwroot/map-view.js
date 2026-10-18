@@ -109,7 +109,7 @@ export class MapView {
     for (const lane of network.lanes) {
       const kind = laneKind(lane);
       if (kind !== 'junction' && kind !== 'road') continue;
-      context.strokeStyle = kind === 'junction' ? '#334959' : '#68899d';
+      context.strokeStyle = kind === 'junction' ? '#5a2208' : '#b0520f';
       context.lineWidth = Math.max(1, Math.min(9, 3.2 * view.scale));
       this.tracePath(context, lane.shape);
       context.stroke();
@@ -132,7 +132,7 @@ export class MapView {
     for (const lane of network.lanes) {
       const kind = lane.render_kind;
       if (kind !== 'sidewalk' && kind !== 'walkingarea' && kind !== 'crossing') continue;
-      context.strokeStyle = kind === 'crossing' ? '#e9dabc' : '#62747d';
+      context.strokeStyle = kind === 'crossing' ? '#ffd23a' : '#4a2a14';
       context.lineWidth = kind === 'crossing' ? Math.max(2, Math.min(5, 2.4 * view.scale)) : Math.max(1, Math.min(3, 1.2 * view.scale));
       context.setLineDash(kind === 'crossing' ? [4, 4] : []);
       this.tracePath(context, lane.shape);
@@ -144,7 +144,7 @@ export class MapView {
 
   drawControlledLanes() {
     const context = this.context;
-    context.strokeStyle = '#a8e76a';
+    context.strokeStyle = '#5cff7a';
     context.lineWidth = Math.max(4, Math.min(12, this.view.scale * 4));
     const device = this.options.focusedDevice?.();
     const lanes = this.options.highlightedLanes?.(device) || controlledLanes(device, this.network.lanes);
@@ -162,13 +162,13 @@ export class MapView {
       this.markersDirty = false;
     }
     for (const marker of this.markers) {
-      context.strokeStyle = '#c9c2b878';
+      context.strokeStyle = '#ff7a1288';
       context.lineWidth = 1;
       context.beginPath();
       context.moveTo(marker.anchor.x, marker.anchor.y);
       context.lineTo(marker.x, marker.y);
       context.stroke();
-      context.fillStyle = '#e8dfd1';
+      context.fillStyle = '#ffb54d';
       context.beginPath();
       context.arc(marker.anchor.x, marker.anchor.y, 2, 0, Math.PI * 2);
       context.fill();
@@ -176,8 +176,8 @@ export class MapView {
     const states = this.options.deviceStates?.() || [];
     for (const marker of this.markers) {
       const code = deviceState(marker.point, states);
-      context.fillStyle = '#111214';
-      context.strokeStyle = this.options.markerActive?.(marker.point) ? '#a8e76a' : '#e8dfd1';
+      context.fillStyle = '#050201';
+      context.strokeStyle = this.options.markerActive?.(marker.point) ? '#5cff7a' : '#ff7a12';
       context.lineWidth = 1.5;
       context.beginPath();
       context.roundRect(marker.x - 7 * size, marker.y - 16 * size, 14 * size, 32 * size, 3 * size);
@@ -189,7 +189,7 @@ export class MapView {
         {color: '#44eb88', lit: code === 'g' || code === 'G' || code === 's'}
       ];
       for (let index = 0; index < lamps.length; index++) {
-        context.fillStyle = lamps[index].lit ? lamps[index].color : '#343638';
+        context.fillStyle = lamps[index].lit ? lamps[index].color : '#2a1408';
         context.beginPath();
         context.arc(marker.x, marker.y + (index - 1) * 9 * size, 3.5 * size, 0, Math.PI * 2);
         context.fill();
@@ -253,9 +253,9 @@ export function drawVehicle(context, position, car, size) {
   context.globalAlpha = car.opacity ?? 1;
   context.translate(position.x, position.y);
   context.rotate(car.angle * Math.PI / 180);
-  context.fillStyle = car.speed_mps < 0.1 ? '#efa957' : '#6ac9df';
+  context.fillStyle = car.speed_mps < 0.1 ? '#ff2f1f' : '#5cff7a';
   context.fillRect(-size * 0.3, -size * 0.5, size * 0.6, size);
-  context.fillStyle = '#e4edf7';
+  context.fillStyle = '#e9ffe0';
   context.fillRect(-size * 0.22, -size * 0.35, size * 0.44, Math.max(1, size * 0.13));
   context.restore();
 }

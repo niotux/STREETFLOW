@@ -1,0 +1,25 @@
+services:
+  simulator:
+    restart: unless-stopped
+  frontend:
+    restart: unless-stopped
+  logistics:
+    restart: unless-stopped
+  casper:
+    restart: unless-stopped
+  camera-demo:
+    profiles: [cameras]
+    image: python:3.12-slim
+    restart: unless-stopped
+    user: "65534:65534"
+    read_only: true
+    environment:
+      CASPER_DEMO_CAMERA_TOKEN: "${CASPER_DEMO_CAMERA_TOKEN:?Set the camera token in .env}"
+      PYTHONDONTWRITEBYTECODE: "1"
+    volumes:
+      - ./components/detector/camera:/camera:ro
+      - ./components/detector/examples/camera.json:/config/camera.json:ro
+    command: ["python", "/camera/worker.py", "--config", "/config/camera.json", "--casper", "http://casper:8080", "--demo"]
+    depends_on:
+      casper:
+        condition: service_healthy

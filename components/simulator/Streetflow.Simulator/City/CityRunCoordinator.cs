@@ -161,8 +161,11 @@ public sealed partial class CityRunCoordinator(ProjectCatalog catalog, Simulator
       await SaveAsync();
       engine = new SumoEngine();
       string version = await engine.StartCityAsync(project, configuration, storage.DirectoryFor(id), options, CancellationToken.None);
+      CompiledSignalPlan? signalPlan = CompiledSignalPlan.Compile(project, engine.SignalPrograms);
+      adaptiveSignals = signalPlan is null ? null : new AdaptiveSignalController(signalPlan, project);
       SignalState[] signals = await engine.GetSignalsAsync(CancellationToken.None);
       prioritySignalStates.Clear();
+      automaticSignals = false;
       foreach (SignalState signal in signals)
       {
         prioritySignalStates.Add(signal.Id, signal.State);
@@ -393,6 +396,11 @@ public sealed partial class CityRunCoordinator(ProjectCatalog catalog, Simulator
       }
 
       EngineSnapshot next = await engine.StepAsync(CancellationToken.None);
+      if (automaticSignals && adaptiveSignals is not null)
+      {
+        SignalState[] applied = await ApplyAdaptiveSignalsAsync(next.Vehicles, next.Time, configuration.StartTimeSeconds + next.Time, next.Signals);
+        next = next with { Signals = applied };
+      }
       liveVehicles = next.ExpectedVehicles;
       current = current with { GridlockRecoveries = current.GridlockRecoveries + next.Teleports.Length, InsertedVehicles = current.InsertedVehicles + next.Departed.Length, ArrivedVehicles = current.ArrivedVehicles + next.Arrived.Length };
       foreach (string departed in next.Departed)
