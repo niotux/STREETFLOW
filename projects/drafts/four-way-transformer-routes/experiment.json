@@ -1,0 +1,17 @@
+{
+  "format_version": 2,
+  "id": "four-way-transformer-routes",
+  "name": "Four Way - Transformer Routes",
+  "description": "Synthetic morning/evening directionality fixture with four entries, four exits, and dense probabilistic model weights.",
+  "network": {
+    "file": "network.net.xml",
+    "attribution": "Synthetic STREETFLOW four-way intersection; same geometry as the version 1 tiny-graph fixture."
+  },
+  "terminals_file": "terminals.json",
+  "journey_model_file": "journey-model.json",
+  "defaults": {
+    "start_time_seconds": 27000,
+    "step_seconds": 0.5
+  },
+  "traffic_lights_file": "traffic-lights.json"
+}

@@ -1,0 +1,119 @@
+{
+  "format_version": 3,
+  "architecture": "local_turn_gru_v1",
+  "model_file": "route-model.onnx",
+  "network_sha256": "5e1755272f3f2986511fb14c64e88acd93c1f5acba90c34e64fe18af8dfe7611",
+  "dataset_sha256": "95d265ba1dbab113a034d97a50653230428bcb54f056e2b17852e7dfb431795d",
+  "vehicle_type": {
+    "id": "car",
+    "vehicle_class": "passenger",
+    "weight": 1
+  },
+  "repeat_daily": true,
+  "hidden_size": 64,
+  "max_turns": 3,
+  "maximum_route_movements": 64,
+  "roads": [
+    {
+      "edge_id": "east_in",
+      "next_edge_ids": [
+        "north_out",
+        "south_out",
+        "west_out"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "east_out",
+      "next_edge_ids": [],
+      "can_exit": true
+    },
+    {
+      "edge_id": "north_in",
+      "next_edge_ids": [
+        "east_out",
+        "south_out",
+        "west_out"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "north_out",
+      "next_edge_ids": [],
+      "can_exit": true
+    },
+    {
+      "edge_id": "south_in",
+      "next_edge_ids": [
+        "east_out",
+        "north_out",
+        "west_out"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "south_out",
+      "next_edge_ids": [],
+      "can_exit": true
+    },
+    {
+      "edge_id": "west_in",
+      "next_edge_ids": [
+        "east_out",
+        "north_out",
+        "south_out"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "west_out",
+      "next_edge_ids": [],
+      "can_exit": true
+    }
+  ],
+  "periods": [
+    {
+      "start_seconds": 0,
+      "end_seconds": 25200,
+      "arrivals": []
+    },
+    {
+      "start_seconds": 25200,
+      "end_seconds": 32400,
+      "arrivals": [
+        {
+          "start_edge": "north_in",
+          "vehicles_per_hour": 40
+        },
+        {
+          "start_edge": "south_in",
+          "vehicles_per_hour": 400
+        }
+      ]
+    },
+    {
+      "start_seconds": 32400,
+      "end_seconds": 57600,
+      "arrivals": []
+    },
+    {
+      "start_seconds": 57600,
+      "end_seconds": 68400,
+      "arrivals": [
+        {
+          "start_edge": "north_in",
+          "vehicles_per_hour": 400
+        },
+        {
+          "start_edge": "south_in",
+          "vehicles_per_hour": 40
+        }
+      ]
+    },
+    {
+      "start_seconds": 68400,
+      "end_seconds": 86400,
+      "arrivals": []
+    }
+  ]
+}

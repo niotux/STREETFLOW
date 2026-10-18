@@ -1,0 +1,345 @@
+[
+  {
+    "id": "entry:303755190#2_0",
+    "lane_id": "303755190#2_0",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Bulevardul Dimitrie Cantemir · lane 1"
+  },
+  {
+    "id": "entry:303755190#2_1",
+    "lane_id": "303755190#2_1",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Bulevardul Dimitrie Cantemir · lane 2"
+  },
+  {
+    "id": "entry:303755190#2_2",
+    "lane_id": "303755190#2_2",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Bulevardul Dimitrie Cantemir · lane 3"
+  },
+  {
+    "id": "entry:1390424230_0",
+    "lane_id": "1390424230_0",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Bulevardul Dimitrie Cantemir · lane 1"
+  },
+  {
+    "id": "entry:1390424230_1",
+    "lane_id": "1390424230_1",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Bulevardul Dimitrie Cantemir · lane 2"
+  },
+  {
+    "id": "entry:1390424230_2",
+    "lane_id": "1390424230_2",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Bulevardul Dimitrie Cantemir · lane 3"
+  },
+  {
+    "id": "exit:303755190#3_0",
+    "lane_id": "303755190#3_0",
+    "role": "exit",
+    "position_m": 46.45,
+    "label": "Bulevardul Dimitrie Cantemir · lane 1"
+  },
+  {
+    "id": "exit:303755190#3_1",
+    "lane_id": "303755190#3_1",
+    "role": "exit",
+    "position_m": 46.45,
+    "label": "Bulevardul Dimitrie Cantemir · lane 2"
+  },
+  {
+    "id": "exit:303755190#3_2",
+    "lane_id": "303755190#3_2",
+    "role": "exit",
+    "position_m": 46.45,
+    "label": "Bulevardul Dimitrie Cantemir · lane 3"
+  },
+  {
+    "id": "entry:-25368524#1_0",
+    "lane_id": "-25368524#1_0",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Strada Sfântul Lazăr · lane 1"
+  },
+  {
+    "id": "entry:-25368524#1_1",
+    "lane_id": "-25368524#1_1",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Strada Sfântul Lazăr · lane 2"
+  },
+  {
+    "id": "exit:25368524#0_0",
+    "lane_id": "25368524#0_0",
+    "role": "exit",
+    "position_m": 71.82,
+    "label": "Strada Sfântul Lazăr · lane 1"
+  },
+  {
+    "id": "exit:25368524#0_1",
+    "lane_id": "25368524#0_1",
+    "role": "exit",
+    "position_m": 71.82,
+    "label": "Strada Sfântul Lazăr · lane 2"
+  },
+  {
+    "id": "exit:256585921_0",
+    "lane_id": "256585921_0",
+    "role": "exit",
+    "position_m": 119.21,
+    "label": "Șoseaua Nicolina · lane 1"
+  },
+  {
+    "id": "exit:256585921_1",
+    "lane_id": "256585921_1",
+    "role": "exit",
+    "position_m": 119.21,
+    "label": "Șoseaua Nicolina · lane 2"
+  },
+  {
+    "id": "entry:230365388#1_0",
+    "lane_id": "230365388#1_0",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Local road · lane 1"
+  },
+  {
+    "id": "entry:-22957475#0_0",
+    "lane_id": "-22957475#0_0",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Strada Traian · lane 1"
+  },
+  {
+    "id": "exit:22957475#0_0",
+    "lane_id": "22957475#0_0",
+    "role": "exit",
+    "position_m": 29.84,
+    "label": "Strada Traian · lane 1"
+  },
+  {
+    "id": "exit:58638001#0_0",
+    "lane_id": "58638001#0_0",
+    "role": "exit",
+    "position_m": 147.64,
+    "label": "Aleea Decebal · lane 1"
+  },
+  {
+    "id": "exit:852500192#1_0",
+    "lane_id": "852500192#1_0",
+    "role": "exit",
+    "position_m": 76.97,
+    "label": "Aleea Decebal · lane 1"
+  },
+  {
+    "id": "entry:29201170#5_0",
+    "lane_id": "29201170#5_0",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Bulevardul Profesor Dimitrie Mangeron · lane 1"
+  },
+  {
+    "id": "entry:29201170#5_1",
+    "lane_id": "29201170#5_1",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Bulevardul Profesor Dimitrie Mangeron · lane 2"
+  },
+  {
+    "id": "entry:305429590_0",
+    "lane_id": "305429590_0",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Aleea Decebal · lane 1"
+  },
+  {
+    "id": "entry:290635797#3_0",
+    "lane_id": "290635797#3_0",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Bulevardul Socola · lane 1"
+  },
+  {
+    "id": "entry:290635797#3_1",
+    "lane_id": "290635797#3_1",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Bulevardul Socola · lane 2"
+  },
+  {
+    "id": "exit:-325176765#1_0",
+    "lane_id": "-325176765#1_0",
+    "role": "exit",
+    "position_m": 447.28,
+    "label": "Bulevardul Socola · lane 1"
+  },
+  {
+    "id": "exit:-325176765#1_1",
+    "lane_id": "-325176765#1_1",
+    "role": "exit",
+    "position_m": 447.28,
+    "label": "Bulevardul Socola · lane 2"
+  },
+  {
+    "id": "exit:722715186#4_0",
+    "lane_id": "722715186#4_0",
+    "role": "exit",
+    "position_m": 81.51,
+    "label": "Șoseaua Națională · lane 1"
+  },
+  {
+    "id": "exit:722715186#4_1",
+    "lane_id": "722715186#4_1",
+    "role": "exit",
+    "position_m": 81.51,
+    "label": "Șoseaua Națională · lane 2"
+  },
+  {
+    "id": "exit:29201176#5_0",
+    "lane_id": "29201176#5_0",
+    "role": "exit",
+    "position_m": 63.81,
+    "label": "Bulevardul Regele Ferdinand I al României · lane 1"
+  },
+  {
+    "id": "exit:29201176#5_1",
+    "lane_id": "29201176#5_1",
+    "role": "exit",
+    "position_m": 63.81,
+    "label": "Bulevardul Regele Ferdinand I al României · lane 2"
+  },
+  {
+    "id": "exit:29201176#5_2",
+    "lane_id": "29201176#5_2",
+    "role": "exit",
+    "position_m": 63.81,
+    "label": "Bulevardul Regele Ferdinand I al României · lane 3"
+  },
+  {
+    "id": "exit:1068022904#0_0",
+    "lane_id": "1068022904#0_0",
+    "role": "exit",
+    "position_m": 47.7,
+    "label": "Aleea Rozelor · lane 1"
+  },
+  {
+    "id": "exit:1068022904#0_1",
+    "lane_id": "1068022904#0_1",
+    "role": "exit",
+    "position_m": 47.7,
+    "label": "Aleea Rozelor · lane 2"
+  },
+  {
+    "id": "entry:265855329_0",
+    "lane_id": "265855329_0",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Șoseaua Nicolina · lane 1"
+  },
+  {
+    "id": "entry:265855329_1",
+    "lane_id": "265855329_1",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Șoseaua Nicolina · lane 2"
+  },
+  {
+    "id": "exit:22771428#2_0",
+    "lane_id": "22771428#2_0",
+    "role": "exit",
+    "position_m": 191.9,
+    "label": "Bulevardul Regele Mihai I al României · lane 1"
+  },
+  {
+    "id": "exit:22771428#2_1",
+    "lane_id": "22771428#2_1",
+    "role": "exit",
+    "position_m": 191.9,
+    "label": "Bulevardul Regele Mihai I al României · lane 2"
+  },
+  {
+    "id": "exit:1068167300#4_0",
+    "lane_id": "1068167300#4_0",
+    "role": "exit",
+    "position_m": 108.39,
+    "label": "Bulevardul Țuțora · lane 1"
+  },
+  {
+    "id": "exit:22816050#0_0",
+    "lane_id": "22816050#0_0",
+    "role": "exit",
+    "position_m": 80.79,
+    "label": "Local road · lane 1"
+  },
+  {
+    "id": "entry:58636262#1_0",
+    "lane_id": "58636262#1_0",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Aleea Rozelor · lane 1"
+  },
+  {
+    "id": "exit:-58636262#1_0",
+    "lane_id": "-58636262#1_0",
+    "role": "exit",
+    "position_m": 71.48,
+    "label": "Aleea Rozelor · lane 1"
+  },
+  {
+    "id": "entry:23378822#1_0",
+    "lane_id": "23378822#1_0",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Local road · lane 1"
+  },
+  {
+    "id": "exit:-23378822#1_0",
+    "lane_id": "-23378822#1_0",
+    "role": "exit",
+    "position_m": 162.8,
+    "label": "Local road · lane 1"
+  },
+  {
+    "id": "entry:803073473#1_0",
+    "lane_id": "803073473#1_0",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Bulevardul Țuțora · lane 1"
+  },
+  {
+    "id": "entry:-1068015153#1_0",
+    "lane_id": "-1068015153#1_0",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Strada Palat · lane 1"
+  },
+  {
+    "id": "entry:-1068015153#1_1",
+    "lane_id": "-1068015153#1_1",
+    "role": "entry",
+    "position_m": 6.0,
+    "label": "Strada Palat · lane 2"
+  },
+  {
+    "id": "exit:1300222779#0_0",
+    "lane_id": "1300222779#0_0",
+    "role": "exit",
+    "position_m": 80.4,
+    "label": "Strada Palat · lane 1"
+  },
+  {
+    "id": "exit:1300222779#0_1",
+    "lane_id": "1300222779#0_1",
+    "role": "exit",
+    "position_m": 80.4,
+    "label": "Strada Palat · lane 2"
+  }
+]

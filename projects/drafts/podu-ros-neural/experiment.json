@@ -1,0 +1,20 @@
+{
+  "format_version": 3,
+  "id": "podu-ros-neural",
+  "name": "Podu Ros - full-day neural routes",
+  "description": "Authored full-day neural routes with 15-minute demand intervals and Gaussian morning/evening rush hours.",
+  "network": {
+    "file": "network.net.xml",
+    "attribution": "\u00a9 OpenStreetMap contributors; https://www.openstreetmap.org/copyright. Converted with SUMO 1.28.0; generated signal timing is estimated."
+  },
+  "detectors_file": "detectors.json",
+  "additional_files": [
+    "pedestrian-flows.add.xml"
+  ],
+  "defaults": {
+    "start_time_seconds": 27000,
+    "step_seconds": 0.5
+  },
+  "neural_model_file": "neural-model.json",
+  "traffic_lights_file": "traffic-lights.json"
+}

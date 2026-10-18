@@ -1,0 +1,2920 @@
+{
+  "format_version": 3,
+  "architecture": "local_turn_gru_v1",
+  "model_file": "route-model.onnx",
+  "network_sha256": "98e5fded7160e53332f7851966ee1c1aca0627e6dcf730e05287eabc275ef437",
+  "dataset_sha256": "bb9fb2dc7d82ff5c103a98aea6d65c5bd00a6a6a9c87706fb57a6893b0028cd4",
+  "vehicle_type": {
+    "id": "car",
+    "vehicle_class": "passenger",
+    "weight": 1
+  },
+  "repeat_daily": true,
+  "hidden_size": 64,
+  "max_turns": 4,
+  "maximum_route_movements": 64,
+  "roads": [
+    {
+      "edge_id": "-1068015153#1",
+      "next_edge_ids": [
+        "1068112704#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "-1100838206",
+      "next_edge_ids": [
+        "1100838206",
+        "915091841#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "-1222926118",
+      "next_edge_ids": [
+        "1222926118"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "-1225444914#1",
+      "next_edge_ids": [
+        "1225444914#0",
+        "40128197#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "-218911690#1",
+      "next_edge_ids": [
+        "218911690#0",
+        "852500192#1"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "-22957475#0",
+      "next_edge_ids": [
+        "22957475#0",
+        "29201176#5"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "-23378822#1",
+      "next_edge_ids": [
+        "23378822#1"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "-23412834",
+      "next_edge_ids": [
+        "-915091841#1",
+        "23412834",
+        "305429593#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "-25368524#1",
+      "next_edge_ids": [
+        "1300222779#0",
+        "25368524#0",
+        "305260417#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "-305429593#1",
+      "next_edge_ids": [
+        "-915091841#1",
+        "23412834",
+        "305429593#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "-325176765#1",
+      "next_edge_ids": [
+        "290635797#3"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "-58636262#1",
+      "next_edge_ids": [
+        "58636262#1"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "-58636262#3",
+      "next_edge_ids": [
+        "-23378822#1",
+        "-58636262#1",
+        "58636262#2"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "-58639945#1",
+      "next_edge_ids": [
+        "58639945#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "-915091841#1",
+      "next_edge_ids": [
+        "1100838206",
+        "915091841#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "1068019512#0",
+      "next_edge_ids": [
+        "-1225444914#1",
+        "-58636262#3",
+        "1134276130#0",
+        "303757861#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "1068022904#0",
+      "next_edge_ids": [],
+      "can_exit": false
+    },
+    {
+      "edge_id": "1068112704#0",
+      "next_edge_ids": [
+        "22897481"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "1068167300#4",
+      "next_edge_ids": [],
+      "can_exit": false
+    },
+    {
+      "edge_id": "1072468318",
+      "next_edge_ids": [
+        "1076971041"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "1076971040",
+      "next_edge_ids": [
+        "324962581#0",
+        "663624563"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "1076971041",
+      "next_edge_ids": [
+        "324972230"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "1078056343",
+      "next_edge_ids": [
+        "22776494",
+        "305274207"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "1100838206",
+      "next_edge_ids": [
+        "-1100838206",
+        "23378819#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "1134276130#0",
+      "next_edge_ids": [
+        "305271346"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "1222926118",
+      "next_edge_ids": [
+        "-1222926118",
+        "205658400#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "1223164064#0",
+      "next_edge_ids": [
+        "1100838206",
+        "915091841#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "1225444914#0",
+      "next_edge_ids": [
+        "-1225444914#1",
+        "-58636262#3",
+        "1134276130#0",
+        "303757861#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "1300222779#0",
+      "next_edge_ids": [
+        "-1068015153#1"
+      ],
+      "can_exit": true
+    },
+    {
+      "edge_id": "1300883979",
+      "next_edge_ids": [
+        "29201176#1"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "1390424230",
+      "next_edge_ids": [
+        "165518602#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "165518602#0",
+      "next_edge_ids": [
+        "165518602#1",
+        "303755190#3"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "165518602#1",
+      "next_edge_ids": [
+        "1076971041"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "173170790",
+      "next_edge_ids": [
+        "255682735",
+        "46719364#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "205658400#0",
+      "next_edge_ids": [
+        "22816050#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "218911690#0",
+      "next_edge_ids": [
+        "-218911690#1"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "22771428#0",
+      "next_edge_ids": [
+        "22771428#2"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "22771428#2",
+      "next_edge_ids": [],
+      "can_exit": false
+    },
+    {
+      "edge_id": "22776494",
+      "next_edge_ids": [
+        "324784649#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "22816050#0",
+      "next_edge_ids": [],
+      "can_exit": false
+    },
+    {
+      "edge_id": "22895248",
+      "next_edge_ids": [
+        "1300222779#0",
+        "25368524#0",
+        "305260417#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "22897481",
+      "next_edge_ids": [
+        "277230359#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "22916759#3",
+      "next_edge_ids": [
+        "1222926118"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "22957475#0",
+      "next_edge_ids": [
+        "-22957475#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "230365388#1",
+      "next_edge_ids": [
+        "22816050#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "23378815#0",
+      "next_edge_ids": [
+        "-58639945#1",
+        "23378815#2"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "23378815#2",
+      "next_edge_ids": [
+        "1223164064#0",
+        "58638001#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "23378819#0",
+      "next_edge_ids": [
+        "722715186#4"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "23378822#1",
+      "next_edge_ids": [
+        "-23378822#1",
+        "-58636262#1",
+        "58636262#2"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "23388862#0",
+      "next_edge_ids": [
+        "1068022904#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "23412834",
+      "next_edge_ids": [
+        "-23412834"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "25367556",
+      "next_edge_ids": [
+        "30959184#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "25368524#0",
+      "next_edge_ids": [
+        "-25368524#1"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "255682735",
+      "next_edge_ids": [
+        "1068167300#4",
+        "22916759#3"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "256447681",
+      "next_edge_ids": [
+        "22771428#2"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "256585921",
+      "next_edge_ids": [],
+      "can_exit": true
+    },
+    {
+      "edge_id": "265855329",
+      "next_edge_ids": [
+        "1068019512#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "277230359#0",
+      "next_edge_ids": [
+        "1300883979",
+        "277230359#1"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "277230359#1",
+      "next_edge_ids": [
+        "1072468318",
+        "29201176#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "290635797#3",
+      "next_edge_ids": [
+        "-325176765#1",
+        "1078056343"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "29201170#5",
+      "next_edge_ids": [
+        "305256944#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "29201176#0",
+      "next_edge_ids": [
+        "29201176#1"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "29201176#1",
+      "next_edge_ids": [
+        "22957475#0",
+        "29201176#5"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "29201176#5",
+      "next_edge_ids": [],
+      "can_exit": false
+    },
+    {
+      "edge_id": "29201250",
+      "next_edge_ids": [
+        "22895248",
+        "663624561"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "29377424",
+      "next_edge_ids": [
+        "29201250"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "303755190#2",
+      "next_edge_ids": [
+        "165518602#1",
+        "303755190#3"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "303755190#3",
+      "next_edge_ids": [],
+      "can_exit": false
+    },
+    {
+      "edge_id": "303757861#0",
+      "next_edge_ids": [
+        "256585921"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "305256944#0",
+      "next_edge_ids": [
+        "29201250",
+        "52503877"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "305260417#0",
+      "next_edge_ids": [
+        "277230359#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "305271346",
+      "next_edge_ids": [
+        "305271349",
+        "325212457#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "305271347",
+      "next_edge_ids": [
+        "-1225444914#1",
+        "-58636262#3",
+        "1134276130#0",
+        "303757861#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "305271348",
+      "next_edge_ids": [
+        "305271346"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "305271349",
+      "next_edge_ids": [
+        "-325176765#1"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "305272857#0",
+      "next_edge_ids": [
+        "1076971040",
+        "305534238"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "305274207",
+      "next_edge_ids": [
+        "255682735",
+        "46719364#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "305429590",
+      "next_edge_ids": [
+        "23378815#0",
+        "852500192#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "305429593#0",
+      "next_edge_ids": [
+        "-305429593#1",
+        "722715186#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "305534238",
+      "next_edge_ids": [
+        "29377424"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "30959184#0",
+      "next_edge_ids": [
+        "-305429593#1",
+        "722715186#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "324784649#0",
+      "next_edge_ids": [
+        "173170790",
+        "324784649#1"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "324784649#1",
+      "next_edge_ids": [
+        "1076971040",
+        "305534238"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "324784651",
+      "next_edge_ids": [
+        "305271347",
+        "305271348"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "324784653",
+      "next_edge_ids": [
+        "324784651"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "324962581#0",
+      "next_edge_ids": [
+        "324972230"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "324972230",
+      "next_edge_ids": [
+        "25367556",
+        "324784653"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "325212457#0",
+      "next_edge_ids": [
+        "324784649#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "40128197#0",
+      "next_edge_ids": [
+        "23388862#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "46719364#0",
+      "next_edge_ids": [
+        "22771428#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "52503877",
+      "next_edge_ids": [
+        "682623766#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "58636262#1",
+      "next_edge_ids": [
+        "-23378822#1",
+        "-58636262#1",
+        "58636262#2"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "58636262#2",
+      "next_edge_ids": [
+        "-1225444914#1",
+        "-58636262#3",
+        "1134276130#0",
+        "303757861#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "58638001#0",
+      "next_edge_ids": [],
+      "can_exit": false
+    },
+    {
+      "edge_id": "58639945#0",
+      "next_edge_ids": [
+        "-58639945#1",
+        "23378815#2"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "663624561",
+      "next_edge_ids": [
+        "1300222779#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "663624563",
+      "next_edge_ids": [
+        "682623766#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "682623766#0",
+      "next_edge_ids": [
+        "1072468318",
+        "29201176#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "722715186#0",
+      "next_edge_ids": [
+        "722715186#4"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "722715186#4",
+      "next_edge_ids": [],
+      "can_exit": false
+    },
+    {
+      "edge_id": "803073473#1",
+      "next_edge_ids": [
+        "1068167300#4",
+        "22916759#3",
+        "803073473#2"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "803073473#2",
+      "next_edge_ids": [
+        "256447681",
+        "803073473#6"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "803073473#6",
+      "next_edge_ids": [
+        "305272857#0"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "852500192#0",
+      "next_edge_ids": [
+        "218911690#0",
+        "852500192#1"
+      ],
+      "can_exit": false
+    },
+    {
+      "edge_id": "852500192#1",
+      "next_edge_ids": [],
+      "can_exit": false
+    },
+    {
+      "edge_id": "915091841#0",
+      "next_edge_ids": [
+        "-915091841#1",
+        "23412834",
+        "305429593#0"
+      ],
+      "can_exit": false
+    }
+  ],
+  "periods": [
+    {
+      "start_seconds": 0,
+      "end_seconds": 900,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 1.651184
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 15.128936
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 3.025787
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 2.017191
+        }
+      ]
+    },
+    {
+      "start_seconds": 900,
+      "end_seconds": 1800,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 1.563118
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 14.939518
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 2.987904
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 1.991936
+        }
+      ]
+    },
+    {
+      "start_seconds": 1800,
+      "end_seconds": 2700,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 1.515522
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 14.818744
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 2.963749
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 1.975833
+        }
+      ]
+    },
+    {
+      "start_seconds": 2700,
+      "end_seconds": 3600,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 1.491776
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 14.758543
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 2.951709
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 1.967806
+        }
+      ]
+    },
+    {
+      "start_seconds": 3600,
+      "end_seconds": 4500,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 1.482783
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 14.754553
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 2.950911
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 1.967274
+        }
+      ]
+    },
+    {
+      "start_seconds": 4500,
+      "end_seconds": 5400,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 1.483752
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 14.804717
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 2.960943
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 1.973962
+        }
+      ]
+    },
+    {
+      "start_seconds": 5400,
+      "end_seconds": 6300,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 1.492281
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 14.908523
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 2.981705
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 1.987803
+        }
+      ]
+    },
+    {
+      "start_seconds": 6300,
+      "end_seconds": 7200,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 1.507285
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 15.066799
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 3.01336
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 2.008907
+        }
+      ]
+    },
+    {
+      "start_seconds": 7200,
+      "end_seconds": 8100,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 1.528458
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 15.282084
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 3.056417
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 2.037611
+        }
+      ]
+    },
+    {
+      "start_seconds": 8100,
+      "end_seconds": 9000,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 1.556088
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 15.559879
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 3.111976
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 2.074651
+        }
+      ]
+    },
+    {
+      "start_seconds": 9000,
+      "end_seconds": 9900,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 1.591182
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 15.911432
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 3.182286
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 2.121524
+        }
+      ]
+    },
+    {
+      "start_seconds": 9900,
+      "end_seconds": 10800,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 1.635933
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 16.359178
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 3.271836
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 2.181224
+        }
+      ]
+    },
+    {
+      "start_seconds": 10800,
+      "end_seconds": 11700,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 1.694668
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 16.946628
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 3.389326
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 2.25955
+        }
+      ]
+    },
+    {
+      "start_seconds": 11700,
+      "end_seconds": 12600,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 1.775512
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 17.755096
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 3.551019
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 2.367346
+        }
+      ]
+    },
+    {
+      "start_seconds": 12600,
+      "end_seconds": 13500,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 1.893003
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 18.930022
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 3.786004
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 2.524003
+        }
+      ]
+    },
+    {
+      "start_seconds": 13500,
+      "end_seconds": 14400,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 2.071906
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 20.719053
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 4.143811
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 2.76254
+        }
+      ]
+    },
+    {
+      "start_seconds": 14400,
+      "end_seconds": 15300,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 2.352191
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 23.521907
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 4.704381
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 3.136254
+        }
+      ]
+    },
+    {
+      "start_seconds": 15300,
+      "end_seconds": 16200,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 2.794741
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 27.947407
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 5.589481
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 3.726321
+        }
+      ]
+    },
+    {
+      "start_seconds": 16200,
+      "end_seconds": 17100,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 3.486589
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 34.865888
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 6.973178
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 4.648785
+        }
+      ]
+    },
+    {
+      "start_seconds": 17100,
+      "end_seconds": 18000,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 4.543622
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 45.436219
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 9.087244
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 6.058163
+        }
+      ]
+    },
+    {
+      "start_seconds": 18000,
+      "end_seconds": 18900,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 6.107878
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 61.078783
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 12.215757
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 8.143838
+        }
+      ]
+    },
+    {
+      "start_seconds": 18900,
+      "end_seconds": 19800,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 8.336326
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 83.363262
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 16.672652
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 11.115102
+        }
+      ]
+    },
+    {
+      "start_seconds": 19800,
+      "end_seconds": 20700,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 11.378832
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 113.788325
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 22.757665
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 15.171777
+        }
+      ]
+    },
+    {
+      "start_seconds": 20700,
+      "end_seconds": 21600,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 15.345296
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 153.452963
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 30.690593
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 20.460395
+        }
+      ]
+    },
+    {
+      "start_seconds": 21600,
+      "end_seconds": 22500,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 20.265538
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 202.655377
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 40.531075
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 27.020717
+        }
+      ]
+    },
+    {
+      "start_seconds": 22500,
+      "end_seconds": 23400,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 26.049726
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 260.497258
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 52.099452
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 34.732968
+        }
+      ]
+    },
+    {
+      "start_seconds": 23400,
+      "end_seconds": 24300,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 32.460443
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 324.604433
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 64.920887
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 43.280591
+        }
+      ]
+    },
+    {
+      "start_seconds": 24300,
+      "end_seconds": 25200,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 39.108173
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 391.081728
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 78.216346
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 52.14423
+        }
+      ]
+    },
+    {
+      "start_seconds": 25200,
+      "end_seconds": 26100,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 45.478764
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 454.787641
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 90.957528
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 60.638352
+        }
+      ]
+    },
+    {
+      "start_seconds": 26100,
+      "end_seconds": 27000,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 50.994237
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 509.942374
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 101.988475
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 67.992316
+        }
+      ]
+    },
+    {
+      "start_seconds": 27000,
+      "end_seconds": 27900,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 55.098722
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 550.987225
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 110.197445
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 73.464963
+        }
+      ]
+    },
+    {
+      "start_seconds": 27900,
+      "end_seconds": 28800,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 57.352469
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 573.524691
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 114.704938
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 76.469959
+        }
+      ]
+    },
+    {
+      "start_seconds": 28800,
+      "end_seconds": 29700,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 57.512069
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 575.12069
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 115.024138
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 76.682759
+        }
+      ]
+    },
+    {
+      "start_seconds": 29700,
+      "end_seconds": 30600,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 55.576646
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 555.766452
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 111.15329
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 74.102194
+        }
+      ]
+    },
+    {
+      "start_seconds": 30600,
+      "end_seconds": 31500,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 51.787861
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 517.878588
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 103.575718
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 69.050478
+        }
+      ]
+    },
+    {
+      "start_seconds": 31500,
+      "end_seconds": 32400,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 46.583737
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 465.837313
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 93.167463
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 62.111642
+        }
+      ]
+    },
+    {
+      "start_seconds": 32400,
+      "end_seconds": 33300,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 40.518449
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 405.18434
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 81.036868
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 54.024579
+        }
+      ]
+    },
+    {
+      "start_seconds": 33300,
+      "end_seconds": 34200,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 34.16833
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 341.682916
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 68.336583
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 45.557722
+        }
+      ]
+    },
+    {
+      "start_seconds": 34200,
+      "end_seconds": 35100,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 28.045953
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 280.458532
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 56.091706
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 37.394471
+        }
+      ]
+    },
+    {
+      "start_seconds": 35100,
+      "end_seconds": 36000,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 22.539352
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 225.391028
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 45.078206
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 30.052137
+        }
+      ]
+    },
+    {
+      "start_seconds": 36000,
+      "end_seconds": 36900,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 17.884609
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 178.84004
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 35.768008
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 23.845339
+        }
+      ]
+    },
+    {
+      "start_seconds": 36900,
+      "end_seconds": 37800,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 14.170456
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 141.690281
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 28.338056
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 18.892037
+        }
+      ]
+    },
+    {
+      "start_seconds": 37800,
+      "end_seconds": 38700,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 11.366387
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 113.631071
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 22.726214
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 15.150809
+        }
+      ]
+    },
+    {
+      "start_seconds": 38700,
+      "end_seconds": 39600,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 9.362557
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 93.552295
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 18.710459
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 12.473639
+        }
+      ]
+    },
+    {
+      "start_seconds": 39600,
+      "end_seconds": 40500,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 8.010509
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 79.945872
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 15.989174
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 10.65945
+        }
+      ]
+    },
+    {
+      "start_seconds": 40500,
+      "end_seconds": 41400,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 7.157148
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 71.235
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 14.247
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 9.498
+        }
+      ]
+    },
+    {
+      "start_seconds": 41400,
+      "end_seconds": 42300,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 6.668706
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 65.995401
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 13.19908
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 8.799387
+        }
+      ]
+    },
+    {
+      "start_seconds": 42300,
+      "end_seconds": 43200,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 6.445197
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 63.069057
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 12.613811
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 8.409208
+        }
+      ]
+    },
+    {
+      "start_seconds": 43200,
+      "end_seconds": 44100,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 6.428305
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 61.593632
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 12.318726
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 8.212484
+        }
+      ]
+    },
+    {
+      "start_seconds": 44100,
+      "end_seconds": 45000,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 6.606637
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 60.979073
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 12.195815
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 8.130543
+        }
+      ]
+    },
+    {
+      "start_seconds": 45000,
+      "end_seconds": 45900,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 7.022056
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 60.860489
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 12.172098
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 8.114732
+        }
+      ]
+    },
+    {
+      "start_seconds": 45900,
+      "end_seconds": 46800,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 7.779911
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 61.048337
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 12.209667
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 8.139778
+        }
+      ]
+    },
+    {
+      "start_seconds": 46800,
+      "end_seconds": 47700,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 9.064565
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 61.487875
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 12.297575
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 8.198383
+        }
+      ]
+    },
+    {
+      "start_seconds": 47700,
+      "end_seconds": 48600,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 11.15992
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 62.232091
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 12.446418
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 8.297612
+        }
+      ]
+    },
+    {
+      "start_seconds": 48600,
+      "end_seconds": 49500,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 14.4726
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 63.427062
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 12.685412
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 8.456942
+        }
+      ]
+    },
+    {
+      "start_seconds": 49500,
+      "end_seconds": 50400,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 19.553096
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 65.305527
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 13.061105
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 8.707404
+        }
+      ]
+    },
+    {
+      "start_seconds": 50400,
+      "end_seconds": 51300,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 27.107748
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 68.182794
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 13.636559
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 9.091039
+        }
+      ]
+    },
+    {
+      "start_seconds": 51300,
+      "end_seconds": 52200,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 37.992322
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 72.448496
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 14.489699
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 9.6598
+        }
+      ]
+    },
+    {
+      "start_seconds": 52200,
+      "end_seconds": 53100,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 53.177107
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 78.547902
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 15.70958
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 10.473054
+        }
+      ]
+    },
+    {
+      "start_seconds": 53100,
+      "end_seconds": 54000,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 73.674617
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 86.947597
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 17.389519
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 11.593013
+        }
+      ]
+    },
+    {
+      "start_seconds": 54000,
+      "end_seconds": 54900,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 100.425219
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 98.082763
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 19.616553
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 13.077702
+        }
+      ]
+    },
+    {
+      "start_seconds": 54900,
+      "end_seconds": 55800,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 134.143465
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 112.286926
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 22.457385
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 14.97159
+        }
+      ]
+    },
+    {
+      "start_seconds": 55800,
+      "end_seconds": 56700,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 175.138109
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 129.709903
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 25.941981
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 17.294654
+        }
+      ]
+    },
+    {
+      "start_seconds": 56700,
+      "end_seconds": 57600,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 223.129955
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 150.234823
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 30.046965
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 20.03131
+        }
+      ]
+    },
+    {
+      "start_seconds": 57600,
+      "end_seconds": 58500,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 277.101054
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 173.409428
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 34.681886
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 23.121257
+        }
+      ]
+    },
+    {
+      "start_seconds": 58500,
+      "end_seconds": 59400,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 335.213105
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 198.408832
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 39.681766
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 26.454511
+        }
+      ]
+    },
+    {
+      "start_seconds": 59400,
+      "end_seconds": 60300,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 394.829278
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 224.045303
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 44.809061
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 29.872707
+        }
+      ]
+    },
+    {
+      "start_seconds": 60300,
+      "end_seconds": 61200,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 452.660798
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 248.834756
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 49.766951
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 33.177967
+        }
+      ]
+    },
+    {
+      "start_seconds": 61200,
+      "end_seconds": 62100,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 505.038523
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 271.12007
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 54.224014
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 36.149343
+        }
+      ]
+    },
+    {
+      "start_seconds": 62100,
+      "end_seconds": 63000,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 548.284144
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 289.239695
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 57.847939
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 38.565293
+        }
+      ]
+    },
+    {
+      "start_seconds": 63000,
+      "end_seconds": 63900,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 579.131419
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 301.719007
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 60.343801
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 40.229201
+        }
+      ]
+    },
+    {
+      "start_seconds": 63900,
+      "end_seconds": 64800,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 595.13134
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 307.454383
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 61.490877
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 40.993918
+        }
+      ]
+    },
+    {
+      "start_seconds": 64800,
+      "end_seconds": 65700,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 594.97174
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 305.858385
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 61.171677
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 40.781118
+        }
+      ]
+    },
+    {
+      "start_seconds": 65700,
+      "end_seconds": 66600,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 578.653497
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 296.93978
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 59.387956
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 39.591971
+        }
+      ]
+    },
+    {
+      "start_seconds": 66600,
+      "end_seconds": 67500,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 547.490523
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 281.303481
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 56.260696
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 37.507131
+        }
+      ]
+    },
+    {
+      "start_seconds": 67500,
+      "end_seconds": 68400,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 503.933556
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 260.070401
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 52.01408
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 34.676053
+        }
+      ]
+    },
+    {
+      "start_seconds": 68400,
+      "end_seconds": 69300,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 451.250538
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 234.73215
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 46.94643
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 31.29762
+        }
+      ]
+    },
+    {
+      "start_seconds": 69300,
+      "end_seconds": 70200,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 393.121432
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 206.966838
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 41.393368
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 27.595578
+        }
+      ]
+    },
+    {
+      "start_seconds": 70200,
+      "end_seconds": 71100,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 333.216982
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 178.447605
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 35.689521
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 23.793014
+        }
+      ]
+    },
+    {
+      "start_seconds": 71100,
+      "end_seconds": 72000,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 274.827501
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 150.673895
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 30.134779
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 20.089853
+        }
+      ]
+    },
+    {
+      "start_seconds": 72000,
+      "end_seconds": 72900,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 220.591276
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 124.848033
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 24.969607
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 16.646404
+        }
+      ]
+    },
+    {
+      "start_seconds": 72900,
+      "end_seconds": 73800,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 172.347981
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 101.808622
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 20.361724
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 13.574483
+        }
+      ]
+    },
+    {
+      "start_seconds": 73800,
+      "end_seconds": 74700,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 131.116839
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 82.020663
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 16.404133
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 10.936088
+        }
+      ]
+    },
+    {
+      "start_seconds": 74700,
+      "end_seconds": 75600,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 97.178212
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 65.61269
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 13.122538
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 8.748359
+        }
+      ]
+    },
+    {
+      "start_seconds": 75600,
+      "end_seconds": 76500,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 70.224395
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 52.445372
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 10.489074
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 6.992716
+        }
+      ]
+    },
+    {
+      "start_seconds": 76500,
+      "end_seconds": 77400,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 49.541753
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 42.194363
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 8.438873
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 5.625915
+        }
+      ]
+    },
+    {
+      "start_seconds": 77400,
+      "end_seconds": 78300,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 34.190689
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 34.432173
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 6.886435
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 4.590956
+        }
+      ]
+    },
+    {
+      "start_seconds": 78300,
+      "end_seconds": 79200,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 23.159275
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 28.698067
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 5.739613
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 3.826409
+        }
+      ]
+    },
+    {
+      "start_seconds": 79200,
+      "end_seconds": 80100,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 15.477553
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 24.550088
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 4.910018
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 3.273345
+        }
+      ]
+    },
+    {
+      "start_seconds": 80100,
+      "end_seconds": 81000,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 10.289686
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 21.597928
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 4.319586
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 2.879724
+        }
+      ]
+    },
+    {
+      "start_seconds": 81000,
+      "end_seconds": 81900,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 6.888584
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 19.518724
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 3.903745
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 2.602497
+        }
+      ]
+    },
+    {
+      "start_seconds": 81900,
+      "end_seconds": 82800,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 4.721757
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 18.059794
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 3.611959
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 2.407973
+        }
+      ]
+    },
+    {
+      "start_seconds": 82800,
+      "end_seconds": 83700,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 3.378357
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 17.032802
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 3.40656
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 2.27104
+        }
+      ]
+    },
+    {
+      "start_seconds": 83700,
+      "end_seconds": 84600,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 2.566351
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 16.30344
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 3.260688
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 2.173792
+        }
+      ]
+    },
+    {
+      "start_seconds": 84600,
+      "end_seconds": 85500,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 2.086704
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 15.779749
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 3.15595
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 2.103967
+        }
+      ]
+    },
+    {
+      "start_seconds": 85500,
+      "end_seconds": 86400,
+      "arrivals": [
+        {
+          "start_edge": "-1068015153#1",
+          "vehicles_per_hour": 1.809052
+        },
+        {
+          "start_edge": "265855329",
+          "vehicles_per_hour": 15.401105
+        },
+        {
+          "start_edge": "290635797#3",
+          "vehicles_per_hour": 3.080221
+        },
+        {
+          "start_edge": "303755190#2",
+          "vehicles_per_hour": 2.053481
+        }
+      ]
+    }
+  ]
+}
