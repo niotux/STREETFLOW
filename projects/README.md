@@ -7,7 +7,7 @@ Balthasar lists every project in this folder. Each entry is either:
 
 Add, edit or remove projects here, then click **Refresh** in Balthasar's Loader. Folders are read in place; ZIP files are extracted into the simulator's data volume once per file version. Entries whose names start with `.` and other files (such as this guide) are ignored. Invalid entries appear in the list as unavailable, with the reason.
 
-Everything here except this guide is ignored by git. To start with the bundled examples:
+Project folders and ZIP files here can be tracked in git. To start with the bundled examples:
 
 ```sh
 cp -r experiments/drafts/* projects/
