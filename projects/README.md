@@ -7,10 +7,10 @@ Balthasar lists every project in this folder. Each entry is either:
 
 Add, edit or remove projects here, then click **Refresh** in Balthasar's Loader. Folders are read in place; ZIP files are extracted into the simulator's data volume once per file version. Entries whose names start with `.` and other files (such as this guide) are ignored. Invalid entries appear in the list as unavailable, with the reason.
 
-Everything here except this guide is ignored by git. To start with the bundled examples:
+The bundled examples are versioned under `projects/drafts/`. The simulator scans only the immediate children of its projects root. Point Compose at that folder to use the examples directly:
 
 ```sh
-cp -r experiments/drafts/* projects/
+STREETFLOW_PROJECTS_DIR=./projects/drafts docker compose up --build -d --wait
 ```
 
-Docker mounts this folder read-only at `/projects`. To use another folder on this machine, set `STREETFLOW_PROJECTS_DIR=/absolute/path` in the repository's `.env` file and run `docker compose up -d simulator`. This recreates only the simulator container (stopping any loaded simulation); no rebuild is needed.
+For your own projects, place each folder or ZIP in a separate directory and set `STREETFLOW_PROJECTS_DIR=/absolute/path` in `.env`. Docker mounts the selected folder read-only at `/projects`. Run `docker compose up -d simulator` after changing the path; this recreates the simulator container and stops any loaded simulation. The Docker Desktop camera demo copies the bundled examples to its project volume, so it works without host folder sharing.

@@ -14,6 +14,8 @@ Start Docker Desktop, then run this from the repository root:
 
 Open **http://localhost:8090/casper/**. The map shows the sample traffic light and its camera. Click either icon to see the camera picture and detected car counts. The 16-second clip repeats automatically. In that camera’s details, choose **Adjust this camera’s counting area** to drag a box over the road and press **Save changes**. Use **Back to device map** to return, or the Streetflow logo at the top left to leave Casper. You do not need to edit JSON, find a snapshot, name a revision, or enter a token.
 
+The launcher also copies the versioned projects from `projects/drafts/` into its Docker project volume. Open Balthasar to load `podu-ros-neural` or another example alongside the camera demo.
+
 The video is included at `assets/casper-demo/cars-night-960.mp4`. It is a resized copy of [Cars Passing by at Night](https://commons.wikimedia.org/wiki/File:Cars_Passing_by_at_Night.webm) by Maximilian Schönherr, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). The launcher downloads the official YOLOX Nano model on first use into ignored `.data/casper-demo/`, creates a private demo token, and copies inputs into Docker Desktop volumes. It uses the `desktop-linux` Docker context and does not require Docker Desktop to share this worktree for file mounts. Docker images and volumes are stored in Docker Desktop, not the default Docker context.
 
 To stop the demo:

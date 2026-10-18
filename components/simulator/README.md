@@ -9,17 +9,13 @@ The simulator supports version 1 **Edge Population**, version 2 **Transformer Ro
 Install Docker Engine with Compose, or Docker Desktop. From the repository root:
 
 ```sh
-docker compose up --build -d
+STREETFLOW_PROJECTS_DIR=./projects/drafts docker compose up --build -d --wait
 docker compose ps
 ```
 
 Open [localhost:8080](http://localhost:8080). The first start downloads/builds .NET and SUMO images; later starts reuse them. PostgreSQL is optional and is not started by the default Compose workflow. Allow a few GB for images and persistent data. Set `SIMULATOR_PORT` if port 8080 is occupied.
 
-Projects live in the repository's `projects/` folder, which Compose mounts read-only into the simulator. Each project folder, or project `.zip`, placed there appears in Loader after **Refresh list**. Copy the bundled examples to start:
-
-```sh
-cp -r experiments/drafts/* projects/
-```
+The versioned examples live in `projects/drafts/`; the command above mounts that folder read-only. Each project folder or `.zip` directly inside the selected folder appears in Loader after **Refresh list**. For your own projects, use a separate folder and set `STREETFLOW_PROJECTS_DIR` to that folder.
 
 - `tiny-graph-devices` — Edge Population with four configured physical devices.
 - `four-way-north-east-devices` — north-to-east Transformer Routes experiment with those same four devices.
@@ -125,14 +121,14 @@ Tests cover generation repeatability, weights, legal paths, midnight, controls, 
 
 ## Intersection terminals
 
-The [Podu Roș commute estimate](../../experiments/drafts/podu-ros-commute/README.md) is a separate prepared variant with morning traffic toward the city/Palas and evening traffic toward the southern approaches. Its direction, peak hours and strengths are estimates based on the user's observation. It combines a citywide daily shape with the existing evening camera proxies; it is not measured full-day directional density. Compare 08:00 and 17:00 with the same seed. Project folders reflect disk edits; saved runs keep their original input snapshots.
+The [Podu Roș commute estimate](../../projects/drafts/podu-ros-commute/README.md) is a separate prepared variant with morning traffic toward the city/Palas and evening traffic toward the southern approaches. Its direction, peak hours and strengths are estimates based on the user's observation. It combines a citywide daily shape with the existing evening camera proxies; it is not measured full-day directional density. Compare 08:00 and 17:00 with the same seed. Project folders reflect disk edits; saved runs keep their original input snapshots.
 
 The Podu Roș example includes `terminals.json`: 22 entrance and 27 exit lane points at the exterior approaches, displayed as entry circles and exit diamonds. Nearby lanes are grouped at map scale; click a numbered group to zoom or choose a terminal and click Show lane. Three interior cul-de-sacs and roundabout fragments have no terminal markers.
 
-The city map also draws live traffic lights per controlled lane-to-lane movement, using the controller ID and `linkIndex` from the SUMO network. Every visible controlled movement has a three-lamp traffic-light symbol, including when the run is stopped or its lights are off. Dark lamps mean off or no live state; hover to distinguish them. Crowded symbols are separated with lines to their modeled stop-line positions. The simulator map is read-only; [Melchior's separate page](../streetflow/README.md) provides manual controls through the external API. The [MAGI frontend](../frontend/README.md) serves this simulator UI under `/balthasar/`. See the [signal and gridlock audit](../../experiments/drafts/podu-ros/README.md#signal-and-gridlock-audit-2026-10-14) for the historical generated timings, saved-run evidence and calibration work required.
+The city map also draws live traffic lights per controlled lane-to-lane movement, using the controller ID and `linkIndex` from the SUMO network. Every visible controlled movement has a three-lamp traffic-light symbol, including when the run is stopped or its lights are off. Dark lamps mean off or no live state; hover to distinguish them. Crowded symbols are separated with lines to their modeled stop-line positions. The simulator map is read-only; [Melchior's separate page](../streetflow/README.md) provides manual controls through the external API. The [MAGI frontend](../frontend/README.md) serves this simulator UI under `/balthasar/`. See the [signal and gridlock audit](../../projects/drafts/podu-ros/README.md#signal-and-gridlock-audit-2026-10-14) for the historical generated timings, saved-run evidence and calibration work required.
 
 Its explicit `endpoint_selection: terminals` generates entrance-to-exit journeys, including lane/position constraints and continuous lane paths. The minimum trip distance is 40 m so short clipped boundary journeys can participate. Edge weights and the 1943.855422/hour camera-track proxy are unchanged. That rate is not calibrated capacity; prolonged runs can still expose congestion in inferred junction/signal geometry. The 2000-second automated flow check uses an explicitly reduced 600/hour test fixture; it does not claim the original rate is congestion-free.
 
 Refresh the list after editing a project's inputs, then load it again. Saved runs retain their original input snapshots; use a separate folder and project ID only when keeping several variants in the projects folder. Generator version `city-weights-v3-through` records the current through-routing behavior; prior-version runs remain inspectable but cannot be restarted as exact replays with this generator. Overload errors now identify blocked entries separately from departure backlog and preserve the last live positions for inspection.
 
-Generated city journeys use `city-weights-v3-through`, which excludes immediate SUMO U-turn connections from both edge and lane route searches. This prevents the Nicolina → Aleea Rozelor → U-turn → Nicolina shortcuts that blocked the main approach. Existing network links and the external traffic-light API are retained. Vehicle symbols now have a pale windshield marking their forward direction. See the [Nicolina correction](../../experiments/drafts/podu-ros-commute/README.md#nicolina-gridlock-correction-2026-10-14).
+Generated city journeys use `city-weights-v3-through`, which excludes immediate SUMO U-turn connections from both edge and lane route searches. This prevents the Nicolina → Aleea Rozelor → U-turn → Nicolina shortcuts that blocked the main approach. Existing network links and the external traffic-light API are retained. Vehicle symbols now have a pale windshield marking their forward direction. See the [Nicolina correction](../../projects/drafts/podu-ros-commute/README.md#nicolina-gridlock-correction-2026-10-14).

@@ -30,7 +30,7 @@ if [[ "${1:-start}" != start ]]; then
   exit 2
 fi
 
-for tool in docker curl openssl; do
+for tool in docker curl openssl tar; do
   if ! command -v "$tool" >/dev/null 2>&1; then
     echo "Install $tool before starting the sample demo." >&2
     exit 1
@@ -71,6 +71,9 @@ copy_to_volume() {
 }
 
 echo "Preparing the sample video and camera…"
+docker --context "$docker_context" volume create "${project}_demo-projects" >/dev/null
+tar -C projects/drafts -cf - . | docker --context "$docker_context" run --rm -i \
+  -v "${project}_demo-projects:/target" alpine:3.21 tar -xf - -C /target
 copy_to_volume components/detector/examples/configuration.json demo-config configuration.json
 copy_to_volume components/detector/examples/camera.json demo-config camera.json
 copy_to_volume assets/casper-demo/cars-night-960.mp4 demo-video source
