@@ -28,8 +28,8 @@ h1 { margin: 4px 0 0; font-size: 28px; font-weight: 600; letter-spacing: .08em; 
 .map-legend .pedestrian-toggle { display: flex; align-items: center; gap: 5px; margin: 0; pointer-events: auto; white-space: nowrap; cursor: pointer; font: inherit; color: inherit; letter-spacing: inherit; }
 .pedestrian-toggle input { width: 12px; height: 12px; margin: 0; accent-color: var(--accent); }
 .map-legend i { display: block; width: 7px; height: 7px; }
-.moving-dot { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
-.stopped-dot { background: var(--ui-alert); box-shadow: 0 0 6px var(--ui-alert); }
+.moving-dot { background: #fff2dc; box-shadow: 0 0 6px #fff2dc; }
+.stopped-dot { background: #ff2e22; box-shadow: 0 0 6px #ff2e22; }
 .entry-dot { background: var(--ui-signal); border-radius: 50%; }
 .exit-dot { background: var(--ui-magi); transform: rotate(45deg); }
 .zoom-controls { position: absolute; bottom: 16px; right: 24px; display: flex; gap: 3px; z-index: 1; }

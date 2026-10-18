@@ -1,5 +1,5 @@
 import {signalAppearance, deviceState, deviceDescription, controlledLanes, deviceMapStatus} from '/balthasar/signals.js?v=physical-devices-3';
-import {MapView, queuedVehicles} from '/balthasar/map-view.js?v=nerv-1';
+import {MapView, queuedVehicles, bindModeToggle} from '/balthasar/map-view.js?v=view-more-1';
 import {createWorkspace} from '/ui/windows.js?v=shared-ui-2';
 
 const $ = id => document.getElementById(id);
@@ -53,6 +53,7 @@ const mapView = new MapView(canvas, {
     if (marker) { $('signal-filter').value = ''; fillDevices(marker.point.id); draw(); }
   }
 });
+bindModeToggle(mapView, $('view-mode'));
 const draw = () => mapView.draw();
 
 async function api(path, method = 'GET', body) {

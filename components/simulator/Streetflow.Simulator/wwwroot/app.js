@@ -2,7 +2,7 @@ import {initializeWorkspace} from './workspace.js?v=shared-ui-2';
 import {vehicleSettingsXml} from './sumo-settings.js?v=workspace-1';
 import {VehicleMotion} from './vehicle-motion.js?v=motion-2';
 import {signalAppearance, deviceState, deviceDescription, deviceMapStatus} from './signals.js?v=physical-devices-3';
-import {MapView} from './map-view.js?v=nerv-1';
+import {MapView, bindModeToggle} from './map-view.js?v=view-more-1';
 const $ = id => document.getElementById(id);
 const workspace = initializeWorkspace();
 const canvas = $('map');
@@ -29,6 +29,7 @@ const mapView = new MapView(canvas, {
   onLeave: () => { $('terminal-tooltip').hidden = true; hoveredSignal = null; draw(); },
   onClick: event => clickMap(event)
 });
+bindModeToggle(mapView, $('view-mode'));
 const draw = now => mapView.draw(now);
 const fit = () => mapView.fit();
 function screen(x, y) { return mapView.screen(x, y); }

@@ -1,7 +1,13 @@
 import {layoutSignalMarkers, deviceState, controlledLanes} from './signals.js?v=physical-devices-3';
+import {colors, paintFor, braking, laneKind, laneWidth, roadMarkings, sidewalkWidth, crossingWidth, vehicleLength, vehicleWidth} from './road-style.js?v=view-more-1';
+import {loadThree, MapScene} from './map-3d.js?v=view-more-1';
+
+const modeKey = 'streetflow.map-mode';
 
 // One map renderer for Balthasar and Melchior: roads, controlled-lane highlight, vehicles and traffic lights.
-// Callers supply vehicles as {x, y, angle (degrees, SUMO heading), speed_mps, opacity?}.
+// Callers supply vehicles as {id?, x, y, angle (degrees, SUMO heading), speed_mps, opacity?}.
+// Mode '2d' draws everything on the canvas; '3d' renders roads and cars with three.js beneath it
+// and keeps the canvas as a projected overlay for signals, highlights and caller drawings.
 export class MapView {
   constructor(canvas, options = {}) {
     this.canvas = canvas;
@@ -18,6 +24,9 @@ export class MapView {
     this.pedestrianCache = null;
     this.markersDirty = true;
     this.drag = null;
+    this.mode = '2d';
+    this.scene = null;
+    this.markings = null;
     new ResizeObserver(() => this.resize()).observe(canvas);
     canvas.addEventListener('pointerdown', event => this.pointerDown(event));
     canvas.addEventListener('pointermove', event => this.pointerMove(event));
@@ -25,6 +34,26 @@ export class MapView {
     canvas.addEventListener('pointercancel', () => { this.drag = null; });
     canvas.addEventListener('pointerleave', event => this.options.onLeave?.(event));
     canvas.addEventListener('wheel', event => this.wheel(event), {passive: false});
+    canvas.addEventListener('contextmenu', event => { if (this.mode === '3d') event.preventDefault(); });
+  }
+
+  async setMode(mode) {
+    if (mode === '3d' && !this.scene) {
+      const THREE = await loadThree();
+      const glCanvas = document.createElement('canvas');
+      glCanvas.className = 'map-3d';
+      glCanvas.setAttribute('aria-hidden', 'true');
+      glCanvas.style.pointerEvents = 'none';
+      this.canvas.before(glCanvas);
+      this.scene = new MapScene(THREE, glCanvas);
+      this.scene.resize(this.width, this.height, window.devicePixelRatio || 1);
+      this.scene.setNetwork(this.network);
+      this.scene.network = this.network;
+    }
+    this.mode = mode;
+    if (this.scene) this.scene.canvas.style.display = mode === '3d' ? '' : 'none';
+    this.markersDirty = true;
+    this.draw();
   }
 
   // network: {lanes: [{id, shape, render_kind?}], devices: [{id, x, y, lane_ids}]}
@@ -36,6 +65,7 @@ export class MapView {
   }
 
   screen(x, y) {
+    if (this.mode === '3d') return this.scene.project(x, y);
     return {x: this.width / 2 + (x - this.view.x) * this.view.scale, y: this.height / 2 - (y - this.view.y) * this.view.scale};
   }
 
@@ -76,20 +106,29 @@ export class MapView {
   draw(now = performance.now()) {
     const context = this.context;
     context.clearRect(0, 0, this.width, this.height);
+    const cars = this.network ? this.options.vehicles?.(now) || [] : [];
+    if (this.mode === '3d') {
+      if (this.scene.network !== this.network) { this.scene.setNetwork(this.network); this.scene.network = this.network; }
+      this.scene.render(this.view, cars, !!this.options.showPedestrians?.());
+      this.markersDirty = true;
+    }
     if (!this.network) return;
-    this.drawRoads();
-    context.drawImage(this.roadCanvas, 0, 0, this.roadCanvas.width, this.roadCanvas.height, 0, 0, this.width, this.height);
-    if (this.options.showPedestrians?.()) {
-      this.drawPedestrians();
-      context.drawImage(this.pedestrianCanvas, 0, 0, this.pedestrianCanvas.width, this.pedestrianCanvas.height, 0, 0, this.width, this.height);
+    if (this.mode === '2d') {
+      this.drawRoads();
+      context.drawImage(this.roadCanvas, 0, 0, this.roadCanvas.width, this.roadCanvas.height, 0, 0, this.width, this.height);
+      if (this.options.showPedestrians?.()) {
+        this.drawPedestrians();
+        context.drawImage(this.pedestrianCanvas, 0, 0, this.pedestrianCanvas.width, this.pedestrianCanvas.height, 0, 0, this.width, this.height);
+      }
     }
     context.lineCap = 'round'; context.lineJoin = 'round';
     this.drawControlledLanes();
-    const size = Math.max(5, Math.min(15, 4.5 * this.view.scale));
-    for (const car of this.options.vehicles?.(now) || []) {
-      const position = this.screen(car.x, car.y);
-      if (position.x < -20 || position.y < -20 || position.x > this.width + 20 || position.y > this.height + 20) continue;
-      drawVehicle(context, position, car, size);
+    if (this.mode === '2d') {
+      cars.forEach((car, index) => {
+        const position = this.screen(car.x, car.y);
+        if (position.x < -40 || position.y < -40 || position.x > this.width + 40 || position.y > this.height + 40) return;
+        drawVehicle(context, position, car, this.view.scale, index);
+      });
     }
     this.options.afterVehicles?.(context);
     this.drawSignals();
@@ -106,16 +145,40 @@ export class MapView {
     const ratio = window.devicePixelRatio || 1;
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
     context.lineCap = 'round'; context.lineJoin = 'round';
-    for (const lane of network.lanes) {
-      const kind = laneKind(lane);
-      if (kind !== 'junction' && kind !== 'road') continue;
-      context.strokeStyle = kind === 'junction' ? '#5a2208' : '#b0520f';
-      context.lineWidth = Math.max(1, Math.min(9, 3.2 * view.scale));
-      this.tracePath(context, lane.shape);
-      context.stroke();
+    // Zoomed out, lanes are thinner than their markings: draw a plain network overview instead.
+    const detailed = defaultPixels(view.scale) >= 4;
+    for (const kind of ['junction', 'road']) {
+      for (const lane of network.lanes) {
+        if (laneKind(lane) !== kind) continue;
+        context.strokeStyle = detailed ? colors[kind === 'junction' ? 'junction' : 'asphalt'] : colors.overview;
+        context.lineWidth = Math.max(1, laneWidth(lane) * view.scale);
+        this.tracePath(context, lane.shape);
+        context.stroke();
+      }
     }
+    if (detailed) this.drawMarkings(context);
     this.roadCache = {network, x: view.x, y: view.y, scale: view.scale};
     this.markersDirty = true;
+  }
+
+  drawMarkings(context) {
+    if (this.markings?.network !== this.network) this.markings = {network: this.network, ...roadMarkings(this.network.lanes)};
+    const scale = this.view.scale;
+    const stroke = (lines, color, width, alpha, dash = []) => {
+      context.strokeStyle = color;
+      context.globalAlpha = alpha;
+      context.lineWidth = Math.max(1, width * scale);
+      context.setLineDash(dash.map(length => length * scale));
+      for (const line of lines) { this.tracePath(context, line); context.stroke(); }
+    };
+    context.lineCap = 'butt';
+    stroke(this.markings.curbs, colors.curb, 0.3, 0.9);
+    stroke(this.markings.centers, colors.line, 0.16, 0.7);
+    stroke(this.markings.dividers, colors.line, 0.16, 0.55, [3, 6]);
+    stroke(this.markings.stops, colors.stop, 0.5, 0.85);
+    context.setLineDash([]);
+    context.globalAlpha = 1;
+    context.lineCap = 'round';
   }
 
   drawPedestrians() {
@@ -129,16 +192,29 @@ export class MapView {
     const ratio = window.devicePixelRatio || 1;
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
     context.lineCap = 'round'; context.lineJoin = 'round';
+    const detailed = defaultPixels(view.scale) >= 4;
     for (const lane of network.lanes) {
       const kind = lane.render_kind;
       if (kind !== 'sidewalk' && kind !== 'walkingarea' && kind !== 'crossing') continue;
-      context.strokeStyle = kind === 'crossing' ? '#ffd23a' : '#4a2a14';
-      context.lineWidth = kind === 'crossing' ? Math.max(2, Math.min(5, 2.4 * view.scale)) : Math.max(1, Math.min(3, 1.2 * view.scale));
-      context.setLineDash(kind === 'crossing' ? [4, 4] : []);
+      if (kind === 'crossing') {
+        // Zebra: short dashes along the crossing, each as wide as the crossing.
+        context.lineCap = 'butt';
+        context.strokeStyle = detailed ? colors.zebra : '#ffd23a';
+        context.globalAlpha = detailed ? 0.6 : 1;
+        context.lineWidth = detailed ? (lane.width || crossingWidth) * view.scale : Math.max(2, Math.min(5, 2.4 * view.scale));
+        context.setLineDash(detailed ? [0.5 * view.scale, 0.6 * view.scale] : [4, 4]);
+      } else {
+        context.lineCap = 'round';
+        context.strokeStyle = colors.sidewalk;
+        context.globalAlpha = 1;
+        context.lineWidth = Math.max(1, (lane.width || sidewalkWidth) * view.scale);
+        context.setLineDash([]);
+      }
       this.tracePath(context, lane.shape);
       context.stroke();
     }
     context.setLineDash([]);
+    context.globalAlpha = 1;
     this.pedestrianCache = {network, x: view.x, y: view.y, scale: view.scale};
   }
 
@@ -212,19 +288,23 @@ export class MapView {
     const ratio = window.devicePixelRatio || 1;
     this.canvas.width = Math.round(this.width * ratio); this.canvas.height = Math.round(this.height * ratio);
     this.context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    this.scene?.resize(this.width, this.height, ratio);
     this.fit();
   }
 
   pointerDown(event) {
-    this.drag = {x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, moved: false};
+    const rotate = this.mode === '3d' && (event.button === 2 || event.shiftKey);
+    this.drag = {x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, moved: false, rotate};
     this.canvas.setPointerCapture(event.pointerId);
     this.options.onPointerDown?.(event);
   }
 
   pointerMove(event) {
     if (!this.drag) { this.options.onHover?.(event); return; }
-    this.view.x -= (event.clientX - this.drag.x) / this.view.scale;
-    this.view.y += (event.clientY - this.drag.y) / this.view.scale;
+    const dx = event.clientX - this.drag.x, dy = event.clientY - this.drag.y;
+    if (this.drag.rotate) this.scene.rotate(dx, dy);
+    else if (this.mode === '3d') this.scene.pan(this.view, dx, dy);
+    else { this.view.x -= dx / this.view.scale; this.view.y += dy / this.view.scale; }
     this.drag.moved ||= Math.hypot(event.clientX - this.drag.startX, event.clientY - this.drag.startY) > 4;
     this.drag.x = event.clientX; this.drag.y = event.clientY;
     this.draw();
@@ -243,25 +323,87 @@ export class MapView {
     const x = event.clientX - rectangle.left - this.width / 2, y = event.clientY - rectangle.top - this.height / 2;
     const old = this.view.scale;
     this.view.scale = Math.max(0.005, Math.min(30, old * Math.exp(-event.deltaY * 0.001)));
-    this.view.x += x / old - x / this.view.scale; this.view.y -= y / old - y / this.view.scale;
+    // The 3D camera zooms toward the view centre; the flat map keeps the point under the cursor.
+    if (this.mode === '2d') { this.view.x += x / old - x / this.view.scale; this.view.y -= y / old - y / this.view.scale; }
     this.draw();
   }
 }
 
-export function drawVehicle(context, position, car, size) {
+// Top-down car at true size when zoomed in, with a minimum size so traffic stays visible.
+// Front faces up before rotation; headlights shine while moving, brake lights glow when stopped.
+export function drawVehicle(context, position, car, scale, index = 0) {
+  const length = Math.max(7, vehicleLength * scale), width = length * vehicleWidth / vehicleLength;
+  const stopped = braking(car);
   context.save();
   context.globalAlpha = car.opacity ?? 1;
   context.translate(position.x, position.y);
   context.rotate(car.angle * Math.PI / 180);
-  context.fillStyle = car.speed_mps < 0.1 ? '#ff2f1f' : '#5cff7a';
-  context.fillRect(-size * 0.3, -size * 0.5, size * 0.6, size);
-  context.fillStyle = '#e9ffe0';
-  context.fillRect(-size * 0.22, -size * 0.35, size * 0.44, Math.max(1, size * 0.13));
+  context.globalCompositeOperation = 'lighter';
+  const glow = (y, radius, color) => {
+    const gradient = context.createRadialGradient(0, y, 0, 0, y, radius);
+    gradient.addColorStop(0, color);
+    gradient.addColorStop(1, 'transparent');
+    context.fillStyle = gradient;
+    context.fillRect(-radius, y - radius, radius * 2, radius * 2);
+  };
+  if (stopped) glow(length * 0.55, length * 0.55, '#ff2e2299');
+  else glow(-length * 0.95, length * 0.6, '#fff2dc40');
+  context.globalCompositeOperation = 'source-over';
+  context.fillStyle = paintFor(car, index);
+  context.strokeStyle = '#000000aa';
+  context.lineWidth = 1;
+  context.beginPath();
+  context.roundRect(-width / 2, -length / 2, width, length, width * 0.3);
+  context.fill();
+  context.stroke();
+  if (length >= 10) {
+    context.fillStyle = '#0b0f16d0';
+    context.beginPath();
+    context.moveTo(-width * 0.4, -length * 0.2); context.lineTo(width * 0.4, -length * 0.2);
+    context.lineTo(width * 0.33, -length * 0.04); context.lineTo(-width * 0.33, -length * 0.04);
+    context.fill();
+    context.fillRect(-width * 0.33, length * 0.22, width * 0.66, length * 0.08);
+    context.fillStyle = '#ffffff22';
+    context.fillRect(-width * 0.33, -length * 0.04, width * 0.66, length * 0.26);
+  }
+  const lamp = Math.max(1, length * 0.06);
+  context.fillStyle = colors.headlight;
+  context.fillRect(-width * 0.42, -length / 2, width * 0.24, lamp);
+  context.fillRect(width * 0.18, -length / 2, width * 0.24, lamp);
+  context.fillStyle = stopped ? colors.brake : '#7a1a12';
+  context.fillRect(-width * 0.42, length / 2 - lamp, width * 0.24, lamp);
+  context.fillRect(width * 0.18, length / 2 - lamp, width * 0.24, lamp);
   context.restore();
 }
 
-function laneKind(lane) {
-  return lane.render_kind || (lane.id.startsWith(':') ? 'junction' : 'road');
+// Lane width in CSS pixels at a scale; markings only read once lanes are a few pixels wide.
+function defaultPixels(scale) { return laneWidth({id: '', render_kind: 'road'}) * scale; }
+
+// A 2D/3D toggle button; the chosen mode is remembered per browser.
+export function bindModeToggle(mapView, button) {
+  const show = () => {
+    button.textContent = mapView.mode === '3d' ? '2D' : '3D';
+    button.setAttribute('aria-pressed', String(mapView.mode === '3d'));
+    button.title = mapView.mode === '3d' ? 'Switch to the flat map' : 'Switch to the 3D map (right-drag or Shift-drag to orbit)';
+  };
+  const apply = async mode => {
+    button.disabled = true;
+    try {
+      await mapView.setMode(mode);
+      try { localStorage.setItem(modeKey, mode); } catch {}
+    } catch (error) {
+      console.error('3D map unavailable', error);
+      await mapView.setMode('2d');
+    } finally {
+      button.disabled = false;
+      show();
+    }
+  };
+  button.onclick = () => apply(mapView.mode === '3d' ? '2d' : '3d');
+  show();
+  let saved = null;
+  try { saved = localStorage.getItem(modeKey); } catch {}
+  if (saved === '3d') apply('3d');
 }
 
 // Queued vehicles placed back from a lane's stop line, following upstream lanes; heading uses SUMO's convention.
